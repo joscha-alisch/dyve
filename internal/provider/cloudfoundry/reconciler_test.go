@@ -39,6 +39,14 @@ func TestReconciler(t *testing.T) {
 				Apps: map[string]*App{"abc": {"app"}},
 			}},
 		},
+		{
+			desc: "no work to be done",
+			db: fakeDb{
+				job: nil,
+			},
+			cf:    fakeCf{},
+			sleep: true,
+		},
 	}
 
 	for _, test := range tests {

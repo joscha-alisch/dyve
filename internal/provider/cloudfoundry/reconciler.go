@@ -24,6 +24,9 @@ type reconciler struct {
 
 func (r *reconciler) Run() (bool, error) {
 	j := r.db.FetchReconcileJob()
+	if j == nil {
+		return true, nil
+	}
 
 	switch j.Type {
 	case ReconcileOrg:
