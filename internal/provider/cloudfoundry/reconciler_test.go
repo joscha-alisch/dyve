@@ -52,7 +52,10 @@ func TestReconciler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			r := NewReconciler(&test.db, &test.cf)
-			_, _ = r.Run()
+			worked, _ := r.Run()
+			if worked == test.sleep {
+				tt.Errorf("\nexpected return: %v, was: %v", !test.sleep, worked)
+			}
 
 			if !cmp.Equal(test.cf.b, test.db.b) {
 				tt.Errorf("\ncf api and reconciled db differ in orgs: \n%s", cmp.Diff(test.cf.b, test.db.b))

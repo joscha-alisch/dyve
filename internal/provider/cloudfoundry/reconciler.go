@@ -25,7 +25,7 @@ type reconciler struct {
 func (r *reconciler) Run() (bool, error) {
 	j := r.db.FetchReconcileJob()
 	if j == nil {
-		return true, nil
+		return false, nil
 	}
 
 	switch j.Type {
@@ -40,5 +40,5 @@ func (r *reconciler) Run() (bool, error) {
 		_ = r.db.UpdateApp(j.Guid, a)
 	}
 
-	return false, nil
+	return true, nil
 }
