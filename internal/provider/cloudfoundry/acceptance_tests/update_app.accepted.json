@@ -1,0 +1,8 @@
+{
+    "apps": [
+        {
+            "guid": "abc",
+            "name": "my-app"
+        }
+    ]
+}
