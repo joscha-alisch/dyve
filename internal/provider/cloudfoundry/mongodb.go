@@ -2,7 +2,6 @@ package cloudfoundry
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -54,9 +53,10 @@ func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Tim
 		},
 	})
 
-	fmt.Printf("%+v, %s\n", res, res.Err())
+	j := ReconcileJob{}
+	_ = res.Decode(&j)
 
-	return ReconcileJob{}, false
+	return j, true
 }
 
 func (d *mongoDatabase) UpsertOrg(o Org) error {
