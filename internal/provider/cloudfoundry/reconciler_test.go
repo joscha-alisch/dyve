@@ -2,6 +2,7 @@ package cloudfoundry
 
 import (
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"testing"
 )
 
@@ -11,6 +12,7 @@ func TestReconciler(t *testing.T) {
 		db    fakeDb
 		cf    fakeCf
 		sleep bool
+		err   error
 	}{
 		{
 			desc: "updates org",
@@ -47,14 +49,29 @@ func TestReconciler(t *testing.T) {
 			cf:    fakeCf{},
 			sleep: true,
 		},
+		{
+			desc: "handle error org not found",
+			db: fakeDb{
+				job: &ReconcileJob{Type: ReconcileOrg, Guid: "not_exist"},
+			},
+			cf: fakeCf{},
+			err: &errReconcileFailed{
+				Err: errNotFound,
+				Job: ReconcileJob{Type: ReconcileOrg, Guid: "not_exist"},
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			r := NewReconciler(&test.db, &test.cf)
-			worked, _ := r.Run()
+			worked, err := r.Run()
 			if worked == test.sleep {
 				tt.Errorf("\nexpected return: %v, was: %v", !test.sleep, worked)
+			}
+
+			if !cmp.Equal(test.err, err, cmpopts.EquateErrors()) {
+				tt.Errorf("\nerr not as expected: \n%s", cmp.Diff(test.err, err, cmpopts.EquateErrors()))
 			}
 
 			if !cmp.Equal(test.cf.b, test.db.b) {
@@ -70,14 +87,23 @@ type fakeCf struct {
 }
 
 func (f *fakeCf) GetApp(guid string) (App, error) {
+	if f.b.Apps[guid] == nil {
+		return App{}, errNotFound
+	}
 	return *f.b.Apps[guid], nil
 }
 
 func (f *fakeCf) GetSpace(guid string) (Space, error) {
+	if f.b.Spaces[guid] == nil {
+		return Space{}, errNotFound
+	}
 	return *f.b.Spaces[guid], nil
 }
 
 func (f *fakeCf) GetOrg(guid string) (Org, error) {
+	if f.b.Orgs[guid] == nil {
+		return Org{}, errNotFound
+	}
 	return *f.b.Orgs[guid], nil
 }
 

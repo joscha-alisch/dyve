@@ -30,7 +30,10 @@ func (r *reconciler) Run() (bool, error) {
 
 	switch j.Type {
 	case ReconcileOrg:
-		o, _ := r.cf.GetOrg(j.Guid)
+		o, err := r.cf.GetOrg(j.Guid)
+		if err != nil {
+			return true, &errReconcileFailed{Err: err, Job: *j}
+		}
 		_ = r.db.UpdateOrg(j.Guid, o)
 	case ReconcileSpace:
 		s, _ := r.cf.GetSpace(j.Guid)
