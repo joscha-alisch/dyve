@@ -14,13 +14,16 @@ type ReconcileJob struct {
 }
 
 type Org struct {
+	Guid string
 	Name string
 }
 
 type Space struct {
+	Guid string
 	Name string
 }
 
 type App struct {
+	Guid string
 	Name string
 }

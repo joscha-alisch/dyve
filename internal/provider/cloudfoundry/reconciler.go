@@ -35,21 +35,21 @@ func (r *reconciler) Run() (bool, error) {
 			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 
-		_ = r.db.UpsertOrg(j.Guid, o)
+		_ = r.db.UpsertOrg(o)
 	case ReconcileSpace:
 		s, err := r.cf.GetSpace(j.Guid)
 		if err != nil {
 			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 
-		_ = r.db.UpsertSpace(j.Guid, s)
+		_ = r.db.UpsertSpace(s)
 	case ReconcileApp:
 		a, err := r.cf.GetApp(j.Guid)
 		if err != nil {
 			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 
-		_ = r.db.UpsertApp(j.Guid, a)
+		_ = r.db.UpsertApp(a)
 	}
 
 	return true, nil

@@ -20,7 +20,7 @@ func TestReconciler(t *testing.T) {
 				job: &ReconcileJob{Type: ReconcileOrg, Guid: "abc"},
 			},
 			cf: fakeCf{b: backend{
-				Orgs: map[string]*Org{"abc": {"org"}},
+				Orgs: map[string]*Org{"abc": {Name: "org", Guid: "abc"}},
 			}},
 		},
 		{
@@ -29,7 +29,7 @@ func TestReconciler(t *testing.T) {
 				job: &ReconcileJob{Type: ReconcileSpace, Guid: "abc"},
 			},
 			cf: fakeCf{b: backend{
-				Spaces: map[string]*Space{"abc": {"space"}},
+				Spaces: map[string]*Space{"abc": {Name: "space", Guid: "abc"}},
 			}},
 		},
 		{
@@ -38,7 +38,7 @@ func TestReconciler(t *testing.T) {
 				job: &ReconcileJob{Type: ReconcileApp, Guid: "abc"},
 			},
 			cf: fakeCf{b: backend{
-				Apps: map[string]*App{"abc": {"app"}},
+				Apps: map[string]*App{"abc": {Name: "app", Guid: "abc"}},
 			}},
 		},
 		{
@@ -134,27 +134,27 @@ type fakeDb struct {
 	b   backend
 }
 
-func (f *fakeDb) UpsertApp(guid string, a App) error {
+func (f *fakeDb) UpsertApp(a App) error {
 	if f.b.Apps == nil {
 		f.b.Apps = make(map[string]*App)
 	}
-	f.b.Apps[guid] = &a
+	f.b.Apps[a.Guid] = &a
 	return nil
 }
 
-func (f *fakeDb) UpsertSpace(guid string, s Space) error {
+func (f *fakeDb) UpsertSpace(s Space) error {
 	if f.b.Spaces == nil {
 		f.b.Spaces = make(map[string]*Space)
 	}
-	f.b.Spaces[guid] = &s
+	f.b.Spaces[s.Guid] = &s
 	return nil
 }
 
-func (f *fakeDb) UpsertOrg(guid string, o Org) error {
+func (f *fakeDb) UpsertOrg(o Org) error {
 	if f.b.Orgs == nil {
 		f.b.Orgs = make(map[string]*Org)
 	}
-	f.b.Orgs[guid] = &o
+	f.b.Orgs[o.Guid] = &o
 	return nil
 }
 

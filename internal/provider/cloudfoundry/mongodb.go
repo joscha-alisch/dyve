@@ -2,7 +2,6 @@ package cloudfoundry
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -44,19 +43,18 @@ func (d *mongoDatabase) FetchReconcileJob() (ReconcileJob, bool) {
 	panic("implement me")
 }
 
-func (d *mongoDatabase) UpsertOrg(guid string, o Org) error {
+func (d *mongoDatabase) UpsertOrg(o Org) error {
 	panic("implement me")
 }
 
-func (d *mongoDatabase) UpsertSpace(guid string, s Space) error {
+func (d *mongoDatabase) UpsertSpace(s Space) error {
 	panic("implement me")
 }
 
-func (d *mongoDatabase) UpsertApp(guid string, a App) error {
-	res, err := d.apps.ReplaceOne(context.Background(), bson.M{
-		"guid": guid,
+func (d *mongoDatabase) UpsertApp(a App) error {
+	_, err := d.apps.ReplaceOne(context.Background(), bson.M{
+		"guid": a.Guid,
 	}, a, options.Replace().SetUpsert(true))
 
-	fmt.Printf("%+v\n", res)
 	return err
 }

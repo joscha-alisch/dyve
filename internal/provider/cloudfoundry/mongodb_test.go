@@ -19,12 +19,20 @@ import (
 
 func TestMongoIntegration(t *testing.T) {
 	tests := []struct {
-		desc string
-		f    func(db Database) error
-		err  error
+		desc  string
+		f     func(db Database) error
+		err   error
+		state bson.M
 	}{
 		{desc: "create app", f: func(db Database) error {
-			return db.UpsertApp("abc", App{Name: "my-app"})
+			return db.UpsertApp(App{Name: "my-app", Guid: "abc"})
+		}},
+		{desc: "update app", state: bson.M{
+			"apps": []bson.M{
+				{"name": "old-name", "guid": "abc"},
+			},
+		}, f: func(db Database) error {
+			return db.UpsertApp(App{Name: "my-app", Guid: "abc"})
 		}},
 	}
 
@@ -37,7 +45,7 @@ func TestMongoIntegration(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			fileName := strings.ReplaceAll(test.desc, " ", "_")
-			acceptanceTesting(fileName, nil, test.f, mongo, tt)
+			acceptanceTesting(fileName, test.state, test.f, mongo, tt)
 		})
 	}
 }
@@ -104,7 +112,7 @@ func acceptanceTesting(
 	}
 }
 
-func setState(data map[string]interface{}, s *memongo.Server, dbName string) error {
+func setState(data bson.M, s *memongo.Server, dbName string) error {
 	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(s.URI()))
 	if err != nil {
 		return err
@@ -113,7 +121,7 @@ func setState(data map[string]interface{}, s *memongo.Server, dbName string) err
 	db := conn.Database(dbName)
 
 	for coll, contents := range data {
-		contentArr, ok := contents.([]map[string]interface{})
+		contentArr, ok := contents.([]bson.M)
 		if !ok {
 			return errors.New("data not in correct format")
 		}
