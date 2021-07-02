@@ -23,8 +23,8 @@ type reconciler struct {
 }
 
 func (r *reconciler) Run() (bool, error) {
-	j := r.db.FetchReconcileJob()
-	if j == nil {
+	j, ok := r.db.FetchReconcileJob()
+	if !ok {
 		return false, nil
 	}
 
@@ -32,21 +32,21 @@ func (r *reconciler) Run() (bool, error) {
 	case ReconcileOrg:
 		o, err := r.cf.GetOrg(j.Guid)
 		if err != nil {
-			return true, &errReconcileFailed{Err: err, Job: *j}
+			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 
 		_ = r.db.UpdateOrg(j.Guid, o)
 	case ReconcileSpace:
 		s, err := r.cf.GetSpace(j.Guid)
 		if err != nil {
-			return true, &errReconcileFailed{Err: err, Job: *j}
+			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 
 		_ = r.db.UpdateSpace(j.Guid, s)
 	case ReconcileApp:
 		a, err := r.cf.GetApp(j.Guid)
 		if err != nil {
-			return true, &errReconcileFailed{Err: err, Job: *j}
+			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 
 		_ = r.db.UpdateApp(j.Guid, a)

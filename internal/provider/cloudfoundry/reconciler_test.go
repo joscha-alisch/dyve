@@ -158,8 +158,11 @@ func (f *fakeDb) UpdateOrg(guid string, o Org) error {
 	return nil
 }
 
-func (f *fakeDb) FetchReconcileJob() *ReconcileJob {
-	return f.job
+func (f *fakeDb) FetchReconcileJob() (ReconcileJob, bool) {
+	if f.job == nil {
+		return ReconcileJob{}, false
+	}
+	return *f.job, true
 }
 
 type backend struct {

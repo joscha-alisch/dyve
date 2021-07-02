@@ -1,7 +1,7 @@
 package cloudfoundry
 
 type Database interface {
-	FetchReconcileJob() *ReconcileJob
+	FetchReconcileJob() (ReconcileJob, bool)
 	UpdateOrg(guid string, o Org) error
 	UpdateSpace(guid string, s Space) error
 	UpdateApp(guid string, a App) error
