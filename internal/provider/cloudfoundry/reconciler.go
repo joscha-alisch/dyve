@@ -34,12 +34,21 @@ func (r *reconciler) Run() (bool, error) {
 		if err != nil {
 			return true, &errReconcileFailed{Err: err, Job: *j}
 		}
+
 		_ = r.db.UpdateOrg(j.Guid, o)
 	case ReconcileSpace:
-		s, _ := r.cf.GetSpace(j.Guid)
+		s, err := r.cf.GetSpace(j.Guid)
+		if err != nil {
+			return true, &errReconcileFailed{Err: err, Job: *j}
+		}
+
 		_ = r.db.UpdateSpace(j.Guid, s)
 	case ReconcileApp:
-		a, _ := r.cf.GetApp(j.Guid)
+		a, err := r.cf.GetApp(j.Guid)
+		if err != nil {
+			return true, &errReconcileFailed{Err: err, Job: *j}
+		}
+
 		_ = r.db.UpdateApp(j.Guid, a)
 	}
 

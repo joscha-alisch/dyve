@@ -60,6 +60,28 @@ func TestReconciler(t *testing.T) {
 				Job: ReconcileJob{Type: ReconcileOrg, Guid: "not_exist"},
 			},
 		},
+		{
+			desc: "handle error space not found",
+			db: fakeDb{
+				job: &ReconcileJob{Type: ReconcileSpace, Guid: "not_exist"},
+			},
+			cf: fakeCf{},
+			err: &errReconcileFailed{
+				Err: errNotFound,
+				Job: ReconcileJob{Type: ReconcileSpace, Guid: "not_exist"},
+			},
+		},
+		{
+			desc: "handle error app not found",
+			db: fakeDb{
+				job: &ReconcileJob{Type: ReconcileApp, Guid: "not_exist"},
+			},
+			cf: fakeCf{},
+			err: &errReconcileFailed{
+				Err: errNotFound,
+				Job: ReconcileJob{Type: ReconcileApp, Guid: "not_exist"},
+			},
+		},
 	}
 
 	for _, test := range tests {
