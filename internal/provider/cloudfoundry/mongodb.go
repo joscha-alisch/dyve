@@ -40,15 +40,23 @@ type mongoDatabase struct {
 }
 
 func (d *mongoDatabase) FetchReconcileJob() (ReconcileJob, bool) {
-	panic("implement me")
+	return ReconcileJob{}, false
 }
 
 func (d *mongoDatabase) UpsertOrg(o Org) error {
-	panic("implement me")
+	_, err := d.orgs.ReplaceOne(context.Background(), bson.M{
+		"guid": o.Guid,
+	}, o, options.Replace().SetUpsert(true))
+
+	return err
 }
 
 func (d *mongoDatabase) UpsertSpace(s Space) error {
-	panic("implement me")
+	_, err := d.spaces.ReplaceOne(context.Background(), bson.M{
+		"guid": s.Guid,
+	}, s, options.Replace().SetUpsert(true))
+
+	return err
 }
 
 func (d *mongoDatabase) UpsertApp(a App) error {

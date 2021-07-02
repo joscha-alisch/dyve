@@ -34,6 +34,26 @@ func TestMongoIntegration(t *testing.T) {
 		}, f: func(db Database) error {
 			return db.UpsertApp(App{Name: "my-app", Guid: "abc"})
 		}},
+		{desc: "create space", f: func(db Database) error {
+			return db.UpsertSpace(Space{Name: "my-space", Guid: "abc"})
+		}},
+		{desc: "update space", state: bson.M{
+			"spaces": []bson.M{
+				{"name": "old-name", "guid": "abc"},
+			},
+		}, f: func(db Database) error {
+			return db.UpsertSpace(Space{Name: "my-space", Guid: "abc"})
+		}},
+		{desc: "create org", f: func(db Database) error {
+			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
+		}},
+		{desc: "update org", state: bson.M{
+			"orgs": []bson.M{
+				{"name": "old-name", "guid": "abc"},
+			},
+		}, f: func(db Database) error {
+			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
+		}},
 	}
 
 	mongo, err := memongo.Start("3.6.23")
