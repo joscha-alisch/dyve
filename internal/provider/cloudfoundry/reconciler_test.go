@@ -134,7 +134,7 @@ type fakeDb struct {
 	b   backend
 }
 
-func (f *fakeDb) UpdateApp(guid string, a App) error {
+func (f *fakeDb) UpsertApp(guid string, a App) error {
 	if f.b.Apps == nil {
 		f.b.Apps = make(map[string]*App)
 	}
@@ -142,7 +142,7 @@ func (f *fakeDb) UpdateApp(guid string, a App) error {
 	return nil
 }
 
-func (f *fakeDb) UpdateSpace(guid string, s Space) error {
+func (f *fakeDb) UpsertSpace(guid string, s Space) error {
 	if f.b.Spaces == nil {
 		f.b.Spaces = make(map[string]*Space)
 	}
@@ -150,7 +150,7 @@ func (f *fakeDb) UpdateSpace(guid string, s Space) error {
 	return nil
 }
 
-func (f *fakeDb) UpdateOrg(guid string, o Org) error {
+func (f *fakeDb) UpsertOrg(guid string, o Org) error {
 	if f.b.Orgs == nil {
 		f.b.Orgs = make(map[string]*Org)
 	}
