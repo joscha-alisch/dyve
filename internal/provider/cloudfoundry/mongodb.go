@@ -51,7 +51,7 @@ func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Tim
 		"$set": bson.M{
 			"lastUpdated": againAt,
 		},
-	})
+	}, options.FindOneAndUpdate().SetSort(bson.D{{"lastUpdated", 1}}))
 
 	j := ReconcileJob{}
 	_ = res.Decode(&j)

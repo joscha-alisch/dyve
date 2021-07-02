@@ -60,7 +60,8 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 		{desc: "fetch job", state: bson.M{
 			"jobs": []bson.M{
-				{"type": ReconcileOrg, "guid": "abc", "lastUpdated": someTime},
+				{"type": float32(ReconcileOrg), "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
+				{"type": float32(ReconcileOrg), "guid": "abc", "lastUpdated": someTime},
 			},
 		}, f: func(db Database, tt *testing.T) error {
 			expected := ReconcileJob{Type: ReconcileOrg, Guid: "abc"}
