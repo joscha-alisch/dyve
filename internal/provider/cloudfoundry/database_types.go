@@ -1,5 +1,7 @@
 package cloudfoundry
 
+import "time"
+
 type ReconcileType int
 
 const (
@@ -9,8 +11,9 @@ const (
 )
 
 type ReconcileJob struct {
-	Type ReconcileType
-	Guid string
+	Type        ReconcileType
+	Guid        string
+	LastUpdated time.Time
 }
 
 type Org struct {

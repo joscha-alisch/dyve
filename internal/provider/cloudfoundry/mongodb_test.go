@@ -7,6 +7,7 @@ import (
 	"github.com/benweissmann/memongo"
 	"github.com/google/go-cmp/cmp"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"io/ioutil"
@@ -15,44 +16,59 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
+
+var someTime, _ = time.Parse(time.RFC3339, "2006-01-01T15:00:00Z")
 
 func TestMongoIntegration(t *testing.T) {
 	tests := []struct {
 		desc  string
-		f     func(db Database) error
+		f     func(db Database, tt *testing.T) error
 		err   error
 		state bson.M
 	}{
-		{desc: "create app", f: func(db Database) error {
+		{desc: "create app", f: func(db Database, tt *testing.T) error {
 			return db.UpsertApp(App{Name: "my-app", Guid: "abc"})
 		}},
 		{desc: "update app", state: bson.M{
 			"apps": []bson.M{
 				{"name": "old-name", "guid": "abc"},
 			},
-		}, f: func(db Database) error {
+		}, f: func(db Database, tt *testing.T) error {
 			return db.UpsertApp(App{Name: "my-app", Guid: "abc"})
 		}},
-		{desc: "create space", f: func(db Database) error {
+		{desc: "create space", f: func(db Database, tt *testing.T) error {
 			return db.UpsertSpace(Space{Name: "my-space", Guid: "abc"})
 		}},
 		{desc: "update space", state: bson.M{
 			"spaces": []bson.M{
 				{"name": "old-name", "guid": "abc"},
 			},
-		}, f: func(db Database) error {
+		}, f: func(db Database, tt *testing.T) error {
 			return db.UpsertSpace(Space{Name: "my-space", Guid: "abc"})
 		}},
-		{desc: "create org", f: func(db Database) error {
+		{desc: "create org", f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
 		}},
 		{desc: "update org", state: bson.M{
 			"orgs": []bson.M{
 				{"name": "old-name", "guid": "abc"},
 			},
-		}, f: func(db Database) error {
+		}, f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
+		}},
+		{desc: "fetch job", state: bson.M{
+			"jobs": []bson.M{
+				{"type": ReconcileOrg, "guid": "abc", "lastUpdated": someTime},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := ReconcileJob{Type: ReconcileOrg, Guid: "abc"}
+			j, ok := db.AcceptReconcileJob(someTime.Add(10*time.Second), someTime.Add(5*time.Minute))
+			if !ok || !cmp.Equal(expected, j) {
+				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
+			}
+			return nil
 		}},
 	}
 
@@ -73,7 +89,7 @@ func TestMongoIntegration(t *testing.T) {
 func acceptanceTesting(
 	name string,
 	state map[string]interface{},
-	f func(db Database) error,
+	f func(db Database, tt *testing.T) error,
 	s *memongo.Server,
 	tt *testing.T,
 ) {
@@ -90,7 +106,7 @@ func acceptanceTesting(
 		}
 	}
 
-	err = f(db)
+	err = f(db, tt)
 	if err != nil {
 		tt.Fatal(err)
 	}
@@ -99,6 +115,12 @@ func acceptanceTesting(
 	if err != nil {
 		tt.Fatal(err)
 	}
+
+	walk(contents, func(m map[string]interface{}, k string) {
+		if t, ok := m[k].(primitive.DateTime); ok {
+			m[k] = time.Unix(int64(t)/1000, 0).Format(time.RFC3339)
+		}
+	})
 
 	_, testFilePath, _, _ := runtime.Caller(0)
 	testDir := filepath.Dir(testFilePath)
@@ -199,4 +221,20 @@ func dumpContents(s *memongo.Server, dbName string) (map[string]interface{}, err
 	}
 
 	return res, nil
+}
+
+func walk(m bson.M, f func(map[string]interface{}, string)) {
+	for k, v := range m {
+		if sm, ok := v.(map[string]interface{}); ok {
+			walk(sm, f)
+		} else if ss, ok := v.([]interface{}); ok {
+			for _, ms := range ss {
+				if sm, ok := ms.(map[string]interface{}); ok {
+					walk(sm, f)
+				}
+			}
+		} else {
+			f(m, k)
+		}
+	}
 }

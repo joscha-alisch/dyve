@@ -4,6 +4,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"testing"
+	"time"
 )
 
 func TestReconciler(t *testing.T) {
@@ -158,7 +159,7 @@ func (f *fakeDb) UpsertOrg(o Org) error {
 	return nil
 }
 
-func (f *fakeDb) FetchReconcileJob() (ReconcileJob, bool) {
+func (f *fakeDb) AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
 	if f.job == nil {
 		return ReconcileJob{}, false
 	}

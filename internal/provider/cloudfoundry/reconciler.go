@@ -1,5 +1,7 @@
 package cloudfoundry
 
+import "time"
+
 /**
 The reconciler fetches new reconciliation work from the mongoDatabase and updates the corresponding
 item via the CloudFoundry API.
@@ -23,7 +25,7 @@ type reconciler struct {
 }
 
 func (r *reconciler) Run() (bool, error) {
-	j, ok := r.db.FetchReconcileJob()
+	j, ok := r.db.AcceptReconcileJob(time.Now(), time.Now())
 	if !ok {
 		return false, nil
 	}

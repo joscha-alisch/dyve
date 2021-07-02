@@ -2,9 +2,11 @@ package cloudfoundry
 
 import (
 	"context"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 func NewMongoDatabase(uri string, dbName string) (Database, error) {
@@ -28,6 +30,7 @@ func NewMongoDatabase(uri string, dbName string) (Database, error) {
 		orgs:   db.Collection("orgs"),
 		spaces: db.Collection("spaces"),
 		apps:   db.Collection("apps"),
+		jobs:   db.Collection("jobs"),
 	}, nil
 }
 
@@ -37,32 +40,41 @@ type mongoDatabase struct {
 	orgs   *mongo.Collection
 	spaces *mongo.Collection
 	apps   *mongo.Collection
+	jobs   *mongo.Collection
 }
 
-func (d *mongoDatabase) FetchReconcileJob() (ReconcileJob, bool) {
+func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
+	res := d.jobs.FindOneAndUpdate(context.Background(), bson.M{
+		"lastUpdated": bson.M{
+			"$lte": olderThan,
+		},
+	}, bson.M{
+		"$set": bson.M{
+			"lastUpdated": againAt,
+		},
+	})
+
+	fmt.Printf("%+v, %s\n", res, res.Err())
+
 	return ReconcileJob{}, false
 }
 
 func (d *mongoDatabase) UpsertOrg(o Org) error {
-	_, err := d.orgs.ReplaceOne(context.Background(), bson.M{
-		"guid": o.Guid,
-	}, o, options.Replace().SetUpsert(true))
-
-	return err
+	return d.upsertByGuid(d.orgs, o.Guid, o)
 }
 
 func (d *mongoDatabase) UpsertSpace(s Space) error {
-	_, err := d.spaces.ReplaceOne(context.Background(), bson.M{
-		"guid": s.Guid,
-	}, s, options.Replace().SetUpsert(true))
-
-	return err
+	return d.upsertByGuid(d.spaces, s.Guid, s)
 }
 
 func (d *mongoDatabase) UpsertApp(a App) error {
-	_, err := d.apps.ReplaceOne(context.Background(), bson.M{
-		"guid": a.Guid,
-	}, a, options.Replace().SetUpsert(true))
+	return d.upsertByGuid(d.apps, a.Guid, a)
+}
+
+func (d *mongoDatabase) upsertByGuid(c *mongo.Collection, guid string, o interface{}) error {
+	_, err := c.ReplaceOne(context.Background(), bson.M{
+		"guid": guid,
+	}, o, options.Replace().SetUpsert(true))
 
 	return err
 }
