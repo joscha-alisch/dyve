@@ -166,6 +166,10 @@ func acceptanceTesting(
 		if t, ok := m[k].(primitive.DateTime); ok {
 			m[k] = time.Unix(int64(t)/1000, 0).Format(time.RFC3339)
 		}
+
+		if t, ok := m[k].(primitive.A); ok {
+			m[k] = ([]interface{})(t)
+		}
 	})
 
 	_, testFilePath, _, _ := runtime.Caller(0)
