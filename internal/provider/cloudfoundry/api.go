@@ -19,19 +19,20 @@ type API interface {
 
 type CfCli interface {
 	ListOrgs() ([]cf.Org, error)
-}
-
-func main() {
-	cli, _ := cf.NewClient(&cf.Config{})
-	NewApi(cli)
+	GetOrgByGuid(guid string) (cf.Org, error)
+	GetSpaceByGuid(guid string) (cf.Space, error)
+	ListSpacesByOrgGuid(orgGuid string) ([]cf.Space, error)
+	ListAppsBySpaceGuid(spaceGuid string) ([]cf.App, error)
 }
 
 func NewApi(cli CfCli) API {
-
-	return &api{}
+	return &api{
+		cli: cli,
+	}
 }
 
 type api struct {
+	cli CfCli
 }
 
 func (a *api) GetApp(guid string) (App, error) {
@@ -43,5 +44,24 @@ func (a *api) GetSpace(guid string) (Space, []App, error) {
 }
 
 func (a *api) GetOrg(guid string) (Org, error) {
-	return Org{}, nil
+	o, err := a.cli.GetOrgByGuid(guid)
+	if err != nil {
+		return Org{}, err
+	}
+
+	spaces, err := a.cli.ListSpacesByOrgGuid(o.Guid)
+	if err != nil {
+		return Org{}, err
+	}
+
+	var spaceGuids []string
+	for _, space := range spaces {
+		spaceGuids = append(spaceGuids, space.Guid)
+	}
+
+	return Org{
+		Guid:   o.Guid,
+		Name:   o.Name,
+		Spaces: spaceGuids,
+	}, nil
 }
