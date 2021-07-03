@@ -46,18 +46,29 @@ func (d *mongoDatabase) DeleteApp(guid string) {
 
 func (d *mongoDatabase) DeleteSpace(guid string) {
 	d.deleteByGuid(d.spaces, guid)
+	d.deleteBySpace(d.apps, guid)
 }
 
 func (d *mongoDatabase) DeleteOrg(guid string) {
 	d.deleteByGuid(d.orgs, guid)
+	d.deleteByOrg(d.spaces, guid)
+	d.deleteByOrg(d.apps, guid)
 }
 
 func (d *mongoDatabase) deleteByGuid(coll *mongo.Collection, guid string) (bool, error) {
-	res, err := coll.DeleteOne(context.Background(), bson.M{
-		"guid": bson.M{
-			"$eq": guid,
-		},
-	})
+	return d.deleteBy(coll, bson.M{"guid": bson.M{"$eq": guid}})
+}
+
+func (d *mongoDatabase) deleteByOrg(coll *mongo.Collection, guid string) (bool, error) {
+	return d.deleteBy(coll, bson.M{"org": bson.M{"$eq": guid}})
+}
+
+func (d *mongoDatabase) deleteBySpace(coll *mongo.Collection, guid string) (bool, error) {
+	return d.deleteBy(coll, bson.M{"space": bson.M{"$eq": guid}})
+}
+
+func (d *mongoDatabase) deleteBy(coll *mongo.Collection, filter bson.M) (bool, error) {
+	res, err := coll.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return false, err
 	}

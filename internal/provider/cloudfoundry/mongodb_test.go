@@ -90,26 +90,50 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 		{desc: "delete org", state: bson.M{
 			"orgs": []bson.M{
-				{"name": "old-name", "guid": "abc"},
+				{"name": "a", "guid": "org-abc"},
+				{"name": "b", "guid": "org-def"},
+			},
+			"spaces": []bson.M{
+				{"name": "a", "guid": "space-abc", "org": "org-abc"},
+				{"name": "b", "guid": "space-def", "org": "org-def"},
+			},
+			"apps": []bson.M{
+				{"name": "a", "guid": "app-abc", "space": "space-abc", "org": "org-abc"},
+				{"name": "b", "guid": "app-def", "space": "space-def", "org": "org-def"},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			db.DeleteOrg("abc")
+			db.DeleteOrg("org-abc")
 			return nil
 		}},
 		{desc: "delete space", state: bson.M{
+			"orgs": []bson.M{
+				{"name": "a", "guid": "org-abc"},
+			},
 			"spaces": []bson.M{
-				{"name": "old-name", "guid": "abc"},
+				{"name": "a", "guid": "space-abc", "org": "org-abc"},
+				{"name": "b", "guid": "space-def", "org": "org-abc"},
+			},
+			"apps": []bson.M{
+				{"name": "a", "guid": "app-abc", "space": "space-abc", "org": "org-abc"},
+				{"name": "b", "guid": "app-def", "space": "space-def", "org": "org-abc"},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			db.DeleteSpace("abc")
+			db.DeleteSpace("space-abc")
 			return nil
 		}},
 		{desc: "delete app", state: bson.M{
+			"orgs": []bson.M{
+				{"name": "a", "guid": "org-abc"},
+			},
+			"spaces": []bson.M{
+				{"name": "a", "guid": "space-abc", "org": "org-abc"},
+			},
 			"apps": []bson.M{
-				{"name": "old-name", "guid": "abc"},
+				{"name": "a", "guid": "app-abc", "space": "space-abc", "org": "org-abc"},
+				{"name": "b", "guid": "app-def", "space": "space-abc", "org": "org-abc"},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			db.DeleteApp("abc")
+			db.DeleteApp("app-abc")
 			return nil
 		}},
 		{desc: "fetch org job", state: bson.M{
