@@ -29,14 +29,14 @@ func TestMongoIntegration(t *testing.T) {
 		state bson.M
 	}{
 		{desc: "create app", f: func(db Database, tt *testing.T) error {
-			return db.UpsertApp(App{Name: "my-app", Guid: "abc"})
+			return db.UpsertApp(App{Name: "my-app", Guid: "abc", Org: "some-org", Space: "some-space"})
 		}},
 		{desc: "update app", state: bson.M{
 			"apps": []bson.M{
 				{"name": "old-name", "guid": "abc"},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			return db.UpsertApp(App{Name: "my-app", Guid: "abc"})
+			return db.UpsertApp(App{Name: "my-app", Guid: "abc", Org: "org", Space: "space"})
 		}},
 		{desc: "create space", f: func(db Database, tt *testing.T) error {
 			return db.UpsertSpace(Space{Name: "my-space", Guid: "abc"})

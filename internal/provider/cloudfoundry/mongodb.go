@@ -40,10 +40,6 @@ type mongoDatabase struct {
 	apps   *mongo.Collection
 }
 
-func (d *mongoDatabase) UpsertJob(job ReconcileJob) error {
-	return nil
-}
-
 func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
 	j, ok := d.acceptCollectionReconcileJob(d.orgs, olderThan, againAt)
 	if ok {
@@ -123,6 +119,9 @@ func (d *mongoDatabase) UpsertApp(a App) error {
 }
 
 func (d *mongoDatabase) removeOutdatedSpaces(org Org) error {
+	if org.Spaces == nil {
+		org.Spaces = []string{}
+	}
 	_, err := d.spaces.DeleteMany(context.Background(), bson.M{
 		"org": bson.M{
 			"$eq": org.Guid,
@@ -135,6 +134,10 @@ func (d *mongoDatabase) removeOutdatedSpaces(org Org) error {
 }
 
 func (d *mongoDatabase) removeOutdatedOrgApps(org Org) error {
+	if org.Spaces == nil {
+		org.Spaces = []string{}
+	}
+
 	_, err := d.apps.DeleteMany(context.Background(), bson.M{
 		"org": bson.M{
 			"$eq": org.Guid,
@@ -155,6 +158,9 @@ func (d *mongoDatabase) upsertByGuid(c *mongo.Collection, guid string, o interfa
 }
 
 func (d *mongoDatabase) removeOutdatedSpaceApps(s Space) error {
+	if s.Apps == nil {
+		s.Apps = []string{}
+	}
 	_, err := d.apps.DeleteMany(context.Background(), bson.M{
 		"space": bson.M{
 			"$eq": s.Guid,

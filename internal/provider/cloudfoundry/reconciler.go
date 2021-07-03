@@ -38,13 +38,6 @@ func (r *reconciler) Run() (bool, error) {
 		}
 
 		_ = r.db.UpsertOrg(o)
-		for _, space := range o.Spaces {
-			_ = r.db.UpsertJob(ReconcileJob{
-				Type: ReconcileSpace,
-				Guid: space,
-			})
-		}
-
 	case ReconcileSpace:
 		s, err := r.cf.GetSpace(j.Guid)
 		if err != nil {

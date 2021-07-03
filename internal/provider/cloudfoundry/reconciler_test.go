@@ -9,12 +9,11 @@ import (
 
 func TestReconciler(t *testing.T) {
 	tests := []struct {
-		desc    string
-		db      fakeDb
-		cf      fakeCf
-		sleep   bool
-		err     error
-		newJobs []ReconcileJob
+		desc  string
+		db    fakeDb
+		cf    fakeCf
+		sleep bool
+		err   error
 	}{
 		{
 			desc: "updates org",
@@ -24,21 +23,6 @@ func TestReconciler(t *testing.T) {
 			cf: fakeCf{b: backend{
 				Orgs: map[string]*Org{"abc": {Name: "org", Guid: "abc"}},
 			}},
-		},
-		{
-			desc: "creates jobs for spaces in org",
-			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileOrg, Guid: "abc"},
-			},
-			cf: fakeCf{b: backend{
-				Orgs: map[string]*Org{"abc": {Name: "org", Guid: "abc", Spaces: []string{
-					"123", "456",
-				}}},
-			}},
-			newJobs: []ReconcileJob{
-				{Type: ReconcileSpace, Guid: "123"},
-				{Type: ReconcileSpace, Guid: "456"},
-			},
 		},
 		{
 			desc: "updates space",
@@ -117,11 +101,6 @@ func TestReconciler(t *testing.T) {
 				tt.Errorf("\ncf api and reconciled db differ in orgs: \n%s", cmp.Diff(test.cf.b, test.db.b))
 			}
 
-			if test.newJobs != nil {
-				if !cmp.Equal(test.newJobs, test.db.recordedJobs) {
-					tt.Errorf("\nexpected recorded jobs: \n%s", cmp.Diff(test.newJobs, test.db.recordedJobs))
-				}
-			}
 		})
 	}
 
@@ -153,14 +132,8 @@ func (f *fakeCf) GetOrg(guid string) (Org, error) {
 }
 
 type fakeDb struct {
-	job          *ReconcileJob
-	recordedJobs []ReconcileJob
-	b            backend
-}
-
-func (f *fakeDb) UpsertJob(j ReconcileJob) error {
-	f.recordedJobs = append(f.recordedJobs, j)
-	return nil
+	job *ReconcileJob
+	b   backend
 }
 
 func (f *fakeDb) UpsertApp(a App) error {
