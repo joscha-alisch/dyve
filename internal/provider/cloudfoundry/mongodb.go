@@ -40,6 +40,16 @@ type mongoDatabase struct {
 	apps   *mongo.Collection
 }
 
+func (d *mongoDatabase) DeleteApp(guid string) {
+}
+
+func (d *mongoDatabase) DeleteSpace(guid string) {
+}
+
+func (d *mongoDatabase) DeleteOrg(guid string) {
+
+}
+
 func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
 	j, ok := d.acceptCollectionReconcileJob(d.orgs, olderThan, againAt)
 	if ok {

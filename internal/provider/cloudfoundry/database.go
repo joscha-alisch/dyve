@@ -7,4 +7,8 @@ type Database interface {
 	UpsertOrg(o Org) error
 	UpsertSpace(s Space) error
 	UpsertApp(a App) error
+
+	DeleteOrg(guid string)
+	DeleteSpace(guid string)
+	DeleteApp(guid string)
 }

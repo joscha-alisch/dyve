@@ -1,6 +1,9 @@
 package cloudfoundry
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 /**
 The reconciler fetches new reconciliation work from the mongoDatabase and updates the corresponding
@@ -33,21 +36,30 @@ func (r *reconciler) Run() (bool, error) {
 	switch j.Type {
 	case ReconcileOrg:
 		o, err := r.cf.GetOrg(j.Guid)
-		if err != nil {
+		if errors.Is(err, errNotFound) {
+			r.db.DeleteOrg(j.Guid)
+			return true, nil
+		} else if err != nil {
 			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 
 		_ = r.db.UpsertOrg(o)
 	case ReconcileSpace:
 		s, err := r.cf.GetSpace(j.Guid)
-		if err != nil {
+		if errors.Is(err, errNotFound) {
+			r.db.DeleteSpace(j.Guid)
+			return true, nil
+		} else if err != nil {
 			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 
 		_ = r.db.UpsertSpace(s)
 	case ReconcileApp:
 		a, err := r.cf.GetApp(j.Guid)
-		if err != nil {
+		if errors.Is(err, errNotFound) {
+			r.db.DeleteApp(j.Guid)
+			return true, nil
+		} else if err != nil {
 			return true, &errReconcileFailed{Err: err, Job: j}
 		}
 

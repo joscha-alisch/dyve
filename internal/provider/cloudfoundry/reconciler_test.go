@@ -51,37 +51,40 @@ func TestReconciler(t *testing.T) {
 			sleep: true,
 		},
 		{
-			desc: "handle error org not found",
+			desc: "removes org when not found",
 			db: fakeDb{
 				job: &ReconcileJob{Type: ReconcileOrg, Guid: "not_exist"},
+				b: backend{
+					Orgs: map[string]*Org{
+						"not_exist": {Guid: "not_exist"},
+					},
+				},
 			},
 			cf: fakeCf{},
-			err: &errReconcileFailed{
-				Err: errNotFound,
-				Job: ReconcileJob{Type: ReconcileOrg, Guid: "not_exist"},
-			},
 		},
 		{
-			desc: "handle error space not found",
+			desc: "removes space when not found",
 			db: fakeDb{
 				job: &ReconcileJob{Type: ReconcileSpace, Guid: "not_exist"},
+				b: backend{
+					Spaces: map[string]*Space{
+						"not_exist": {Guid: "not_exist"},
+					},
+				},
 			},
 			cf: fakeCf{},
-			err: &errReconcileFailed{
-				Err: errNotFound,
-				Job: ReconcileJob{Type: ReconcileSpace, Guid: "not_exist"},
-			},
 		},
 		{
-			desc: "handle error app not found",
+			desc: "removes app when not found",
 			db: fakeDb{
 				job: &ReconcileJob{Type: ReconcileApp, Guid: "not_exist"},
+				b: backend{
+					Apps: map[string]*App{
+						"not_exist": {Guid: "not_exist"},
+					},
+				},
 			},
 			cf: fakeCf{},
-			err: &errReconcileFailed{
-				Err: errNotFound,
-				Job: ReconcileJob{Type: ReconcileApp, Guid: "not_exist"},
-			},
 		},
 	}
 
@@ -134,6 +137,27 @@ func (f *fakeCf) GetOrg(guid string) (Org, error) {
 type fakeDb struct {
 	job *ReconcileJob
 	b   backend
+}
+
+func (f *fakeDb) DeleteApp(guid string) {
+	delete(f.b.Apps, guid)
+	if len(f.b.Apps) == 0 {
+		f.b.Apps = nil
+	}
+}
+
+func (f *fakeDb) DeleteSpace(guid string) {
+	delete(f.b.Spaces, guid)
+	if len(f.b.Spaces) == 0 {
+		f.b.Spaces = nil
+	}
+}
+
+func (f *fakeDb) DeleteOrg(guid string) {
+	delete(f.b.Orgs, guid)
+	if len(f.b.Orgs) == 0 {
+		f.b.Orgs = nil
+	}
 }
 
 func (f *fakeDb) UpsertApp(a App) error {
