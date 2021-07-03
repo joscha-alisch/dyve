@@ -29,7 +29,6 @@ func NewMongoDatabase(uri string, dbName string) (Database, error) {
 		orgs:   db.Collection("orgs"),
 		spaces: db.Collection("spaces"),
 		apps:   db.Collection("apps"),
-		jobs:   db.Collection("jobs"),
 	}, nil
 }
 
@@ -39,11 +38,36 @@ type mongoDatabase struct {
 	orgs   *mongo.Collection
 	spaces *mongo.Collection
 	apps   *mongo.Collection
-	jobs   *mongo.Collection
+}
+
+func (d *mongoDatabase) UpsertJob(job ReconcileJob) error {
+	return nil
 }
 
 func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
-	res := d.jobs.FindOneAndUpdate(context.Background(), bson.M{
+	j, ok := d.acceptCollectionReconcileJob(d.orgs, olderThan, againAt)
+	if ok {
+		j.Type = ReconcileOrg
+		return j, true
+	}
+
+	j, ok = d.acceptCollectionReconcileJob(d.spaces, olderThan, againAt)
+	if ok {
+		j.Type = ReconcileSpace
+		return j, true
+	}
+
+	j, ok = d.acceptCollectionReconcileJob(d.apps, olderThan, againAt)
+	if ok {
+		j.Type = ReconcileApp
+		return j, true
+	}
+
+	return ReconcileJob{}, false
+}
+
+func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
+	res := coll.FindOneAndUpdate(context.Background(), bson.M{
 		"lastUpdated": bson.M{
 			"$lte": olderThan,
 		},
@@ -54,8 +78,10 @@ func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Tim
 	}, options.FindOneAndUpdate().SetSort(bson.D{{"lastUpdated", 1}}))
 
 	j := ReconcileJob{}
-	_ = res.Decode(&j)
-
+	err := res.Decode(&j)
+	if err != nil {
+		return ReconcileJob{}, false
+	}
 	return j, true
 }
 

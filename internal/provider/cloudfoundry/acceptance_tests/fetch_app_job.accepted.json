@@ -1,14 +1,14 @@
 {
-    "jobs": [
+    "apps": [
         {
             "guid": "def",
             "lastUpdated": "2006-01-01T16:00:01+01:00",
-            "type": 0
+            "name": "b"
         },
         {
             "guid": "abc",
             "lastUpdated": "2006-01-01T16:05:00+01:00",
-            "type": 0
+            "name": "a"
         }
     ]
 }

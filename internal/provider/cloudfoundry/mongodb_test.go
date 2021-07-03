@@ -58,13 +58,39 @@ func TestMongoIntegration(t *testing.T) {
 		}, f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
 		}},
-		{desc: "fetch job", state: bson.M{
-			"jobs": []bson.M{
-				{"type": float32(ReconcileOrg), "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
-				{"type": float32(ReconcileOrg), "guid": "abc", "lastUpdated": someTime},
+		{desc: "fetch org job", state: bson.M{
+			"orgs": []bson.M{
+				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
+				{"name": "a", "guid": "abc", "lastUpdated": someTime},
 			},
 		}, f: func(db Database, tt *testing.T) error {
 			expected := ReconcileJob{Type: ReconcileOrg, Guid: "abc"}
+			j, ok := db.AcceptReconcileJob(someTime.Add(10*time.Second), someTime.Add(5*time.Minute))
+			if !ok || !cmp.Equal(expected, j) {
+				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
+			}
+			return nil
+		}},
+		{desc: "fetch space job", state: bson.M{
+			"spaces": []bson.M{
+				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
+				{"name": "a", "guid": "abc", "lastUpdated": someTime},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := ReconcileJob{Type: ReconcileSpace, Guid: "abc"}
+			j, ok := db.AcceptReconcileJob(someTime.Add(10*time.Second), someTime.Add(5*time.Minute))
+			if !ok || !cmp.Equal(expected, j) {
+				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
+			}
+			return nil
+		}},
+		{desc: "fetch app job", state: bson.M{
+			"apps": []bson.M{
+				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
+				{"name": "a", "guid": "abc", "lastUpdated": someTime},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := ReconcileJob{Type: ReconcileApp, Guid: "abc"}
 			j, ok := db.AcceptReconcileJob(someTime.Add(10*time.Second), someTime.Add(5*time.Minute))
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))

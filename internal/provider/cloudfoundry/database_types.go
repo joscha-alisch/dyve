@@ -11,22 +11,26 @@ const (
 )
 
 type ReconcileJob struct {
-	Type        ReconcileType
-	Guid        string
-	LastUpdated time.Time
+	Type ReconcileType
+	Guid string
 }
 
 type Org struct {
-	Guid string
-	Name string
+	Guid        string
+	Name        string
+	Spaces      []string
+	LastUpdated time.Time `bson:"lastUpdated"`
 }
 
 type Space struct {
-	Guid string
-	Name string
+	Guid        string
+	Name        string
+	Apps        []string
+	LastUpdated time.Time `bson:"lastUpdated"`
 }
 
 type App struct {
-	Guid string
-	Name string
+	Guid        string
+	Name        string
+	LastUpdated time.Time `bson:"lastUpdated"`
 }
