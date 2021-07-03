@@ -32,5 +32,7 @@ type Space struct {
 type App struct {
 	Guid        string
 	Name        string
+	Org         string
+	Space       string
 	LastUpdated time.Time `bson:"lastUpdated"`
 }

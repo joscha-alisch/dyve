@@ -86,7 +86,22 @@ func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, old
 }
 
 func (d *mongoDatabase) UpsertOrg(o Org) error {
-	return d.upsertByGuid(d.orgs, o.Guid, o)
+	err := d.upsertByGuid(d.orgs, o.Guid, o)
+	if err != nil {
+		return err
+	}
+
+	err = d.removeOutdatedSpaces(o)
+	if err != nil {
+		return err
+	}
+
+	err = d.removeOutdatedOrgApps(o)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *mongoDatabase) UpsertSpace(s Space) error {
@@ -95,6 +110,30 @@ func (d *mongoDatabase) UpsertSpace(s Space) error {
 
 func (d *mongoDatabase) UpsertApp(a App) error {
 	return d.upsertByGuid(d.apps, a.Guid, a)
+}
+
+func (d *mongoDatabase) removeOutdatedSpaces(org Org) error {
+	_, err := d.spaces.DeleteMany(context.Background(), bson.M{
+		"org": bson.M{
+			"$eq": org.Guid,
+		},
+		"guid": bson.M{
+			"$nin": org.Spaces,
+		},
+	})
+	return err
+}
+
+func (d *mongoDatabase) removeOutdatedOrgApps(org Org) error {
+	_, err := d.apps.DeleteMany(context.Background(), bson.M{
+		"org": bson.M{
+			"$eq": org.Guid,
+		},
+		"space": bson.M{
+			"$nin": org.Spaces,
+		},
+	})
+	return err
 }
 
 func (d *mongoDatabase) upsertByGuid(c *mongo.Collection, guid string, o interface{}) error {

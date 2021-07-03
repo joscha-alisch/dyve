@@ -1,0 +1,27 @@
+{
+    "apps": [
+        {
+            "guid": "app-abc",
+            "name": "a",
+            "org": "org-abc",
+            "space": "space-abc"
+        }
+    ],
+    "orgs": [
+        {
+            "guid": "org-abc",
+            "lastUpdated": "0001-01-01T00:53:28+00:53",
+            "name": "a",
+            "spaces": [
+                "space-abc"
+            ]
+        }
+    ],
+    "spaces": [
+        {
+            "guid": "space-abc",
+            "name": "a",
+            "org": "org-abc"
+        }
+    ]
+}
