@@ -34,12 +34,22 @@ func TestReconciler(t *testing.T) {
 			}},
 		},
 		{
-			desc: "updates app",
+			desc: "updates apps for space",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileApp, Guid: "abc"},
+				job: &ReconcileJob{Type: ReconcileSpace, Guid: "abc"},
 			},
 			cf: fakeCf{b: backend{
-				Apps: map[string]*App{"abc": {Name: "app", Guid: "abc"}},
+				Spaces: map[string]*Space{"abc": {Name: "space", Guid: "abc", Apps: []string{
+					"app-a",
+				}}},
+				Apps: map[string]*App{
+					"app-a": {
+						Guid:  "app-a",
+						Name:  "a",
+						Org:   "a",
+						Space: "abc",
+					},
+				},
 			}},
 		},
 		{
@@ -68,18 +78,6 @@ func TestReconciler(t *testing.T) {
 				job: &ReconcileJob{Type: ReconcileSpace, Guid: "not_exist"},
 				b: backend{
 					Spaces: map[string]*Space{
-						"not_exist": {Guid: "not_exist"},
-					},
-				},
-			},
-			cf: fakeCf{},
-		},
-		{
-			desc: "removes app when not found",
-			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileApp, Guid: "not_exist"},
-				b: backend{
-					Apps: map[string]*App{
 						"not_exist": {Guid: "not_exist"},
 					},
 				},
@@ -120,11 +118,17 @@ func (f *fakeCf) GetApp(guid string) (App, error) {
 	return *f.b.Apps[guid], nil
 }
 
-func (f *fakeCf) GetSpace(guid string) (Space, error) {
+func (f *fakeCf) GetSpace(guid string) (Space, []App, error) {
 	if f.b.Spaces[guid] == nil {
-		return Space{}, errNotFound
+		return Space{}, nil, errNotFound
 	}
-	return *f.b.Spaces[guid], nil
+	s := *f.b.Spaces[guid]
+	var apps []App
+	for _, app := range s.Apps {
+		a, _ := f.GetApp(app)
+		apps = append(apps, a)
+	}
+	return s, apps, nil
 }
 
 func (f *fakeCf) GetOrg(guid string) (Org, error) {
@@ -160,11 +164,14 @@ func (f *fakeDb) DeleteOrg(guid string) {
 	}
 }
 
-func (f *fakeDb) UpsertApp(a App) error {
-	if f.b.Apps == nil {
-		f.b.Apps = make(map[string]*App)
+func (f *fakeDb) UpsertApps(apps []App) error {
+	for _, app := range apps {
+		if f.b.Apps == nil {
+			f.b.Apps = make(map[string]*App)
+		}
+		f.b.Apps[app.Guid] = &app
 	}
-	f.b.Apps[a.Guid] = &a
+
 	return nil
 }
 

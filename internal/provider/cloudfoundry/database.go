@@ -6,7 +6,7 @@ type Database interface {
 	AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool)
 	UpsertOrg(o Org) error
 	UpsertSpace(s Space) error
-	UpsertApp(a App) error
+	UpsertApps(apps []App) error
 
 	DeleteOrg(guid string)
 	DeleteSpace(guid string)

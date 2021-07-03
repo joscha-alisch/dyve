@@ -7,7 +7,6 @@ type ReconcileType int
 const (
 	ReconcileOrg ReconcileType = iota
 	ReconcileSpace
-	ReconcileApp
 )
 
 type ReconcileJob struct {
@@ -30,9 +29,8 @@ type Space struct {
 }
 
 type App struct {
-	Guid        string
-	Name        string
-	Org         string
-	Space       string
-	LastUpdated time.Time `bson:"lastUpdated"`
+	Guid  string
+	Name  string
+	Org   string
+	Space string
 }

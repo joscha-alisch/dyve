@@ -29,8 +29,6 @@ func (r *errReconcileFailed) Error() string {
 	switch r.Job.Type {
 	case ReconcileOrg:
 		t = "org"
-	case ReconcileApp:
-		t = "app"
 	case ReconcileSpace:
 		t = "space"
 	}

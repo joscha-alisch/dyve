@@ -45,7 +45,7 @@ func (r *reconciler) Run() (bool, error) {
 
 		_ = r.db.UpsertOrg(o)
 	case ReconcileSpace:
-		s, err := r.cf.GetSpace(j.Guid)
+		s, apps, err := r.cf.GetSpace(j.Guid)
 		if errors.Is(err, errNotFound) {
 			r.db.DeleteSpace(j.Guid)
 			return true, nil
@@ -54,16 +54,7 @@ func (r *reconciler) Run() (bool, error) {
 		}
 
 		_ = r.db.UpsertSpace(s)
-	case ReconcileApp:
-		a, err := r.cf.GetApp(j.Guid)
-		if errors.Is(err, errNotFound) {
-			r.db.DeleteApp(j.Guid)
-			return true, nil
-		} else if err != nil {
-			return true, &errReconcileFailed{Err: err, Job: j}
-		}
-
-		_ = r.db.UpsertApp(a)
+		_ = r.db.UpsertApps(apps)
 	}
 
 	return true, nil

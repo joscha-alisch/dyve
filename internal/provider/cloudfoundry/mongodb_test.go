@@ -29,14 +29,14 @@ func TestMongoIntegration(t *testing.T) {
 		state bson.M
 	}{
 		{desc: "create app", f: func(db Database, tt *testing.T) error {
-			return db.UpsertApp(App{Name: "my-app", Guid: "abc", Org: "some-org", Space: "some-space"})
+			return db.UpsertApps([]App{{Name: "my-app", Guid: "abc", Org: "some-org", Space: "some-space"}})
 		}},
 		{desc: "update app", state: bson.M{
 			"apps": []bson.M{
 				{"name": "old-name", "guid": "abc"},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			return db.UpsertApp(App{Name: "my-app", Guid: "abc", Org: "org", Space: "space"})
+			return db.UpsertApps([]App{{Name: "my-app", Guid: "abc", Org: "org", Space: "space"}})
 		}},
 		{desc: "create space", f: func(db Database, tt *testing.T) error {
 			return db.UpsertSpace(Space{Name: "my-space", Guid: "abc"})
@@ -156,19 +156,6 @@ func TestMongoIntegration(t *testing.T) {
 			},
 		}, f: func(db Database, tt *testing.T) error {
 			expected := ReconcileJob{Type: ReconcileSpace, Guid: "abc"}
-			j, ok := db.AcceptReconcileJob(someTime.Add(10*time.Second), someTime.Add(5*time.Minute))
-			if !ok || !cmp.Equal(expected, j) {
-				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
-			}
-			return nil
-		}},
-		{desc: "fetch app job", state: bson.M{
-			"apps": []bson.M{
-				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
-				{"name": "a", "guid": "abc", "lastUpdated": someTime},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileApp, Guid: "abc"}
 			j, ok := db.AcceptReconcileJob(someTime.Add(10*time.Second), someTime.Add(5*time.Minute))
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))

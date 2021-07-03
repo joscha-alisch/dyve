@@ -89,12 +89,6 @@ func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Tim
 		return j, true
 	}
 
-	j, ok = d.acceptCollectionReconcileJob(d.apps, olderThan, againAt)
-	if ok {
-		j.Type = ReconcileApp
-		return j, true
-	}
-
 	return ReconcileJob{}, false
 }
 
@@ -150,8 +144,14 @@ func (d *mongoDatabase) UpsertSpace(s Space) error {
 	return nil
 }
 
-func (d *mongoDatabase) UpsertApp(a App) error {
-	return d.upsertByGuid(d.apps, a.Guid, a)
+func (d *mongoDatabase) UpsertApps(apps []App) error {
+	for _, app := range apps {
+		err := d.upsertByGuid(d.apps, app.Guid, app)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (d *mongoDatabase) removeOutdatedSpaces(org Org) error {
