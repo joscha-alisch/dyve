@@ -41,13 +41,28 @@ type mongoDatabase struct {
 }
 
 func (d *mongoDatabase) DeleteApp(guid string) {
+	d.deleteByGuid(d.apps, guid)
 }
 
 func (d *mongoDatabase) DeleteSpace(guid string) {
+	d.deleteByGuid(d.spaces, guid)
 }
 
 func (d *mongoDatabase) DeleteOrg(guid string) {
+	d.deleteByGuid(d.orgs, guid)
+}
 
+func (d *mongoDatabase) deleteByGuid(coll *mongo.Collection, guid string) (bool, error) {
+	res, err := coll.DeleteOne(context.Background(), bson.M{
+		"guid": bson.M{
+			"$eq": guid,
+		},
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return res.DeletedCount > 0, nil
 }
 
 func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {

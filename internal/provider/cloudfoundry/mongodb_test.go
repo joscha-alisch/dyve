@@ -88,6 +88,30 @@ func TestMongoIntegration(t *testing.T) {
 		}, f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
 		}},
+		{desc: "delete org", state: bson.M{
+			"orgs": []bson.M{
+				{"name": "old-name", "guid": "abc"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			db.DeleteOrg("abc")
+			return nil
+		}},
+		{desc: "delete space", state: bson.M{
+			"spaces": []bson.M{
+				{"name": "old-name", "guid": "abc"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			db.DeleteSpace("abc")
+			return nil
+		}},
+		{desc: "delete app", state: bson.M{
+			"apps": []bson.M{
+				{"name": "old-name", "guid": "abc"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			db.DeleteApp("abc")
+			return nil
+		}},
 		{desc: "fetch org job", state: bson.M{
 			"orgs": []bson.M{
 				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
