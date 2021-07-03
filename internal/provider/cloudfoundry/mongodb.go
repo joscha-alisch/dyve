@@ -105,7 +105,17 @@ func (d *mongoDatabase) UpsertOrg(o Org) error {
 }
 
 func (d *mongoDatabase) UpsertSpace(s Space) error {
-	return d.upsertByGuid(d.spaces, s.Guid, s)
+	err := d.upsertByGuid(d.spaces, s.Guid, s)
+	if err != nil {
+		return err
+	}
+
+	err = d.removeOutdatedSpaceApps(s)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *mongoDatabase) UpsertApp(a App) error {
@@ -141,5 +151,17 @@ func (d *mongoDatabase) upsertByGuid(c *mongo.Collection, guid string, o interfa
 		"guid": guid,
 	}, o, options.Replace().SetUpsert(true))
 
+	return err
+}
+
+func (d *mongoDatabase) removeOutdatedSpaceApps(s Space) error {
+	_, err := d.apps.DeleteMany(context.Background(), bson.M{
+		"space": bson.M{
+			"$eq": s.Guid,
+		},
+		"guid": bson.M{
+			"$nin": s.Apps,
+		},
+	})
 	return err
 }

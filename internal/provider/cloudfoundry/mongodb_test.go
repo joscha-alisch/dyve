@@ -50,9 +50,7 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 		{desc: "updates org spaces and apps", state: bson.M{
 			"orgs": []bson.M{
-				{"name": "a", "guid": "org-abc", "spaces": []string{
-					"space-abc", "space-def",
-				}},
+				{"name": "a", "guid": "org-abc"},
 			},
 			"spaces": []bson.M{
 				{"name": "a", "guid": "space-abc", "org": "org-abc"},
@@ -65,6 +63,19 @@ func TestMongoIntegration(t *testing.T) {
 		}, f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrg(Org{Name: "a", Guid: "org-abc", Spaces: []string{
 				"space-abc",
+			}})
+		}},
+		{desc: "updates space apps", state: bson.M{
+			"spaces": []bson.M{
+				{"name": "a", "guid": "space-abc", "org": "org-abc"},
+			},
+			"apps": []bson.M{
+				{"name": "a", "guid": "app-abc", "org": "org-abc", "space": "space-abc"},
+				{"name": "b", "guid": "app-def", "org": "org-abc", "space": "space-abc"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			return db.UpsertSpace(Space{Name: "a", Guid: "space-abc", Apps: []string{
+				"app-abc",
 			}})
 		}},
 		{desc: "create org", f: func(db Database, tt *testing.T) error {
