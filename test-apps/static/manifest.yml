@@ -1,0 +1,10 @@
+---
+applications:
+  - name: aaaa-joscha-test-static
+    instances: 1
+    memory: 25M
+    stack: cflinuxfs3
+    routes:
+      - route: joscha-test-static.springernature.app
+    buildpacks:
+      - staticfile_buildpack
