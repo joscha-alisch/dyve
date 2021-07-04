@@ -94,7 +94,13 @@ func (d *mongoDatabase) deleteBy(coll *mongo.Collection, filter bson.M) (bool, e
 func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool) {
 	t := currentTime()
 
-	j, ok := d.acceptCollectionReconcileJob(d.orgs, t, olderThan)
+	j, ok := d.acceptCollectionReconcileJob(d.cfInfos, t, olderThan)
+	if ok {
+		j.Type = ReconcileCF
+		return j, true
+	}
+
+	j, ok = d.acceptCollectionReconcileJob(d.orgs, t, olderThan)
 	if ok {
 		j.Type = ReconcileOrg
 		return j, true

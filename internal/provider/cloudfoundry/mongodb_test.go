@@ -174,6 +174,18 @@ func TestMongoIntegration(t *testing.T) {
 			}
 			return nil
 		}},
+		{desc: "fetch cf info job", state: bson.M{
+			"cf_infos": []bson.M{
+				{"guid": "", "lastUpdated": someTime.Add(-3 * time.Minute)},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := ReconcileJob{Type: ReconcileCF}
+			j, ok := db.AcceptReconcileJob(2 * time.Minute)
+			if !ok || !cmp.Equal(expected, j) {
+				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
+			}
+			return nil
+		}},
 		{desc: "fetch org job never updated", state: bson.M{
 			"orgs": []bson.M{
 				{"name": "a", "guid": "abc"},

@@ -16,7 +16,8 @@ type ReconcileJob struct {
 }
 
 type CFInfo struct {
-	Orgs []string
+	Orgs        []string
+	LastUpdated time.Time `bson:"lastUpdated"`
 }
 
 type Org struct {
