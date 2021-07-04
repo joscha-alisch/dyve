@@ -24,23 +24,36 @@ func NewMongoDatabase(uri string, dbName string) (Database, error) {
 	db := c.Database(dbName)
 
 	return &mongoDatabase{
-		cli:    c,
-		db:     db,
-		orgs:   db.Collection("orgs"),
-		spaces: db.Collection("spaces"),
-		apps:   db.Collection("apps"),
+		cli:     c,
+		db:      db,
+		cfInfos: db.Collection("cf_infos"),
+		orgs:    db.Collection("orgs"),
+		spaces:  db.Collection("spaces"),
+		apps:    db.Collection("apps"),
 	}, nil
 }
 
 type mongoDatabase struct {
-	cli    *mongo.Client
-	db     *mongo.Database
-	orgs   *mongo.Collection
-	spaces *mongo.Collection
-	apps   *mongo.Collection
+	cli     *mongo.Client
+	db      *mongo.Database
+	orgs    *mongo.Collection
+	spaces  *mongo.Collection
+	apps    *mongo.Collection
+	cfInfos *mongo.Collection
 }
 
 var currentTime = time.Now
+
+func (d *mongoDatabase) UpsertCfInfo(i CFInfo) error {
+	err := d.upsertByGuid(d.cfInfos, "", i)
+	if err != nil {
+		return err
+	}
+
+	d.createMissingOrgs(i)
+
+	return nil
+}
 
 func (d *mongoDatabase) DeleteApp(guid string) {
 	d.deleteByGuid(d.apps, guid)
@@ -231,6 +244,25 @@ func (d *mongoDatabase) createMissingSpaces(o Org) error {
 		}, bson.M{
 			"$set": bson.M{
 				"guid": s,
+			},
+		}, options.Update().SetUpsert(true))
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (d *mongoDatabase) createMissingOrgs(i CFInfo) error {
+	var orgs []Org
+	for _, o := range i.Orgs {
+		orgs = append(orgs, Org{Guid: o})
+		_, err := d.orgs.UpdateOne(context.Background(), bson.M{
+			"guid": o,
+		}, bson.M{
+			"$set": bson.M{
+				"guid": o,
 			},
 		}, options.Update().SetUpsert(true))
 

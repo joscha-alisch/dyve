@@ -25,6 +25,15 @@ func TestReconciler(t *testing.T) {
 			}},
 		},
 		{
+			desc: "updates orgs",
+			db: fakeDb{
+				job: &ReconcileJob{Type: ReconcileCF},
+			},
+			cf: fakeCf{b: backend{
+				Orgs: map[string]*Org{"abc": {Guid: "abc"}},
+			}},
+		},
+		{
 			desc: "updates space",
 			db: fakeDb{
 				job: &ReconcileJob{Type: ReconcileSpace, Guid: "abc"},
@@ -111,6 +120,16 @@ type fakeCf struct {
 	b backend
 }
 
+func (f *fakeCf) GetCFInfo() (CFInfo, error) {
+	var orgs []string
+	for _, o := range f.b.Orgs {
+		orgs = append(orgs, o.Guid)
+	}
+	return CFInfo{
+		Orgs: orgs,
+	}, nil
+}
+
 func (f *fakeCf) GetApp(guid string) (App, error) {
 	if f.b.Apps[guid] == nil {
 		return App{}, errNotFound
@@ -141,6 +160,13 @@ func (f *fakeCf) GetOrg(guid string) (Org, error) {
 type fakeDb struct {
 	job *ReconcileJob
 	b   backend
+}
+
+func (f *fakeDb) UpsertCfInfo(i CFInfo) error {
+	for _, org := range i.Orgs {
+		_ = f.UpsertOrg(Org{Guid: org})
+	}
+	return nil
 }
 
 func (f *fakeDb) DeleteApp(guid string) {

@@ -85,6 +85,9 @@ func TestMongoIntegration(t *testing.T) {
 		{desc: "create org", f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
 		}},
+		{desc: "create cf info", f: func(db Database, tt *testing.T) error {
+			return db.UpsertCfInfo(CFInfo{Orgs: []string{"org-a", "org-b"}})
+		}},
 		{desc: "update org creates missing spaces", f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc", Spaces: []string{
 				"space-a",

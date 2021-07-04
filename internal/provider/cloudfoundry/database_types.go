@@ -7,11 +7,16 @@ type ReconcileType int
 const (
 	ReconcileOrg ReconcileType = iota
 	ReconcileSpace
+	ReconcileCF
 )
 
 type ReconcileJob struct {
 	Type ReconcileType
 	Guid string
+}
+
+type CFInfo struct {
+	Orgs []string
 }
 
 type Org struct {

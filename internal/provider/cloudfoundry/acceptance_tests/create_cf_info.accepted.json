@@ -1,0 +1,18 @@
+{
+    "cf_infos": [
+        {
+            "orgs": [
+                "org-a",
+                "org-b"
+            ]
+        }
+    ],
+    "orgs": [
+        {
+            "guid": "org-a"
+        },
+        {
+            "guid": "org-b"
+        }
+    ]
+}

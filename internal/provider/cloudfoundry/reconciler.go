@@ -38,6 +38,8 @@ func (r *reconciler) Run() (bool, error) {
 
 	var err error
 	switch j.Type {
+	case ReconcileCF:
+		err = r.reconcileCF(j)
 	case ReconcileOrg:
 		err = r.reconcileOrg(j)
 	case ReconcileSpace:
@@ -71,5 +73,16 @@ func (r *reconciler) reconcileSpace(j ReconcileJob) error {
 
 	_ = r.db.UpsertSpace(s)
 	_ = r.db.UpsertApps(apps)
+	return nil
+}
+
+func (r *reconciler) reconcileCF(j ReconcileJob) error {
+	i, err := r.cf.GetCFInfo()
+	if err != nil {
+		return err
+	}
+
+	_ = r.db.UpsertCfInfo(i)
+
 	return nil
 }

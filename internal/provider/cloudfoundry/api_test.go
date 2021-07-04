@@ -71,6 +71,31 @@ func TestGetSpace(t *testing.T) {
 	}
 }
 
+func TestGetCfInfo(t *testing.T) {
+	tests := []struct {
+		desc     string
+		state    cfBackend
+		expected *CFInfo
+	}{
+		{"gets info", cfBackend{
+			orgs: map[string]*cf.Org{"org-a": {Guid: "org-a", Name: "org-name"}},
+		}, &CFInfo{
+			Orgs: []string{"org-a"},
+		}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(tt *testing.T) {
+			api := NewApi(&fakeCfClient{test.state})
+
+			o, _ := api.GetCFInfo()
+			if !cmp.Equal(*test.expected, o) {
+				tt.Errorf("\ninfo was different: \n%s\n", cmp.Diff(*test.expected, o))
+			}
+		})
+	}
+}
+
 type fakeCfClient struct {
 	b cfBackend
 }

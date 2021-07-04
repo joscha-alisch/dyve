@@ -12,6 +12,7 @@ type Login struct {
 A cloudfoundry.API is a wrapper around the official client.
 */
 type API interface {
+	GetCFInfo() (CFInfo, error)
 	GetOrg(guid string) (Org, error)
 	GetSpace(guid string) (Space, []App, error)
 	GetApp(guid string) (App, error)
@@ -46,6 +47,22 @@ func NewApi(cli CfCli) API {
 
 type api struct {
 	cli CfCli
+}
+
+func (a *api) GetCFInfo() (CFInfo, error) {
+	orgs, err := a.cli.ListOrgs()
+	if err != nil {
+		return CFInfo{}, err
+	}
+
+	var res []string
+	for _, org := range orgs {
+		res = append(res, org.Guid)
+	}
+
+	return CFInfo{
+		Orgs: res,
+	}, nil
 }
 
 func (a *api) GetApp(guid string) (App, error) {
