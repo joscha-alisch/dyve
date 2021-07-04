@@ -191,7 +191,7 @@ func (f *fakeDb) UpsertOrg(o Org) error {
 	return nil
 }
 
-func (f *fakeDb) AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
+func (f *fakeDb) AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool) {
 	if f.job == nil {
 		return ReconcileJob{}, false
 	}

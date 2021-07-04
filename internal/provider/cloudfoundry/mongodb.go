@@ -40,6 +40,8 @@ type mongoDatabase struct {
 	apps   *mongo.Collection
 }
 
+var currentTime = time.Now
+
 func (d *mongoDatabase) DeleteApp(guid string) {
 	d.deleteByGuid(d.apps, guid)
 }
@@ -76,14 +78,16 @@ func (d *mongoDatabase) deleteBy(coll *mongo.Collection, filter bson.M) (bool, e
 	return res.DeletedCount > 0, nil
 }
 
-func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
-	j, ok := d.acceptCollectionReconcileJob(d.orgs, olderThan, againAt)
+func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool) {
+	t := currentTime()
+
+	j, ok := d.acceptCollectionReconcileJob(d.orgs, t, olderThan)
 	if ok {
 		j.Type = ReconcileOrg
 		return j, true
 	}
 
-	j, ok = d.acceptCollectionReconcileJob(d.spaces, olderThan, againAt)
+	j, ok = d.acceptCollectionReconcileJob(d.spaces, t, olderThan)
 	if ok {
 		j.Type = ReconcileSpace
 		return j, true
@@ -92,14 +96,18 @@ func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Time, againAt time.Tim
 	return ReconcileJob{}, false
 }
 
-func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, olderThan time.Time, againAt time.Time) (ReconcileJob, bool) {
+func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, t time.Time, olderThan time.Duration) (ReconcileJob, bool) {
+	lessThanTime := t.Add(-olderThan)
 	res := coll.FindOneAndUpdate(context.Background(), bson.M{
-		"lastUpdated": bson.M{
-			"$lte": olderThan,
+		"$or": bson.A{
+			bson.M{
+				"lastUpdated": bson.M{"$lte": lessThanTime},
+			},
+			bson.M{"lastUpdated": nil},
 		},
 	}, bson.M{
 		"$set": bson.M{
-			"lastUpdated": againAt,
+			"lastUpdated": t,
 		},
 	}, options.FindOneAndUpdate().SetSort(bson.D{{"lastUpdated", 1}}))
 
@@ -112,6 +120,8 @@ func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, old
 }
 
 func (d *mongoDatabase) UpsertOrg(o Org) error {
+	o.LastUpdated = currentTime()
+
 	err := d.upsertByGuid(d.orgs, o.Guid, o)
 	if err != nil {
 		return err
@@ -127,10 +137,14 @@ func (d *mongoDatabase) UpsertOrg(o Org) error {
 		return err
 	}
 
+	err = d.createMissingSpaces(o)
+
 	return nil
 }
 
 func (d *mongoDatabase) UpsertSpace(s Space) error {
+	s.LastUpdated = currentTime()
+
 	err := d.upsertByGuid(d.spaces, s.Guid, s)
 	if err != nil {
 		return err
@@ -206,4 +220,23 @@ func (d *mongoDatabase) removeOutdatedSpaceApps(s Space) error {
 		},
 	})
 	return err
+}
+
+func (d *mongoDatabase) createMissingSpaces(o Org) error {
+	var spaces []Space
+	for _, s := range o.Spaces {
+		spaces = append(spaces, Space{Guid: s})
+		_, err := d.spaces.UpdateOne(context.Background(), bson.M{
+			"guid": s,
+		}, bson.M{
+			"$set": bson.M{
+				"guid": s,
+			},
+		}, options.Update().SetUpsert(true))
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

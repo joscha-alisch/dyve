@@ -3,7 +3,7 @@ package cloudfoundry
 import "time"
 
 type Database interface {
-	AcceptReconcileJob(olderThan time.Time, againAt time.Time) (ReconcileJob, bool)
+	AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool)
 	UpsertOrg(o Org) error
 	UpsertSpace(s Space) error
 	UpsertApps(apps []App) error

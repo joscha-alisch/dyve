@@ -33,7 +33,42 @@ func TestGetOrg(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestGetSpace(t *testing.T) {
+	tests := []struct {
+		desc          string
+		guid          string
+		state         cfBackend
+		expectedSpace *Space
+		expectedApps  []App
+	}{
+		{"gets space", "space-a", cfBackend{
+			spaces: map[string]*cf.Space{"space-a": {Guid: "space-a", Name: "space-name", OrganizationGuid: "org-a"}},
+			apps:   map[string]*cf.App{"app-a": {Guid: "app-a", Name: "app-name", SpaceGuid: "space-a"}},
+		}, &Space{
+			Guid: "space-a",
+			Org:  "org-a",
+			Name: "space-name",
+			Apps: []string{"app-a"},
+		}, []App{
+			{Guid: "app-a", Name: "app-name", Space: "space-a", Org: "org-a"},
+		}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(tt *testing.T) {
+			api := NewApi(&fakeCfClient{test.state})
+
+			s, apps, _ := api.GetSpace(test.guid)
+			if !cmp.Equal(*test.expectedSpace, s) {
+				tt.Errorf("\nspace was different: \n%s\n", cmp.Diff(*test.expectedSpace, s))
+			}
+			if !cmp.Equal(test.expectedApps, apps) {
+				tt.Errorf("\napps were different: \n%s\n", cmp.Diff(test.expectedApps, apps))
+			}
+		})
+	}
 }
 
 type fakeCfClient struct {
@@ -59,7 +94,7 @@ func (f *fakeCfClient) GetOrgByGuid(guid string) (cf.Org, error) {
 }
 
 func (f *fakeCfClient) GetSpaceByGuid(guid string) (cf.Space, error) {
-	panic("implement me")
+	return *f.b.spaces[guid], nil
 }
 
 func (f *fakeCfClient) ListSpacesByOrgGuid(orgGuid string) ([]cf.Space, error) {
@@ -73,5 +108,11 @@ func (f *fakeCfClient) ListSpacesByOrgGuid(orgGuid string) ([]cf.Space, error) {
 }
 
 func (f *fakeCfClient) ListAppsBySpaceGuid(spaceGuid string) ([]cf.App, error) {
-	panic("implement me")
+	var res []cf.App
+	for _, app := range f.b.apps {
+		if app.SpaceGuid == spaceGuid {
+			res = append(res, *app)
+		}
+	}
+	return res, nil
 }

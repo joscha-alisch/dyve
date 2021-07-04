@@ -3,8 +3,9 @@
         {
             "apps": null,
             "guid": "abc",
-            "lastUpdated": "0001-01-01T00:53:28+00:53",
-            "name": "my-space"
+            "lastUpdated": "2006-01-01T16:00:00+01:00",
+            "name": "my-space",
+            "org": ""
         }
     ]
 }

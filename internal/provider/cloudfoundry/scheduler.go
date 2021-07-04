@@ -1,6 +1,9 @@
 package cloudfoundry
 
-import "time"
+import (
+	"github.com/rs/zerolog/log"
+	"time"
+)
 
 type ReconciliationScheduler interface {
 	Run(n int, d time.Duration) error
@@ -35,6 +38,7 @@ func (s *scheduler) worker(d time.Duration) {
 		default:
 			worked, _ := s.r.Run()
 			if !worked {
+				log.Debug().Msg("nothing to reconcile, sleeping...")
 				t.Reset(d)
 				select {
 				case <-s.cancel:

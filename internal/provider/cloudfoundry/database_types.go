@@ -23,6 +23,7 @@ type Org struct {
 
 type Space struct {
 	Guid        string
+	Org         string
 	Name        string
 	Apps        []string
 	LastUpdated time.Time `bson:"lastUpdated"`

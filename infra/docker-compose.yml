@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    volumes:
+      - ./data/mongo:/data/db
+    ports:
+      - "9503:27017"
+    networks:
+      - shared
+  mongo-express:
+    image: mongo-express
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_SERVER: mongo
+    ports:
+      - 8081:8081
+    networks:
+      - shared
+networks:
+  shared:
+    driver: bridge

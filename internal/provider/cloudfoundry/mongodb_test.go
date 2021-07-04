@@ -22,6 +22,10 @@ import (
 var someTime, _ = time.Parse(time.RFC3339, "2006-01-01T15:00:00Z")
 
 func TestMongoIntegration(t *testing.T) {
+	currentTime = func() time.Time {
+		return someTime
+	}
+
 	tests := []struct {
 		desc  string
 		f     func(db Database, tt *testing.T) error
@@ -81,6 +85,11 @@ func TestMongoIntegration(t *testing.T) {
 		{desc: "create org", f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
 		}},
+		{desc: "update org creates missing spaces", f: func(db Database, tt *testing.T) error {
+			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc", Spaces: []string{
+				"space-a",
+			}})
+		}},
 		{desc: "update org", state: bson.M{
 			"orgs": []bson.M{
 				{"name": "old-name", "guid": "abc"},
@@ -138,12 +147,12 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 		{desc: "fetch org job", state: bson.M{
 			"orgs": []bson.M{
-				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
-				{"name": "a", "guid": "abc", "lastUpdated": someTime},
+				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(-1 * time.Minute)},
+				{"name": "a", "guid": "abc", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
 			expected := ReconcileJob{Type: ReconcileOrg, Guid: "abc"}
-			j, ok := db.AcceptReconcileJob(someTime.Add(10*time.Second), someTime.Add(5*time.Minute))
+			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
 			}
@@ -151,12 +160,24 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 		{desc: "fetch space job", state: bson.M{
 			"spaces": []bson.M{
-				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(1 * time.Second)},
-				{"name": "a", "guid": "abc", "lastUpdated": someTime},
+				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(-1 * time.Minute)},
+				{"name": "a", "guid": "abc", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
 			expected := ReconcileJob{Type: ReconcileSpace, Guid: "abc"}
-			j, ok := db.AcceptReconcileJob(someTime.Add(10*time.Second), someTime.Add(5*time.Minute))
+			j, ok := db.AcceptReconcileJob(2 * time.Minute)
+			if !ok || !cmp.Equal(expected, j) {
+				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
+			}
+			return nil
+		}},
+		{desc: "fetch org job never updated", state: bson.M{
+			"orgs": []bson.M{
+				{"name": "a", "guid": "abc"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := ReconcileJob{Type: ReconcileOrg, Guid: "abc"}
+			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
 			}

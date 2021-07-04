@@ -25,6 +25,19 @@ type CfCli interface {
 	ListAppsBySpaceGuid(spaceGuid string) ([]cf.App, error)
 }
 
+func NewDefaultApi(l Login) (API, error) {
+	cli, err := cf.NewClient(&cf.Config{
+		ApiAddress: l.Api,
+		Username:   l.User,
+		Password:   l.Pass,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &api{cli: cli}, nil
+}
+
 func NewApi(cli CfCli) API {
 	return &api{
 		cli: cli,
@@ -40,7 +53,33 @@ func (a *api) GetApp(guid string) (App, error) {
 }
 
 func (a *api) GetSpace(guid string) (Space, []App, error) {
-	return Space{}, nil, nil
+	s, err := a.cli.GetSpaceByGuid(guid)
+	if err != nil {
+		return Space{}, nil, err
+	}
+
+	cfApps, err := a.cli.ListAppsBySpaceGuid(s.Guid)
+	if err != nil {
+		return Space{}, nil, err
+	}
+
+	var appGuids []string
+	var apps []App
+	for _, app := range cfApps {
+		appGuids = append(appGuids, app.Guid)
+		apps = append(apps, App{
+			Guid:  app.Guid,
+			Name:  app.Name,
+			Org:   s.OrganizationGuid,
+			Space: s.Guid,
+		})
+	}
+	return Space{
+		Guid: s.Guid,
+		Org:  s.OrganizationGuid,
+		Name: s.Name,
+		Apps: appGuids,
+	}, apps, nil
 }
 
 func (a *api) GetOrg(guid string) (Org, error) {
