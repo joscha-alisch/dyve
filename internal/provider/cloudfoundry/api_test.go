@@ -11,15 +11,15 @@ func TestGetOrg(t *testing.T) {
 		desc     string
 		guid     string
 		state    cfBackend
-		expected *Org
+		expected []Space
 	}{
-		{"gets org", "org-a", cfBackend{
-			orgs:   map[string]*cf.Org{"org-a": {Guid: "org-a", Name: "org-name"}},
-			spaces: map[string]*cf.Space{"space-a": {Guid: "space-a", OrganizationGuid: "org-a"}},
-		}, &Org{
-			Guid:   "org-a",
-			Name:   "org-name",
-			Spaces: []string{"space-a"},
+		{"gets org spaces", "org-a", cfBackend{
+			orgs: map[string]*cf.Org{"org-a": {Guid: "org-a", Name: "org-name"}},
+			spaces: map[string]*cf.Space{"space-a": {
+				Guid: "space-a", Name: "space-name", OrganizationGuid: "org-a",
+			}},
+		}, []Space{
+			{SpaceInfo: SpaceInfo{Guid: "space-a", Name: "space-name", Org: OrgInfo{Guid: "org-a"}}},
 		}},
 	}
 
@@ -27,9 +27,9 @@ func TestGetOrg(t *testing.T) {
 		t.Run(test.desc, func(tt *testing.T) {
 			api := NewApi(&fakeCfClient{test.state})
 
-			o, _ := api.GetOrg(test.guid)
-			if !cmp.Equal(*test.expected, o) {
-				tt.Errorf("\norg was different: \n%s\n", cmp.Diff(*test.expected, o))
+			spaces, _ := api.ListSpaces(test.guid)
+			if !cmp.Equal(test.expected, spaces) {
+				tt.Errorf("\nspaces were different: \n%s\n", cmp.Diff(test.expected, spaces))
 			}
 		})
 	}
@@ -37,22 +37,16 @@ func TestGetOrg(t *testing.T) {
 
 func TestGetSpace(t *testing.T) {
 	tests := []struct {
-		desc          string
-		guid          string
-		state         cfBackend
-		expectedSpace *Space
-		expectedApps  []App
+		desc         string
+		guid         string
+		state        cfBackend
+		expectedApps []App
 	}{
 		{"gets space", "space-a", cfBackend{
 			spaces: map[string]*cf.Space{"space-a": {Guid: "space-a", Name: "space-name", OrganizationGuid: "org-a"}},
 			apps:   map[string]*cf.App{"app-a": {Guid: "app-a", Name: "app-name", SpaceGuid: "space-a"}},
-		}, &Space{
-			Guid: "space-a",
-			Org:  "org-a",
-			Name: "space-name",
-			Apps: []string{"app-a"},
 		}, []App{
-			{Guid: "app-a", Name: "app-name", Space: "space-a", Org: "org-a"},
+			{AppInfo{Guid: "app-a", Name: "app-name", Space: SpaceInfo{Guid: "space-a"}}},
 		}},
 	}
 
@@ -60,10 +54,7 @@ func TestGetSpace(t *testing.T) {
 		t.Run(test.desc, func(tt *testing.T) {
 			api := NewApi(&fakeCfClient{test.state})
 
-			s, apps, _ := api.GetSpace(test.guid)
-			if !cmp.Equal(*test.expectedSpace, s) {
-				tt.Errorf("\nspace was different: \n%s\n", cmp.Diff(*test.expectedSpace, s))
-			}
+			apps, _ := api.ListApps(test.guid)
 			if !cmp.Equal(test.expectedApps, apps) {
 				tt.Errorf("\napps were different: \n%s\n", cmp.Diff(test.expectedApps, apps))
 			}
@@ -75,12 +66,12 @@ func TestGetCfInfo(t *testing.T) {
 	tests := []struct {
 		desc     string
 		state    cfBackend
-		expected *CFInfo
+		expected []Org
 	}{
 		{"gets info", cfBackend{
 			orgs: map[string]*cf.Org{"org-a": {Guid: "org-a", Name: "org-name"}},
-		}, &CFInfo{
-			Orgs: []string{"org-a"},
+		}, []Org{
+			{OrgInfo: OrgInfo{Guid: "org-a", Name: "org-name", Cf: CFInfo{Guid: CFGuid}}},
 		}},
 	}
 
@@ -88,9 +79,9 @@ func TestGetCfInfo(t *testing.T) {
 		t.Run(test.desc, func(tt *testing.T) {
 			api := NewApi(&fakeCfClient{test.state})
 
-			o, _ := api.GetCFInfo()
-			if !cmp.Equal(*test.expected, o) {
-				tt.Errorf("\ninfo was different: \n%s\n", cmp.Diff(*test.expected, o))
+			orgs, _ := api.ListOrgs()
+			if !cmp.Equal(test.expected, orgs) {
+				tt.Errorf("\norgs were different: \n%s\n", cmp.Diff(test.expected, orgs))
 			}
 		})
 	}

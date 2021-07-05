@@ -2,6 +2,7 @@ package cloudfoundry
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -23,14 +24,17 @@ func NewMongoDatabase(uri string, dbName string) (Database, error) {
 	}
 	db := c.Database(dbName)
 
-	return &mongoDatabase{
+	m := &mongoDatabase{
 		cli:     c,
 		db:      db,
 		cfInfos: db.Collection("cf_infos"),
 		orgs:    db.Collection("orgs"),
 		spaces:  db.Collection("spaces"),
 		apps:    db.Collection("apps"),
-	}, nil
+	}
+
+	err = m.setupBaseJob()
+	return m, err
 }
 
 type mongoDatabase struct {
@@ -44,15 +48,88 @@ type mongoDatabase struct {
 
 var currentTime = time.Now
 
-func (d *mongoDatabase) UpsertCfInfo(i CFInfo) error {
-	err := d.upsertByGuid(d.cfInfos, "", i)
+func (d *mongoDatabase) UpsertOrgs(cfGuid string, orgs []Org) error {
+	var orgGuids []string
+	for _, org := range orgs {
+		orgGuids = append(orgGuids, org.Guid)
+	}
+
+	err := d.updateCfInfo(cfGuid, orgGuids)
 	if err != nil {
 		return err
 	}
 
-	d.createMissingOrgs(i)
+	cf, err := d.getCf(cfGuid)
+	if err != nil {
+		return err
+	}
+
+	for i := range orgs {
+		orgs[i].Cf = cf.CFInfo
+	}
+
+	err = d.upsertOrgs(orgs)
+	if err != nil {
+		return err
+	}
+
+	err = d.removeOutdatedIn(d.orgs, "cf.guid", cfGuid, "guid", orgGuids)
+	if err != nil {
+		return err
+	}
+
+	err = d.removeOutdatedIn(d.spaces, "org.cf.guid", cfGuid, "org.guid", orgGuids)
+	if err != nil {
+		return err
+	}
+
+	err = d.removeOutdatedIn(d.apps, "space.org.cf.guid", cfGuid, "space.org.guid", orgGuids)
+	if err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func (d *mongoDatabase) updateCfInfo(cfGuid string, orgGuids []string) error {
+	_, err := d.cfInfos.UpdateOne(context.Background(), bson.M{
+		"guid": bson.M{
+			"$eq": cfGuid,
+		},
+	}, bson.M{
+		"$set": bson.M{
+			"orgs":        orgGuids,
+			"lastUpdated": currentTime(),
+		},
+	})
+
+	return err
+}
+
+func (d *mongoDatabase) updateOrg(orgGuid string, spaceGuids []string) error {
+	_, err := d.orgs.UpdateOne(context.Background(), bson.M{
+		"guid": orgGuid,
+	}, bson.M{
+		"$set": bson.M{
+			"spaces":      spaceGuids,
+			"lastUpdated": currentTime(),
+		},
+	})
+
+	return err
+}
+
+func (d *mongoDatabase) updateSpace(spaceGuid string, appGuids []string) error {
+	_, err := d.spaces.UpdateOne(context.Background(), bson.M{
+		"guid": spaceGuid,
+	}, bson.M{
+		"$set": bson.M{
+			"apps":        appGuids,
+			"lastUpdated": currentTime(),
+		},
+	})
+
+	return err
 }
 
 func (d *mongoDatabase) DeleteApp(guid string) {
@@ -94,21 +171,21 @@ func (d *mongoDatabase) deleteBy(coll *mongo.Collection, filter bson.M) (bool, e
 func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool) {
 	t := currentTime()
 
-	j, ok := d.acceptCollectionReconcileJob(d.cfInfos, t, olderThan)
+	j, ok := d.acceptCollectionReconcileJob(d.orgs, t, olderThan)
 	if ok {
-		j.Type = ReconcileCF
-		return j, true
-	}
-
-	j, ok = d.acceptCollectionReconcileJob(d.orgs, t, olderThan)
-	if ok {
-		j.Type = ReconcileOrg
+		j.Type = ReconcileSpaces
 		return j, true
 	}
 
 	j, ok = d.acceptCollectionReconcileJob(d.spaces, t, olderThan)
 	if ok {
-		j.Type = ReconcileSpace
+		j.Type = ReconcileApps
+		return j, true
+	}
+
+	j, ok = d.acceptCollectionReconcileJob(d.cfInfos, t, olderThan)
+	if ok {
+		j.Type = ReconcileOrganizations
 		return j, true
 	}
 
@@ -138,38 +215,34 @@ func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, t t
 	return j, true
 }
 
-func (d *mongoDatabase) UpsertOrg(o Org) error {
-	o.LastUpdated = currentTime()
-
-	err := d.upsertByGuid(d.orgs, o.Guid, o)
+func (d *mongoDatabase) UpsertOrgSpaces(orgGuid string, spaces []Space) error {
+	org, err := d.getOrg(orgGuid)
 	if err != nil {
 		return err
 	}
 
-	err = d.removeOutdatedSpaces(o)
+	var spaceGuids []string
+	for i, space := range spaces {
+		spaceGuids = append(spaceGuids, space.Guid)
+		spaces[i].Org = org.OrgInfo
+	}
+
+	err = d.updateOrg(orgGuid, spaceGuids)
 	if err != nil {
 		return err
 	}
 
-	err = d.removeOutdatedOrgApps(o)
+	err = d.upsertSpaces(spaces)
 	if err != nil {
 		return err
 	}
 
-	err = d.createMissingSpaces(o)
-
-	return nil
-}
-
-func (d *mongoDatabase) UpsertSpace(s Space) error {
-	s.LastUpdated = currentTime()
-
-	err := d.upsertByGuid(d.spaces, s.Guid, s)
+	err = d.removeOutdatedIn(d.spaces, "org.guid", orgGuid, "guid", spaceGuids)
 	if err != nil {
 		return err
 	}
 
-	err = d.removeOutdatedSpaceApps(s)
+	err = d.removeOutdatedIn(d.apps, "space.org.guid", orgGuid, "space.guid", spaceGuids)
 	if err != nil {
 		return err
 	}
@@ -177,45 +250,34 @@ func (d *mongoDatabase) UpsertSpace(s Space) error {
 	return nil
 }
 
-func (d *mongoDatabase) UpsertApps(apps []App) error {
-	for _, app := range apps {
-		err := d.upsertByGuid(d.apps, app.Guid, app)
-		if err != nil {
-			return err
-		}
+func (d *mongoDatabase) UpsertSpaceApps(spaceGuid string, apps []App) error {
+	space, err := d.getSpace(spaceGuid)
+	if err != nil {
+		return err
 	}
+
+	var appGuids []string
+	for i, app := range apps {
+		appGuids = append(appGuids, app.Guid)
+		apps[i].AppInfo.Space = space.SpaceInfo
+	}
+
+	err = d.updateSpace(space.Guid, appGuids)
+	if err != nil {
+		return err
+	}
+
+	err = d.removeOutdatedIn(d.apps, "space.guid", space.Guid, "guid", appGuids)
+	if err != nil {
+		return err
+	}
+
+	err = d.upsertApps(apps)
+	if err != nil {
+		return err
+	}
+
 	return nil
-}
-
-func (d *mongoDatabase) removeOutdatedSpaces(org Org) error {
-	if org.Spaces == nil {
-		org.Spaces = []string{}
-	}
-	_, err := d.spaces.DeleteMany(context.Background(), bson.M{
-		"org": bson.M{
-			"$eq": org.Guid,
-		},
-		"guid": bson.M{
-			"$nin": org.Spaces,
-		},
-	})
-	return err
-}
-
-func (d *mongoDatabase) removeOutdatedOrgApps(org Org) error {
-	if org.Spaces == nil {
-		org.Spaces = []string{}
-	}
-
-	_, err := d.apps.DeleteMany(context.Background(), bson.M{
-		"org": bson.M{
-			"$eq": org.Guid,
-		},
-		"space": bson.M{
-			"$nin": org.Spaces,
-		},
-	})
-	return err
 }
 
 func (d *mongoDatabase) upsertByGuid(c *mongo.Collection, guid string, o interface{}) error {
@@ -226,55 +288,152 @@ func (d *mongoDatabase) upsertByGuid(c *mongo.Collection, guid string, o interfa
 	return err
 }
 
-func (d *mongoDatabase) removeOutdatedSpaceApps(s Space) error {
-	if s.Apps == nil {
-		s.Apps = []string{}
+func (d *mongoDatabase) upsertSpaces(spaces []Space) error {
+	for _, s := range spaces {
+		_, err := d.spaces.UpdateOne(context.Background(), bson.M{
+			"guid": bson.M{
+				"$eq": s.Guid,
+			},
+		}, bson.M{
+			"$set": s.SpaceInfo,
+		}, options.Update().SetUpsert(true))
+
+		_, err = d.apps.UpdateMany(context.Background(), bson.M{
+			"space.guid": bson.M{
+				"$eq": s.Guid,
+			},
+		}, bson.M{
+			"$set": bson.M{
+				"space": s.SpaceInfo,
+			},
+		})
+
+		if err != nil {
+			return err
+		}
 	}
-	_, err := d.apps.DeleteMany(context.Background(), bson.M{
-		"space": bson.M{
-			"$eq": s.Guid,
-		},
+	return nil
+}
+
+func (d *mongoDatabase) upsertOrgs(orgs []Org) error {
+	for _, o := range orgs {
+		_, err := d.orgs.UpdateOne(context.Background(), bson.M{
+			"guid": o.Guid,
+		}, bson.M{
+			"$set": o.OrgInfo,
+		}, options.Update().SetUpsert(true))
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (d *mongoDatabase) setupBaseJob() error {
+	_, err := d.cfInfos.UpdateOne(context.Background(), bson.M{
 		"guid": bson.M{
-			"$nin": s.Apps,
+			"$eq": CFGuid,
 		},
-	})
+	}, bson.M{
+		"$set": bson.M{
+			"guid": CFGuid,
+		},
+	}, options.Update().SetUpsert(true))
+
 	return err
 }
 
-func (d *mongoDatabase) createMissingSpaces(o Org) error {
-	var spaces []Space
-	for _, s := range o.Spaces {
-		spaces = append(spaces, Space{Guid: s})
-		_, err := d.spaces.UpdateOne(context.Background(), bson.M{
-			"guid": s,
-		}, bson.M{
-			"$set": bson.M{
-				"guid": s,
+func (d *mongoDatabase) upsertApps(apps []App) error {
+	for _, app := range apps {
+		_, err := d.apps.UpdateOne(context.Background(), bson.M{
+			"guid": bson.M{
+				"$eq": app.Guid,
 			},
+		}, bson.M{
+			"$set": app.AppInfo,
 		}, options.Update().SetUpsert(true))
 
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func (d *mongoDatabase) createMissingOrgs(i CFInfo) error {
-	var orgs []Org
-	for _, o := range i.Orgs {
-		orgs = append(orgs, Org{Guid: o})
-		_, err := d.orgs.UpdateOne(context.Background(), bson.M{
-			"guid": o,
-		}, bson.M{
-			"$set": bson.M{
-				"guid": o,
-			},
-		}, options.Update().SetUpsert(true))
-
-		if err != nil {
-			return err
-		}
+func (d *mongoDatabase) getSpace(spaceGuid string) (Space, error) {
+	res := d.spaces.FindOne(context.Background(), bson.M{
+		"guid": spaceGuid,
+	})
+	if res.Err() != nil {
+		return Space{}, res.Err()
 	}
-	return nil
+
+	s := Space{}
+	err := res.Decode(&s)
+	if err != nil {
+		return Space{}, err
+	}
+
+	return s, nil
+}
+
+func (d *mongoDatabase) getOrg(orgGuid string) (Org, error) {
+	res := d.orgs.FindOne(context.Background(), bson.M{
+		"guid": orgGuid,
+	})
+	if res.Err() != nil {
+		return Org{}, errNotFound
+	}
+
+	o := Org{}
+	err := res.Decode(&o)
+	if err != nil {
+		return Org{}, err
+	}
+
+	return o, nil
+}
+
+func (d *mongoDatabase) getCf(cfGuid string) (CF, error) {
+	res := d.cfInfos.FindOne(context.Background(), bson.M{
+		"guid": bson.M{
+			"$eq": cfGuid,
+		},
+	})
+	if res.Err() != nil {
+		return CF{}, errNotFound
+	}
+
+	cf := CF{}
+	err := res.Decode(&cf)
+	if err != nil {
+		return CF{}, err
+	}
+
+	return cf, nil
+}
+
+func (d *mongoDatabase) removeOutdatedIn(c *mongo.Collection, where, equals, and string, notIn []string) error {
+	if notIn == nil {
+		notIn = []string{}
+	}
+
+	filter := bson.M{
+		where: bson.M{
+			"$eq": equals,
+		},
+		and: bson.M{
+			"$nin": notIn,
+		},
+	}
+
+	res, err := c.DeleteMany(context.Background(), filter)
+	log.Debug().
+		Interface("filter", filter).
+		Interface("result", res).
+		Msg("deleted outdated " + c.Name())
+
+	return err
 }

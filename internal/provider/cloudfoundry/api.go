@@ -1,6 +1,10 @@
 package cloudfoundry
 
-import cf "github.com/cloudfoundry-community/go-cfclient"
+import (
+	cf "github.com/cloudfoundry-community/go-cfclient"
+)
+
+const CFGuid = "main"
 
 type Login struct {
 	Api  string
@@ -12,9 +16,9 @@ type Login struct {
 A cloudfoundry.API is a wrapper around the official client.
 */
 type API interface {
-	GetCFInfo() (CFInfo, error)
-	GetOrg(guid string) (Org, error)
-	GetSpace(guid string) (Space, []App, error)
+	ListOrgs() ([]Org, error)
+	ListSpaces(orgGuid string) ([]Space, error)
+	ListApps(spaceGuid string) ([]App, error)
 	GetApp(guid string) (App, error)
 }
 
@@ -49,75 +53,72 @@ type api struct {
 	cli CfCli
 }
 
-func (a *api) GetCFInfo() (CFInfo, error) {
+func (a *api) ListOrgs() ([]Org, error) {
 	orgs, err := a.cli.ListOrgs()
 	if err != nil {
-		return CFInfo{}, err
+		return nil, err
 	}
 
-	var res []string
+	var res []Org
 	for _, org := range orgs {
-		res = append(res, org.Guid)
+		res = append(res, Org{
+			OrgInfo: OrgInfo{
+				Guid: org.Guid,
+				Name: org.Name,
+				Cf: CFInfo{
+					Guid: CFGuid,
+				},
+			},
+		})
 	}
 
-	return CFInfo{
-		Orgs: res,
-	}, nil
+	return res, nil
 }
 
 func (a *api) GetApp(guid string) (App, error) {
 	return App{}, nil
 }
 
-func (a *api) GetSpace(guid string) (Space, []App, error) {
-	s, err := a.cli.GetSpaceByGuid(guid)
+func (a *api) ListApps(spaceGuid string) ([]App, error) {
+	cfApps, err := a.cli.ListAppsBySpaceGuid(spaceGuid)
 	if err != nil {
-		return Space{}, nil, err
+		return nil, err
 	}
 
-	cfApps, err := a.cli.ListAppsBySpaceGuid(s.Guid)
-	if err != nil {
-		return Space{}, nil, err
-	}
-
-	var appGuids []string
 	var apps []App
 	for _, app := range cfApps {
-		appGuids = append(appGuids, app.Guid)
 		apps = append(apps, App{
-			Guid:  app.Guid,
-			Name:  app.Name,
-			Org:   s.OrganizationGuid,
-			Space: s.Guid,
+			AppInfo{
+				Guid: app.Guid,
+				Name: app.Name,
+				Space: SpaceInfo{
+					Guid: spaceGuid,
+				},
+			},
 		})
 	}
-	return Space{
-		Guid: s.Guid,
-		Org:  s.OrganizationGuid,
-		Name: s.Name,
-		Apps: appGuids,
-	}, apps, nil
+
+	return apps, nil
 }
 
-func (a *api) GetOrg(guid string) (Org, error) {
-	o, err := a.cli.GetOrgByGuid(guid)
+func (a *api) ListSpaces(orgGuid string) ([]Space, error) {
+	spaces, err := a.cli.ListSpacesByOrgGuid(orgGuid)
 	if err != nil {
-		return Org{}, err
+		return nil, err
 	}
 
-	spaces, err := a.cli.ListSpacesByOrgGuid(o.Guid)
-	if err != nil {
-		return Org{}, err
-	}
-
-	var spaceGuids []string
+	var res []Space
 	for _, space := range spaces {
-		spaceGuids = append(spaceGuids, space.Guid)
+		res = append(res, Space{
+			SpaceInfo: SpaceInfo{
+				Guid: space.Guid,
+				Name: space.Name,
+				Org: OrgInfo{
+					Guid: orgGuid,
+				},
+			},
+		})
 	}
 
-	return Org{
-		Guid:   o.Guid,
-		Name:   o.Name,
-		Spaces: spaceGuids,
-	}, nil
+	return res, nil
 }

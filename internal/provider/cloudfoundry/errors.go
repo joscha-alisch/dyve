@@ -27,9 +27,9 @@ func (r *errReconcileFailed) Unwrap() error {
 func (r *errReconcileFailed) Error() string {
 	t := ""
 	switch r.Job.Type {
-	case ReconcileOrg:
+	case ReconcileSpaces:
 		t = "org"
-	case ReconcileSpace:
+	case ReconcileApps:
 		t = "space"
 	}
 	return fmt.Sprintf("%s reconcile failed for guid '%s': %s", t, r.Job.Guid, r.Err)

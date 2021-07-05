@@ -29,7 +29,7 @@ type reconciler struct {
 }
 
 func (r *reconciler) Run() (bool, error) {
-	j, ok := r.db.AcceptReconcileJob(20 * time.Second)
+	j, ok := r.db.AcceptReconcileJob(1 * time.Minute)
 	if !ok {
 		return false, nil
 	}
@@ -38,19 +38,19 @@ func (r *reconciler) Run() (bool, error) {
 
 	var err error
 	switch j.Type {
-	case ReconcileCF:
-		err = r.reconcileCF(j)
-	case ReconcileOrg:
-		err = r.reconcileOrg(j)
-	case ReconcileSpace:
-		err = r.reconcileSpace(j)
+	case ReconcileOrganizations:
+		err = r.reconcileOrganizations(j)
+	case ReconcileSpaces:
+		err = r.reconcileSpaces(j)
+	case ReconcileApps:
+		err = r.reconcileApps(j)
 	}
 
 	return true, err
 }
 
-func (r *reconciler) reconcileOrg(j ReconcileJob) error {
-	o, err := r.cf.GetOrg(j.Guid)
+func (r *reconciler) reconcileSpaces(j ReconcileJob) error {
+	spaces, err := r.cf.ListSpaces(j.Guid)
 	if errors.Is(err, errNotFound) {
 		r.db.DeleteOrg(j.Guid)
 		return nil
@@ -58,12 +58,12 @@ func (r *reconciler) reconcileOrg(j ReconcileJob) error {
 		return &errReconcileFailed{Err: err, Job: j}
 	}
 
-	_ = r.db.UpsertOrg(o)
+	_ = r.db.UpsertOrgSpaces(j.Guid, spaces)
 	return nil
 }
 
-func (r *reconciler) reconcileSpace(j ReconcileJob) error {
-	s, apps, err := r.cf.GetSpace(j.Guid)
+func (r *reconciler) reconcileApps(j ReconcileJob) error {
+	apps, err := r.cf.ListApps(j.Guid)
 	if errors.Is(err, errNotFound) {
 		r.db.DeleteSpace(j.Guid)
 		return nil
@@ -71,18 +71,17 @@ func (r *reconciler) reconcileSpace(j ReconcileJob) error {
 		return &errReconcileFailed{Err: err, Job: j}
 	}
 
-	_ = r.db.UpsertSpace(s)
-	_ = r.db.UpsertApps(apps)
+	_ = r.db.UpsertSpaceApps(j.Guid, apps)
 	return nil
 }
 
-func (r *reconciler) reconcileCF(j ReconcileJob) error {
-	i, err := r.cf.GetCFInfo()
+func (r *reconciler) reconcileOrganizations(j ReconcileJob) error {
+	orgs, err := r.cf.ListOrgs()
 	if err != nil {
 		return err
 	}
 
-	_ = r.db.UpsertCfInfo(i)
+	_ = r.db.UpsertOrgs(j.Guid, orgs)
 
 	return nil
 }

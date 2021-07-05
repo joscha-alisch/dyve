@@ -18,46 +18,48 @@ func TestReconciler(t *testing.T) {
 		{
 			desc: "updates org",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileOrg, Guid: "abc"},
+				job: &ReconcileJob{Type: ReconcileSpaces, Guid: "org-a-guid"},
+				b: backend{
+					Orgs: map[string]*Org{"org-a-guid": {
+						OrgInfo: OrgInfo{Name: "org", Guid: "org-a-guid"},
+					}},
+				},
 			},
 			cf: fakeCf{b: backend{
-				Orgs: map[string]*Org{"abc": {Name: "org", Guid: "abc"}},
+				Orgs: map[string]*Org{"org-a-guid": {OrgInfo: OrgInfo{Name: "org", Guid: "org-a-guid"}}},
+				Spaces: map[string]*Space{
+					"space-a-guid": {SpaceInfo: SpaceInfo{Guid: "space-a-guid", Org: OrgInfo{Guid: "org-a-guid"}}},
+					"space-b-guid": {SpaceInfo: SpaceInfo{Guid: "space-b-guid", Org: OrgInfo{Guid: "org-a-guid"}}},
+				},
 			}},
 		},
 		{
 			desc: "updates orgs",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileCF},
+				job: &ReconcileJob{Type: ReconcileOrganizations, Guid: "main"},
+				b:   backend{CfApis: map[string]*CF{"main": {CFInfo: CFInfo{Guid: "main"}}}},
 			},
 			cf: fakeCf{b: backend{
-				Orgs: map[string]*Org{"abc": {Guid: "abc"}},
+				CfApis: map[string]*CF{"main": {CFInfo: CFInfo{Guid: "main"}}},
+				Orgs: map[string]*Org{
+					"org-a": {OrgInfo: OrgInfo{Guid: "org-a"}},
+					"org-b": {OrgInfo: OrgInfo{Guid: "org-b"}},
+				},
 			}},
 		},
 		{
 			desc: "updates space",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileSpace, Guid: "abc"},
+				job: &ReconcileJob{Type: ReconcileApps, Guid: "space-a"},
+				b: backend{
+					Spaces: map[string]*Space{"space-a": {SpaceInfo: SpaceInfo{Guid: "space-a"}}},
+				},
 			},
 			cf: fakeCf{b: backend{
-				Spaces: map[string]*Space{"abc": {Name: "space", Guid: "abc"}},
-			}},
-		},
-		{
-			desc: "updates apps for space",
-			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileSpace, Guid: "abc"},
-			},
-			cf: fakeCf{b: backend{
-				Spaces: map[string]*Space{"abc": {Name: "space", Guid: "abc", Apps: []string{
-					"app-a",
-				}}},
+				Spaces: map[string]*Space{"space-a": {SpaceInfo: SpaceInfo{Guid: "space-a"}}},
 				Apps: map[string]*App{
-					"app-a": {
-						Guid:  "app-a",
-						Name:  "a",
-						Org:   "a",
-						Space: "abc",
-					},
+					"app-a": {AppInfo: AppInfo{Guid: "app-a", Space: SpaceInfo{Guid: "space-a"}}},
+					"app-b": {AppInfo: AppInfo{Guid: "app-b", Space: SpaceInfo{Guid: "space-a"}}},
 				},
 			}},
 		},
@@ -72,10 +74,10 @@ func TestReconciler(t *testing.T) {
 		{
 			desc: "removes org when not found",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileOrg, Guid: "not_exist"},
+				job: &ReconcileJob{Type: ReconcileSpaces, Guid: "not_exist"},
 				b: backend{
 					Orgs: map[string]*Org{
-						"not_exist": {Guid: "not_exist"},
+						"not_exist": {OrgInfo: OrgInfo{Guid: "not_exist"}},
 					},
 				},
 			},
@@ -84,10 +86,10 @@ func TestReconciler(t *testing.T) {
 		{
 			desc: "removes space when not found",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileSpace, Guid: "not_exist"},
+				job: &ReconcileJob{Type: ReconcileApps, Guid: "not_exist"},
 				b: backend{
 					Spaces: map[string]*Space{
-						"not_exist": {Guid: "not_exist"},
+						"not_exist": {SpaceInfo: SpaceInfo{Guid: "not_exist"}},
 					},
 				},
 			},
@@ -120,14 +122,41 @@ type fakeCf struct {
 	b backend
 }
 
-func (f *fakeCf) GetCFInfo() (CFInfo, error) {
-	var orgs []string
-	for _, o := range f.b.Orgs {
-		orgs = append(orgs, o.Guid)
+func (f *fakeCf) ListOrgs() ([]Org, error) {
+	var res []Org
+	for _, org := range f.b.Orgs {
+		res = append(res, *org)
 	}
-	return CFInfo{
-		Orgs: orgs,
-	}, nil
+	return res, nil
+}
+
+func (f *fakeCf) ListSpaces(orgGuid string) ([]Space, error) {
+	var res []Space
+
+	if f.b.Orgs[orgGuid] == nil {
+		return nil, errNotFound
+	}
+
+	for _, space := range f.b.Spaces {
+		if space.Org.Guid == orgGuid {
+			res = append(res, *space)
+		}
+	}
+	return res, nil
+}
+
+func (f *fakeCf) ListApps(spaceGuid string) ([]App, error) {
+	if f.b.Spaces[spaceGuid] == nil {
+		return nil, errNotFound
+	}
+
+	var res []App
+	for _, app := range f.b.Apps {
+		if app.Space.Guid == spaceGuid {
+			res = append(res, *app)
+		}
+	}
+	return res, nil
 }
 
 func (f *fakeCf) GetApp(guid string) (App, error) {
@@ -137,34 +166,41 @@ func (f *fakeCf) GetApp(guid string) (App, error) {
 	return *f.b.Apps[guid], nil
 }
 
-func (f *fakeCf) GetSpace(guid string) (Space, []App, error) {
-	if f.b.Spaces[guid] == nil {
-		return Space{}, nil, errNotFound
-	}
-	s := *f.b.Spaces[guid]
-	var apps []App
-	for _, app := range s.Apps {
-		a, _ := f.GetApp(app)
-		apps = append(apps, a)
-	}
-	return s, apps, nil
-}
-
-func (f *fakeCf) GetOrg(guid string) (Org, error) {
-	if f.b.Orgs[guid] == nil {
-		return Org{}, errNotFound
-	}
-	return *f.b.Orgs[guid], nil
-}
-
 type fakeDb struct {
 	job *ReconcileJob
 	b   backend
 }
 
-func (f *fakeDb) UpsertCfInfo(i CFInfo) error {
-	for _, org := range i.Orgs {
-		_ = f.UpsertOrg(Org{Guid: org})
+func (f *fakeDb) UpsertOrgs(cfGuid string, orgs []Org) error {
+	if f.b.Orgs == nil {
+		f.b.Orgs = make(map[string]*Org)
+	}
+	for _, org := range orgs {
+		org := org
+		f.b.Orgs[org.Guid] = &org
+	}
+	return nil
+}
+
+func (f *fakeDb) UpsertOrgSpaces(orgGuid string, spaces []Space) error {
+	if f.b.Spaces == nil {
+		f.b.Spaces = make(map[string]*Space)
+	}
+
+	for _, space := range spaces {
+		space := space
+		f.b.Spaces[space.Guid] = &space
+	}
+	return nil
+}
+
+func (f *fakeDb) UpsertSpaceApps(spaceGuid string, apps []App) error {
+	if f.b.Apps == nil {
+		f.b.Apps = make(map[string]*App)
+	}
+	for _, app := range apps {
+		app := app
+		f.b.Apps[app.Guid] = &app
 	}
 	return nil
 }
@@ -190,30 +226,11 @@ func (f *fakeDb) DeleteOrg(guid string) {
 	}
 }
 
-func (f *fakeDb) UpsertApps(apps []App) error {
-	for _, app := range apps {
-		if f.b.Apps == nil {
-			f.b.Apps = make(map[string]*App)
-		}
-		f.b.Apps[app.Guid] = &app
-	}
-
-	return nil
-}
-
 func (f *fakeDb) UpsertSpace(s Space) error {
 	if f.b.Spaces == nil {
 		f.b.Spaces = make(map[string]*Space)
 	}
 	f.b.Spaces[s.Guid] = &s
-	return nil
-}
-
-func (f *fakeDb) UpsertOrg(o Org) error {
-	if f.b.Orgs == nil {
-		f.b.Orgs = make(map[string]*Org)
-	}
-	f.b.Orgs[o.Guid] = &o
 	return nil
 }
 
@@ -225,6 +242,7 @@ func (f *fakeDb) AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool
 }
 
 type backend struct {
+	CfApis map[string]*CF
 	Orgs   map[string]*Org
 	Spaces map[string]*Space
 	Apps   map[string]*App

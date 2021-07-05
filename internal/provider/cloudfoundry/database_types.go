@@ -2,12 +2,12 @@ package cloudfoundry
 
 import "time"
 
-type ReconcileType int
+type ReconcileType string
 
 const (
-	ReconcileOrg ReconcileType = iota
-	ReconcileSpace
-	ReconcileCF
+	ReconcileOrganizations ReconcileType = "organizations"
+	ReconcileSpaces        ReconcileType = "spaces"
+	ReconcileApps          ReconcileType = "apps"
 )
 
 type ReconcileJob struct {
@@ -16,28 +16,45 @@ type ReconcileJob struct {
 }
 
 type CFInfo struct {
+	Guid string
+}
+
+type CF struct {
+	CFInfo      `bson:",inline"`
 	Orgs        []string
 	LastUpdated time.Time `bson:"lastUpdated"`
 }
 
+type OrgInfo struct {
+	Guid string
+	Name string
+	Cf   CFInfo
+}
+
 type Org struct {
-	Guid        string
-	Name        string
+	OrgInfo     `bson:",inline"`
 	Spaces      []string
 	LastUpdated time.Time `bson:"lastUpdated"`
 }
 
+type SpaceInfo struct {
+	Guid string
+	Name string
+	Org  OrgInfo
+}
+
 type Space struct {
-	Guid        string
-	Org         string
-	Name        string
+	SpaceInfo   `bson:",inline"`
 	Apps        []string
 	LastUpdated time.Time `bson:"lastUpdated"`
 }
 
-type App struct {
+type AppInfo struct {
 	Guid  string
 	Name  string
-	Org   string
-	Space string
+	Space SpaceInfo
+}
+
+type App struct {
+	AppInfo `bson:",inline"`
 }

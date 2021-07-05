@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/benweissmann/memongo"
 	"github.com/google/go-cmp/cmp"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,6 +22,32 @@ import (
 
 var someTime, _ = time.Parse(time.RFC3339, "2006-01-01T15:00:00Z")
 
+var baseState = map[string]interface{}{
+	"cf_infos": []bson.M{
+		{"guid": "main", "orgs": []string{"org-a-guid", "org-b-guid"}},
+	},
+	"orgs": []bson.M{
+		{"name": "org-a-name", "guid": "org-a-guid", "cf": bson.M{"guid": "main"}, "spaces": []string{"space-a-guid", "space-b-guid"}},
+		{"name": "org-b-name", "guid": "org-b-guid", "cf": bson.M{"guid": "main"}, "spaces": []string{"space-c-guid", "space-d-guid"}},
+	},
+	"spaces": []bson.M{
+		{"name": "space-a-name", "guid": "space-a-guid", "org": bson.M{"guid": "org-a-guid", "name": "org-a-name", "cf": bson.M{"guid": "main"}}, "apps": []string{"app-a-guid", "app-b-guid"}},
+		{"name": "space-b-name", "guid": "space-b-guid", "org": bson.M{"guid": "org-a-guid", "name": "org-a-name", "cf": bson.M{"guid": "main"}}, "apps": []string{"app-c-guid", "app-d-guid"}},
+		{"name": "space-c-name", "guid": "space-c-guid", "org": bson.M{"guid": "org-b-guid", "name": "org-b-name", "cf": bson.M{"guid": "main"}}, "apps": []string{"app-e-guid", "app-f-guid"}},
+		{"name": "space-d-name", "guid": "space-d-guid", "org": bson.M{"guid": "org-b-guid", "name": "org-b-name", "cf": bson.M{"guid": "main"}}, "apps": []string{"app-g-guid", "app-h-guid"}},
+	},
+	"apps": []bson.M{
+		{"name": "app-a-name", "guid": "app-a-guid", "space": bson.M{"guid": "space-a-guid", "name": "space-a-name", "org": bson.M{"guid": "org-a-guid", "name": "org-a-name", "cf": bson.M{"guid": "main"}}}},
+		{"name": "app-b-name", "guid": "app-b-guid", "space": bson.M{"guid": "space-a-guid", "name": "space-a-name", "org": bson.M{"guid": "org-a-guid", "name": "org-a-name", "cf": bson.M{"guid": "main"}}}},
+		{"name": "app-c-name", "guid": "app-c-guid", "space": bson.M{"guid": "space-b-guid", "name": "space-b-name", "org": bson.M{"guid": "org-a-guid", "name": "org-a-name", "cf": bson.M{"guid": "main"}}}},
+		{"name": "app-d-name", "guid": "app-d-guid", "space": bson.M{"guid": "space-b-guid", "name": "space-b-name", "org": bson.M{"guid": "org-a-guid", "name": "org-a-name", "cf": bson.M{"guid": "main"}}}},
+		{"name": "app-e-name", "guid": "app-e-guid", "space": bson.M{"guid": "space-c-guid", "name": "space-c-name", "org": bson.M{"guid": "org-b-guid", "name": "org-b-name", "cf": bson.M{"guid": "main"}}}},
+		{"name": "app-f-name", "guid": "app-f-guid", "space": bson.M{"guid": "space-c-guid", "name": "space-c-name", "org": bson.M{"guid": "org-b-guid", "name": "org-b-name", "cf": bson.M{"guid": "main"}}}},
+		{"name": "app-g-name", "guid": "app-g-guid", "space": bson.M{"guid": "space-d-guid", "name": "space-d-name", "org": bson.M{"guid": "org-b-guid", "name": "org-b-name", "cf": bson.M{"guid": "main"}}}},
+		{"name": "app-h-name", "guid": "app-h-guid", "space": bson.M{"guid": "space-d-guid", "name": "space-d-name", "org": bson.M{"guid": "org-b-guid", "name": "org-b-name", "cf": bson.M{"guid": "main"}}}},
+	},
+}
+
 func TestMongoIntegration(t *testing.T) {
 	currentTime = func() time.Time {
 		return someTime
@@ -32,121 +59,23 @@ func TestMongoIntegration(t *testing.T) {
 		err   error
 		state bson.M
 	}{
-		{desc: "create app", f: func(db Database, tt *testing.T) error {
-			return db.UpsertApps([]App{{Name: "my-app", Guid: "abc", Org: "some-org", Space: "some-space"}})
+		{desc: "updates space apps", state: baseState, f: func(db Database, tt *testing.T) error {
+			return db.UpsertSpaceApps("space-a-guid", []App{
+				{AppInfo: AppInfo{Name: "changed-name", Guid: "app-a-guid"}},
+				{AppInfo: AppInfo{Name: "new-app", Guid: "new-app-guid"}},
+			})
 		}},
-		{desc: "update app", state: bson.M{
-			"apps": []bson.M{
-				{"name": "old-name", "guid": "abc"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			return db.UpsertApps([]App{{Name: "my-app", Guid: "abc", Org: "org", Space: "space"}})
+		{desc: "updates org spaces", state: baseState, f: func(db Database, tt *testing.T) error {
+			return db.UpsertOrgSpaces("org-a-guid", []Space{
+				{SpaceInfo: SpaceInfo{Name: "changed-name", Guid: "space-a-guid"}},
+				{SpaceInfo: SpaceInfo{Name: "new-space", Guid: "new-space-guid"}},
+			})
 		}},
-		{desc: "create space", f: func(db Database, tt *testing.T) error {
-			return db.UpsertSpace(Space{Name: "my-space", Guid: "abc"})
-		}},
-		{desc: "update space", state: bson.M{
-			"spaces": []bson.M{
-				{"name": "old-name", "guid": "abc"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			return db.UpsertSpace(Space{Name: "my-space", Guid: "abc"})
-		}},
-		{desc: "updates org spaces and apps", state: bson.M{
-			"orgs": []bson.M{
-				{"name": "a", "guid": "org-abc"},
-			},
-			"spaces": []bson.M{
-				{"name": "a", "guid": "space-abc", "org": "org-abc"},
-				{"name": "b", "guid": "space-def", "org": "org-abc"},
-			},
-			"apps": []bson.M{
-				{"name": "a", "guid": "app-abc", "org": "org-abc", "space": "space-abc"},
-				{"name": "b", "guid": "app-def", "org": "org-abc", "space": "space-def"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			return db.UpsertOrg(Org{Name: "a", Guid: "org-abc", Spaces: []string{
-				"space-abc",
-			}})
-		}},
-		{desc: "updates space apps", state: bson.M{
-			"spaces": []bson.M{
-				{"name": "a", "guid": "space-abc", "org": "org-abc"},
-			},
-			"apps": []bson.M{
-				{"name": "a", "guid": "app-abc", "org": "org-abc", "space": "space-abc"},
-				{"name": "b", "guid": "app-def", "org": "org-abc", "space": "space-abc"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			return db.UpsertSpace(Space{Name: "a", Guid: "space-abc", Apps: []string{
-				"app-abc",
-			}})
-		}},
-		{desc: "create org", f: func(db Database, tt *testing.T) error {
-			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
-		}},
-		{desc: "create cf info", f: func(db Database, tt *testing.T) error {
-			return db.UpsertCfInfo(CFInfo{Orgs: []string{"org-a", "org-b"}})
-		}},
-		{desc: "update org creates missing spaces", f: func(db Database, tt *testing.T) error {
-			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc", Spaces: []string{
-				"space-a",
-			}})
-		}},
-		{desc: "update org", state: bson.M{
-			"orgs": []bson.M{
-				{"name": "old-name", "guid": "abc"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			return db.UpsertOrg(Org{Name: "my-org", Guid: "abc"})
-		}},
-		{desc: "delete org", state: bson.M{
-			"orgs": []bson.M{
-				{"name": "a", "guid": "org-abc"},
-				{"name": "b", "guid": "org-def"},
-			},
-			"spaces": []bson.M{
-				{"name": "a", "guid": "space-abc", "org": "org-abc"},
-				{"name": "b", "guid": "space-def", "org": "org-def"},
-			},
-			"apps": []bson.M{
-				{"name": "a", "guid": "app-abc", "space": "space-abc", "org": "org-abc"},
-				{"name": "b", "guid": "app-def", "space": "space-def", "org": "org-def"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			db.DeleteOrg("org-abc")
-			return nil
-		}},
-		{desc: "delete space", state: bson.M{
-			"orgs": []bson.M{
-				{"name": "a", "guid": "org-abc"},
-			},
-			"spaces": []bson.M{
-				{"name": "a", "guid": "space-abc", "org": "org-abc"},
-				{"name": "b", "guid": "space-def", "org": "org-abc"},
-			},
-			"apps": []bson.M{
-				{"name": "a", "guid": "app-abc", "space": "space-abc", "org": "org-abc"},
-				{"name": "b", "guid": "app-def", "space": "space-def", "org": "org-abc"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			db.DeleteSpace("space-abc")
-			return nil
-		}},
-		{desc: "delete app", state: bson.M{
-			"orgs": []bson.M{
-				{"name": "a", "guid": "org-abc"},
-			},
-			"spaces": []bson.M{
-				{"name": "a", "guid": "space-abc", "org": "org-abc"},
-			},
-			"apps": []bson.M{
-				{"name": "a", "guid": "app-abc", "space": "space-abc", "org": "org-abc"},
-				{"name": "b", "guid": "app-def", "space": "space-abc", "org": "org-abc"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			db.DeleteApp("app-abc")
-			return nil
+		{desc: "updates cf orgs", state: baseState, f: func(db Database, tt *testing.T) error {
+			return db.UpsertOrgs("main", []Org{
+				{OrgInfo: OrgInfo{Name: "changed-name", Guid: "org-a-guid"}},
+				{OrgInfo: OrgInfo{Name: "new-org", Guid: "new-org-guid"}},
+			})
 		}},
 		{desc: "fetch org job", state: bson.M{
 			"orgs": []bson.M{
@@ -154,7 +83,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"name": "a", "guid": "abc", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileOrg, Guid: "abc"}
+			expected := ReconcileJob{Type: ReconcileSpaces, Guid: "abc"}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -167,7 +96,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"name": "a", "guid": "abc", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileSpace, Guid: "abc"}
+			expected := ReconcileJob{Type: ReconcileApps, Guid: "abc"}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -176,10 +105,10 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 		{desc: "fetch cf info job", state: bson.M{
 			"cf_infos": []bson.M{
-				{"guid": "", "lastUpdated": someTime.Add(-3 * time.Minute)},
+				{"guid": "main", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileCF}
+			expected := ReconcileJob{Type: ReconcileOrganizations, Guid: "main"}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -191,7 +120,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"name": "a", "guid": "abc"},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileOrg, Guid: "abc"}
+			expected := ReconcileJob{Type: ReconcileSpaces, Guid: "abc"}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -222,17 +151,31 @@ func acceptanceTesting(
 	tt *testing.T,
 ) {
 	dbName := memongo.RandomDatabase()
+	if state != nil {
+		err := setState(state, s, dbName)
+		if err != nil {
+			tt.Fatal(err)
+		}
+	}
+
 	db, err := NewMongoDatabase(s.URI(), dbName)
 	if err != nil {
 		tt.Fatal(err)
 	}
 
-	if state != nil {
-		err = setState(state, s, dbName)
-		if err != nil {
-			tt.Fatal(err)
-		}
+	before, err := dumpContents(s, dbName)
+	if err != nil {
+		tt.Fatal(err)
 	}
+	walk(before, func(m map[string]interface{}, k string) {
+		if t, ok := m[k].(primitive.DateTime); ok {
+			m[k] = time.Unix(int64(t)/1000, 0).Format(time.RFC3339)
+		}
+
+		if t, ok := m[k].(primitive.A); ok {
+			m[k] = ([]interface{})(t)
+		}
+	})
 
 	err = f(db, tt)
 	if err != nil {
@@ -270,6 +213,9 @@ func acceptanceTesting(
 		if err != nil {
 			tt.Fatal(err)
 		}
+	} else {
+		log.Warn().Msg("first acceptance testing run. Diffing with 'before'-state")
+		acceptedContents = before
 	}
 
 	if !cmp.Equal(acceptedContents, contents) {

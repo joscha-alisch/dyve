@@ -5,10 +5,9 @@ import "time"
 type Database interface {
 	AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool)
 
-	UpsertCfInfo(i CFInfo) error
-	UpsertOrg(o Org) error
-	UpsertSpace(s Space) error
-	UpsertApps(apps []App) error
+	UpsertOrgs(cfGuid string, orgs []Org) error
+	UpsertOrgSpaces(orgGuid string, spaces []Space) error
+	UpsertSpaceApps(spaceGuid string, apps []App) error
 
 	DeleteOrg(guid string)
 	DeleteSpace(guid string)
