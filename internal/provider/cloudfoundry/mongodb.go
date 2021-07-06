@@ -50,6 +50,25 @@ type mongoDatabase struct {
 	cfInfos *mongo.Collection
 }
 
+func (d *mongoDatabase) GetApp(id string) (App, error) {
+	res := d.apps.FindOne(context.Background(), bson.M{
+		"guid": bson.M{
+			"$eq": id,
+		},
+	})
+	if res.Err() != nil {
+		return App{}, res.Err()
+	}
+
+	a := App{}
+	err := res.Decode(&a)
+	if err != nil {
+		return App{}, err
+	}
+
+	return a, nil
+}
+
 func (d *mongoDatabase) ListApps() ([]App, error) {
 	c, err := d.apps.Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"guid": 1}))
 	if err != nil {

@@ -29,7 +29,15 @@ func (p *provider) ListApps() ([]sdk.App, error) {
 }
 
 func (p *provider) GetApp(id string) (sdk.App, error) {
-	panic("implement me")
+	app, err := p.db.GetApp(id)
+	if err != nil {
+		return sdk.App{}, err
+	}
+
+	return sdk.App{
+		Id:   app.Guid,
+		Name: app.Name,
+	}, nil
 }
 
 func (p *provider) Search(term string, limit int) ([]sdk.AppSearchResult, error) {

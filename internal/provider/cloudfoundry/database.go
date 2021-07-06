@@ -14,4 +14,5 @@ type Database interface {
 	DeleteApp(guid string)
 
 	ListApps() ([]App, error)
+	GetApp(id string) (App, error)
 }

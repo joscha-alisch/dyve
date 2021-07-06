@@ -97,6 +97,23 @@ func TestMongoIntegration(t *testing.T) {
 			}
 			return nil
 		}},
+		{desc: "gets app", state: map[string]interface{}{
+			"apps": []bson.M{
+				{"name": "app-a-name", "guid": "app-a-guid"},
+				{"name": "app-b-name", "guid": "app-b-guid"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			app, err := db.GetApp("app-a-guid")
+			if err != nil {
+				return err
+			}
+			expected := App{AppInfo{Name: "app-a-name", Guid: "app-a-guid"}}
+
+			if !cmp.Equal(expected, app) {
+				tt.Errorf("wrong app returned:\n%s\n", cmp.Diff(expected, app))
+			}
+			return nil
+		}},
 		{desc: "fetch org job", state: bson.M{
 			"orgs": []bson.M{
 				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(-1 * time.Minute)},

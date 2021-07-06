@@ -171,6 +171,14 @@ type fakeDb struct {
 	b   backend
 }
 
+func (f *fakeDb) GetApp(id string) (App, error) {
+	if f.b.Apps[id] == nil {
+		return App{}, errNotFound
+	}
+
+	return *f.b.Apps[id], nil
+}
+
 func (f *fakeDb) ListApps() ([]App, error) {
 	var res []App
 	for _, app := range f.b.Apps {
