@@ -30,9 +30,9 @@ type appProviderHandler struct {
 }
 
 type response struct {
-	Code   int
-	Err    string
-	Result interface{}
+	Status int         `json:"status"`
+	Err    string      `json:"error,omitempty"`
+	Result interface{} `json:"result,omitempty"`
 }
 
 func (h *appProviderHandler) listApps(w http.ResponseWriter, r *http.Request) {
@@ -87,15 +87,15 @@ func (h *appProviderHandler) search(w http.ResponseWriter, r *http.Request) {
 
 func respondOk(w http.ResponseWriter, result interface{}) {
 	respond(w, response{
-		Code:   http.StatusOK,
+		Status: http.StatusOK,
 		Result: result,
 	})
 }
 
 func respondErr(w http.ResponseWriter, code int, err error) {
 	respond(w, response{
-		Code: code,
-		Err:  err.Error(),
+		Status: code,
+		Err:    err.Error(),
 	})
 }
 
@@ -105,7 +105,7 @@ func respond(w http.ResponseWriter, r response) {
 		log.Error().Interface("response", r).Err(err).Msg("error marshalling response")
 	}
 
-	w.WriteHeader(r.Code)
+	w.WriteHeader(r.Status)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Error().Interface("response", r).Err(err).Msg("error writing response")
