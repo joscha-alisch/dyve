@@ -171,6 +171,14 @@ type fakeDb struct {
 	b   backend
 }
 
+func (f *fakeDb) ListApps() ([]App, error) {
+	var res []App
+	for _, app := range f.b.Apps {
+		res = append(res, *app)
+	}
+	return res, nil
+}
+
 func (f *fakeDb) UpsertOrgs(cfGuid string, orgs []Org) error {
 	if f.b.Orgs == nil {
 		f.b.Orgs = make(map[string]*Org)

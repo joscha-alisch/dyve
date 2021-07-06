@@ -12,4 +12,6 @@ type Database interface {
 	DeleteOrg(guid string)
 	DeleteSpace(guid string)
 	DeleteApp(guid string)
+
+	ListApps() ([]App, error)
 }

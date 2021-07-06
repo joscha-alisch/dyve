@@ -6,7 +6,7 @@ import (
 
 const CFGuid = "main"
 
-type Login struct {
+type CFLogin struct {
 	Api  string
 	User string
 	Pass string
@@ -30,7 +30,7 @@ type CfCli interface {
 	ListAppsBySpaceGuid(spaceGuid string) ([]cf.App, error)
 }
 
-func NewDefaultApi(l Login) (API, error) {
+func NewDefaultApi(l CFLogin) (API, error) {
 	cli, err := cf.NewClient(&cf.Config{
 		ApiAddress: l.Api,
 		Username:   l.User,

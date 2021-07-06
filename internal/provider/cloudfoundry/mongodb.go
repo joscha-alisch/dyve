@@ -2,17 +2,21 @@ package cloudfoundry
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
-func NewMongoDatabase(uri string, dbName string) (Database, error) {
+type MongoLogin struct {
+	Uri string
+	DB  string
+}
+
+func NewMongoDatabase(l MongoLogin) (Database, error) {
 	c, err := mongo.Connect(
 		context.Background(),
-		options.Client().ApplyURI(uri),
+		options.Client().ApplyURI(l.Uri),
 	)
 	if err != nil {
 		return nil, err
@@ -22,7 +26,7 @@ func NewMongoDatabase(uri string, dbName string) (Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	db := c.Database(dbName)
+	db := c.Database(l.DB)
 
 	m := &mongoDatabase{
 		cli:     c,
@@ -44,6 +48,24 @@ type mongoDatabase struct {
 	spaces  *mongo.Collection
 	apps    *mongo.Collection
 	cfInfos *mongo.Collection
+}
+
+func (d *mongoDatabase) ListApps() ([]App, error) {
+	c, err := d.apps.Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"guid": 1}))
+	if err != nil {
+		return nil, err
+	}
+
+	var apps []App
+	for c.Next(context.Background()) {
+		app := App{}
+		err = c.Decode(&app)
+		if err != nil {
+			return nil, err
+		}
+		apps = append(apps, app)
+	}
+	return apps, nil
 }
 
 var currentTime = time.Now
@@ -429,11 +451,6 @@ func (d *mongoDatabase) removeOutdatedIn(c *mongo.Collection, where, equals, and
 		},
 	}
 
-	res, err := c.DeleteMany(context.Background(), filter)
-	log.Debug().
-		Interface("filter", filter).
-		Interface("result", res).
-		Msg("deleted outdated " + c.Name())
-
+	_, err := c.DeleteMany(context.Background(), filter)
 	return err
 }

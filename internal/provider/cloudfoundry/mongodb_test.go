@@ -77,6 +77,26 @@ func TestMongoIntegration(t *testing.T) {
 				{OrgInfo: OrgInfo{Name: "new-org", Guid: "new-org-guid"}},
 			})
 		}},
+		{desc: "lists apps", state: map[string]interface{}{
+			"apps": []bson.M{
+				{"name": "app-a-name", "guid": "app-a-guid"},
+				{"name": "app-b-name", "guid": "app-b-guid"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			apps, err := db.ListApps()
+			if err != nil {
+				return err
+			}
+			expected := []App{
+				{AppInfo{Name: "app-a-name", Guid: "app-a-guid"}},
+				{AppInfo{Name: "app-b-name", Guid: "app-b-guid"}},
+			}
+
+			if !cmp.Equal(expected, apps) {
+				tt.Errorf("wrong apps returned:\n%s\n", cmp.Diff(expected, apps))
+			}
+			return nil
+		}},
 		{desc: "fetch org job", state: bson.M{
 			"orgs": []bson.M{
 				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(-1 * time.Minute)},
@@ -158,7 +178,10 @@ func acceptanceTesting(
 		}
 	}
 
-	db, err := NewMongoDatabase(s.URI(), dbName)
+	db, err := NewMongoDatabase(MongoLogin{
+		Uri: s.URI(),
+		DB:  dbName,
+	})
 	if err != nil {
 		tt.Fatal(err)
 	}

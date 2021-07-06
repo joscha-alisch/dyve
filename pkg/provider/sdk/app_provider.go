@@ -1,6 +1,7 @@
 package sdk
 
 type AppProvider interface {
-	Apps() []App
-	App(id int) App
+	ListApps() ([]App, error)
+	GetApp(id string) (App, error)
+	Search(term string, limit int) ([]AppSearchResult, error)
 }
