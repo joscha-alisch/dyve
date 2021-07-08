@@ -9,4 +9,5 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/rs/zerolog v1.23.0
 	go.mongodb.org/mongo-driver v1.0.3
+	gopkg.in/yaml.v2 v2.2.1
 )

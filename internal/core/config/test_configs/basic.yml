@@ -1,0 +1,5 @@
+appProviders:
+  - name: provider-a
+    host: https://provider-a.com
+  - name: provider-b
+    host: https://provider-b.com
