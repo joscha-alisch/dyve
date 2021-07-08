@@ -1,6 +1,9 @@
 package cloudfoundry
 
-import "github.com/joscha-alisch/dyve/pkg/provider/sdk"
+import (
+	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
+	"math"
+)
 
 func NewAppProvider(db Database) sdk.AppProvider {
 	return &provider{
@@ -10,6 +13,35 @@ func NewAppProvider(db Database) sdk.AppProvider {
 
 type provider struct {
 	db Database
+}
+
+func (p *provider) ListAppsPaged(perPage int, page int) (sdk.AppPage, error) {
+	c, apps, err := p.db.ListAppsPaged(page, perPage)
+	if err != nil {
+		return sdk.AppPage{}, err
+	}
+
+	totalPages := int(math.Ceil(float64(c) / float64(perPage)))
+	cursor := perPage * page
+	if cursor > c {
+		return sdk.AppPage{}, sdk.ErrPageExceeded
+	}
+
+	var res []sdk.App
+	for _, app := range apps {
+		res = append(res, sdk.App{
+			Id:   app.Guid,
+			Name: app.Name,
+		})
+	}
+
+	return sdk.AppPage{
+		TotalResults: c,
+		TotalPages: totalPages,
+		PerPage: perPage,
+		Page: page,
+		Apps: res,
+	}, nil
 }
 
 func (p *provider) ListApps() ([]sdk.App, error) {

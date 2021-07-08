@@ -97,6 +97,31 @@ func TestMongoIntegration(t *testing.T) {
 			}
 			return nil
 		}},
+		{desc: "lists apps paged", state: map[string]interface{}{
+			"apps": []bson.M{
+				{"name": "app-a-name", "guid": "app-a-guid"},
+				{"name": "app-b-name", "guid": "app-b-guid"},
+				{"name": "app-c-name", "guid": "app-c-guid"},
+				{"name": "app-d-name", "guid": "app-d-guid"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			total, apps, err := db.ListAppsPaged(0, 2)
+			if err != nil {
+				return err
+			}
+			expected := []App{
+				{AppInfo{Name: "app-a-name", Guid: "app-a-guid"}},
+				{AppInfo{Name: "app-b-name", Guid: "app-b-guid"}},
+			}
+			if !cmp.Equal(total, 4) {
+				tt.Errorf("wrong number returned:\n%s\n", cmp.Diff(4, total))
+			}
+
+			if !cmp.Equal(expected, apps) {
+				tt.Errorf("wrong apps returned:\n%s\n", cmp.Diff(expected, apps))
+			}
+			return nil
+		}},
 		{desc: "gets app", state: map[string]interface{}{
 			"apps": []bson.M{
 				{"name": "app-a-name", "guid": "app-a-guid"},

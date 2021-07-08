@@ -13,6 +13,12 @@ type listAppsResponse struct {
 	Result []sdk.App
 }
 
+type listAppsPagedResponse struct {
+	Status int
+	Err    string
+	Result sdk.AppPage
+}
+
 type getAppResponse struct {
 	Status int
 	Err    string
@@ -33,6 +39,13 @@ func NewAppProviderClient(uri string, c *http.Client) sdk.AppProvider {
 type appProviderClient struct {
 	c        *http.Client
 	basePath string
+}
+
+func (a *appProviderClient) ListAppsPaged(perPage int, page int) (sdk.AppPage, error) {
+	path := fmt.Sprintf("apps?perPage=%d&page=%d", perPage, page)
+	r := listAppsPagedResponse{}
+	err := a.get(path, &r)
+	return r.Result, err
 }
 
 func (a *appProviderClient) ListApps() ([]sdk.App, error) {
@@ -83,4 +96,24 @@ func (a *appProviderClient) GetApp(id string) (sdk.App, error) {
 
 func (a *appProviderClient) Search(term string, limit int) ([]sdk.AppSearchResult, error) {
 	panic("implement me")
+}
+
+
+func (a *appProviderClient) get(path string, resp interface{}) error {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s", a.basePath, path), nil)
+	if err != nil {
+		return err
+	}
+
+	res, err := a.c.Do(req)
+	if err != nil {
+		return err
+	}
+
+	err = json.NewDecoder(res.Body).Decode(&resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

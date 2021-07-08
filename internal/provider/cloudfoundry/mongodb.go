@@ -50,6 +50,7 @@ type mongoDatabase struct {
 	cfInfos *mongo.Collection
 }
 
+
 func (d *mongoDatabase) GetApp(id string) (App, error) {
 	res := d.apps.FindOne(context.Background(), bson.M{
 		"guid": bson.M{
@@ -69,8 +70,28 @@ func (d *mongoDatabase) GetApp(id string) (App, error) {
 	return a, nil
 }
 
+
+func (d *mongoDatabase) ListAppsPaged(page int, perPage int) (int, []App, error) {
+	apps, err := d.getApps(bson.M{}, options.Find().
+		SetSort(bson.M{"guid": 1}).
+		SetLimit(int64(perPage)).
+		SetSkip(int64(page * perPage)))
+	if err != nil {
+		return 0, nil, err
+	}
+
+	count, err := d.apps.CountDocuments(context.Background(), bson.M{}, options.Count())
+
+	return int(count), apps, err
+}
+
 func (d *mongoDatabase) ListApps() ([]App, error) {
-	c, err := d.apps.Find(context.Background(), bson.M{}, options.Find().SetSort(bson.M{"guid": 1}))
+	return d.getApps(bson.M{}, options.Find().
+		SetSort(bson.M{"guid": 1}))
+}
+
+func (d *mongoDatabase) getApps(filter bson.M, options *options.FindOptions) ([]App, error){
+	c, err := d.apps.Find(context.Background(),filter, options)
 	if err != nil {
 		return nil, err
 	}

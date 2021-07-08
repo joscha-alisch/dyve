@@ -3,6 +3,7 @@ package sdk
 import (
 	"encoding/json"
 	"github.com/google/go-cmp/cmp"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -92,6 +93,27 @@ func TestName(t *testing.T) {
 			Status: http.StatusNotFound,
 			Err:    "not found",
 		}},
+		{"lists apps paged", apps, "GET", "/apps?perPage=2", http.StatusOK, response{
+			Status: http.StatusOK,
+			Result: map[string]interface{}{
+				"totalPages": float64(6),
+				"totalResults": float64(11),
+				"perPage": float64(2),
+				"page": float64(0),
+				"apps": []interface{}{
+					map[string]interface{}{"id": "a", "name": "name-a"},
+					map[string]interface{}{"id": "b", "name": "name-b"},
+				},
+			},
+		}},
+		{"fails for malformed page", apps, "GET", "/apps?perPage=2&page=abc", http.StatusBadRequest, response{
+			Status: http.StatusBadRequest,
+			Err: ErrQueryPageMalformed.Error(),
+		}},
+		{"fails for malformed perPage", apps, "GET", "/apps?perPage=abc&page=1", http.StatusBadRequest, response{
+			Status: http.StatusBadRequest,
+			Err: ErrQueryPerPageMalformed.Error(),
+		}},
 	}
 
 	for _, test := range tests {
@@ -116,6 +138,24 @@ func TestName(t *testing.T) {
 
 type fakeProvider struct {
 	state []App
+}
+
+func (f *fakeProvider) ListAppsPaged(perPage int, page int) (AppPage, error) {
+	total := len(f.state)
+	pages := int(math.Ceil(float64(total) / float64(perPage)))
+	cursor := perPage * page
+	if cursor > total {
+		return AppPage{}, ErrPageExceeded
+	}
+
+	until := math.Min(float64(total-1), float64(cursor+perPage))
+	return AppPage{
+		TotalPages: pages,
+		TotalResults: total,
+		PerPage: perPage,
+		Page: page,
+		Apps: f.state[cursor:int(until)],
+	}, nil
 }
 
 func (f *fakeProvider) ListApps() ([]App, error) {

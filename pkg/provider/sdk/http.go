@@ -16,6 +16,7 @@ func ListenAndServeAppProvider(addr string, p AppProvider) error {
 func NewAppProviderHandler(p AppProvider) http.Handler {
 	h := &appProviderHandler{Router: mux.NewRouter(), p: p}
 
+	h.Path("/apps").Queries("perPage", "").HandlerFunc(h.listAppsPaged)
 	h.HandleFunc("/apps", h.listApps)
 	h.HandleFunc("/apps/{id:[0-9a-z-]+}", h.getApp)
 	h.Path("/search").HandlerFunc(h.search)
@@ -79,12 +80,36 @@ func (h *appProviderHandler) search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	matches, err := h.p.Search(term, limit)
-
 	if err != nil {
 		panic(err)
 	}
 
 	respondOk(w, matches)
+}
+
+func (h *appProviderHandler) listAppsPaged(w http.ResponseWriter, r *http.Request) {
+	perPage, err := mustQueryInt(r, "perPage")
+	if err != nil {
+		if errors.Is(err, errExpectedQueryParamMissing) {
+			respondErr(w, http.StatusInternalServerError, ErrInternal)
+			return
+		}
+		respondErr(w, http.StatusBadRequest, ErrQueryPerPageMalformed)
+		return
+	}
+
+	page, err := defaultQueryInt(r, "page", 0)
+	if err != nil {
+		 respondErr(w, http.StatusBadRequest, ErrQueryPageMalformed)
+		return
+	}
+
+	apps, err := h.p.ListAppsPaged(perPage, page)
+	if err != nil {
+		panic(err)
+	}
+
+	respondOk(w, apps)
 }
 
 func respondOk(w http.ResponseWriter, result interface{}) {
@@ -112,4 +137,33 @@ func respond(w http.ResponseWriter, r response) {
 	if err != nil {
 		log.Error().Interface("response", r).Err(err).Msg("error writing response")
 	}
+}
+
+
+func mustQueryInt(r *http.Request, queryKey string) (int, error) {
+	valueStr := r.FormValue(queryKey)
+	if valueStr == "" {
+		return 0, errExpectedQueryParamMissing
+	}
+
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return value, nil
+}
+
+func defaultQueryInt(r *http.Request, queryKey string, defaultValue int) (int, error) {
+	valueStr := r.FormValue(queryKey)
+	if valueStr == "" {
+		return defaultValue, nil
+	}
+
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return value, nil
 }

@@ -76,12 +76,63 @@ func TestListApps(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestListAppsPaged(t *testing.T) {
+	tests := []struct {
+		desc        string
+		perPage     int
+		page        int
+		appPage    sdk.AppPage
+		expectedErr error
+	}{
+		{desc: "returns apps", perPage: 2, page: 4, appPage: sdk.AppPage{
+			TotalResults: 10,
+			TotalPages:   10,
+			PerPage:      2,
+			Page:         4,
+			Apps:         []sdk.App{
+				{"id-a", "name-a"},
+				{"id-b", "name-b"},
+			},
+		}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(tt *testing.T) {
+			f := &fakeAppProvider{
+				appPage: test.appPage,
+			}
+			handler := sdk.NewAppProviderHandler(f)
+			s := httptest.NewServer(handler)
+			defer s.Close()
+
+			c := NewAppProviderClient(s.URL, nil)
+
+			page, err := c.ListAppsPaged(test.perPage, test.page)
+			if !errors.Is(err, test.expectedErr) {
+				tt.Errorf("\nwanted err: %v\ngot: %v", test.expectedErr, err)
+			}
+
+			if !cmp.Equal(test.appPage, page) {
+				tt.Errorf("\ndiff between apps\n%s\n", cmp.Diff(test.appPage, page))
+			}
+		})
+	}
 
 }
 
 type fakeAppProvider struct {
 	apps []sdk.App
 	app  sdk.App
+	appPage sdk.AppPage
+}
+
+func (f fakeAppProvider) ListAppsPaged(perPage int, page int) (sdk.AppPage, error) {
+	if f.appPage.PerPage == perPage && f.appPage.Page == page {
+		return f.appPage, nil
+	}
+	return sdk.AppPage{}, errors.New("something went wrong")
 }
 
 func (f fakeAppProvider) ListApps() ([]sdk.App, error) {
