@@ -11,3 +11,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+* {
+  box-sizing: border-box;
+}
+
+
+.debug > * {
+  border: 1px solid #ea6eff;
+}
+.debug > * > * {
+  border: 1px solid #ff7080;
+}
+.debug > * > * * {
+  border: 1px dashed #f8a7ff;
+}
