@@ -2,8 +2,14 @@ package cloudfoundry
 
 import (
 	"errors"
-	"github.com/rs/zerolog/log"
+	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"time"
+)
+
+const (
+	ReconcileOrganizations recon.Type = "organizations"
+	ReconcileSpaces        recon.Type = "spaces"
+	ReconcileApps          recon.Type = "apps"
 )
 
 /**
@@ -12,44 +18,28 @@ item via the CloudFoundry API.
 
 It returns true, if there was work to be done and false, if there was no open reconciliation work.
 */
-type Reconciler interface {
-	Run() (bool, error)
-}
-
-func NewReconciler(db Database, cf API) Reconciler {
-	return &reconciler{
-		db: db,
-		cf: cf,
+func NewReconciler(db Database, cf API) recon.Reconciler {
+	r := &reconciler{
+		Reconciler: recon.NewReconciler(db, 1*time.Minute),
+		db:         db,
+		cf:         cf,
 	}
+
+	r.Handler(ReconcileOrganizations, r.reconcileOrganizations)
+	r.Handler(ReconcileSpaces, r.reconcileSpaces)
+	r.Handler(ReconcileApps, r.reconcileApps)
+
+	return r
 }
 
 type reconciler struct {
+	recon.Reconciler
+
 	db Database
 	cf API
 }
 
-func (r *reconciler) Run() (bool, error) {
-	j, ok := r.db.AcceptReconcileJob(1 * time.Minute)
-	if !ok {
-		return false, nil
-	}
-
-	log.Info().Interface("job", j).Msg("reconciling")
-
-	var err error
-	switch j.Type {
-	case ReconcileOrganizations:
-		err = r.reconcileOrganizations(j)
-	case ReconcileSpaces:
-		err = r.reconcileSpaces(j)
-	case ReconcileApps:
-		err = r.reconcileApps(j)
-	}
-
-	return true, err
-}
-
-func (r *reconciler) reconcileSpaces(j ReconcileJob) error {
+func (r *reconciler) reconcileSpaces(j recon.Job) error {
 	spaces, err := r.cf.ListSpaces(j.Guid)
 	if errors.Is(err, errNotFound) {
 		r.db.DeleteOrg(j.Guid)
@@ -62,7 +52,7 @@ func (r *reconciler) reconcileSpaces(j ReconcileJob) error {
 	return nil
 }
 
-func (r *reconciler) reconcileApps(j ReconcileJob) error {
+func (r *reconciler) reconcileApps(j recon.Job) error {
 	apps, err := r.cf.ListApps(j.Guid)
 	if errors.Is(err, errNotFound) {
 		r.db.DeleteSpace(j.Guid)
@@ -75,7 +65,7 @@ func (r *reconciler) reconcileApps(j ReconcileJob) error {
 	return nil
 }
 
-func (r *reconciler) reconcileOrganizations(j ReconcileJob) error {
+func (r *reconciler) reconcileOrganizations(j recon.Job) error {
 	orgs, err := r.cf.ListOrgs()
 	if err != nil {
 		return err

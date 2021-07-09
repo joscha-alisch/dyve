@@ -3,6 +3,7 @@ package cloudfoundry
 import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"testing"
 	"time"
 )
@@ -18,7 +19,7 @@ func TestReconciler(t *testing.T) {
 		{
 			desc: "updates org",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileSpaces, Guid: "org-a-guid"},
+				job: &recon.Job{Type: ReconcileSpaces, Guid: "org-a-guid"},
 				b: backend{
 					Orgs: map[string]*Org{"org-a-guid": {
 						OrgInfo: OrgInfo{Name: "org", Guid: "org-a-guid"},
@@ -36,7 +37,7 @@ func TestReconciler(t *testing.T) {
 		{
 			desc: "updates orgs",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileOrganizations, Guid: "main"},
+				job: &recon.Job{Type: ReconcileOrganizations, Guid: "main"},
 				b:   backend{CfApis: map[string]*CF{"main": {CFInfo: CFInfo{Guid: "main"}}}},
 			},
 			cf: fakeCf{b: backend{
@@ -50,7 +51,7 @@ func TestReconciler(t *testing.T) {
 		{
 			desc: "updates space",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileApps, Guid: "space-a"},
+				job: &recon.Job{Type: ReconcileApps, Guid: "space-a"},
 				b: backend{
 					Spaces: map[string]*Space{"space-a": {SpaceInfo: SpaceInfo{Guid: "space-a"}}},
 				},
@@ -74,7 +75,7 @@ func TestReconciler(t *testing.T) {
 		{
 			desc: "removes org when not found",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileSpaces, Guid: "not_exist"},
+				job: &recon.Job{Type: ReconcileSpaces, Guid: "not_exist"},
 				b: backend{
 					Orgs: map[string]*Org{
 						"not_exist": {OrgInfo: OrgInfo{Guid: "not_exist"}},
@@ -86,7 +87,7 @@ func TestReconciler(t *testing.T) {
 		{
 			desc: "removes space when not found",
 			db: fakeDb{
-				job: &ReconcileJob{Type: ReconcileApps, Guid: "not_exist"},
+				job: &recon.Job{Type: ReconcileApps, Guid: "not_exist"},
 				b: backend{
 					Spaces: map[string]*Space{
 						"not_exist": {SpaceInfo: SpaceInfo{Guid: "not_exist"}},
@@ -167,7 +168,7 @@ func (f *fakeCf) GetApp(guid string) (App, error) {
 }
 
 type fakeDb struct {
-	job *ReconcileJob
+	job *recon.Job
 	b   backend
 }
 
@@ -250,9 +251,9 @@ func (f *fakeDb) UpsertSpace(s Space) error {
 	return nil
 }
 
-func (f *fakeDb) AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool) {
+func (f *fakeDb) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
 	if f.job == nil {
-		return ReconcileJob{}, false
+		return recon.Job{}, false
 	}
 	return *f.job, true
 }

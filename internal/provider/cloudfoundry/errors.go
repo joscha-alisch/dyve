@@ -3,13 +3,14 @@ package cloudfoundry
 import (
 	"errors"
 	"fmt"
+	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 )
 
 var errNotFound = errors.New("not found")
 
 type errReconcileFailed struct {
 	Err error
-	Job ReconcileJob
+	Job recon.Job
 }
 
 func (r *errReconcileFailed) Is(target error) bool {

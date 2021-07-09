@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/benweissmann/memongo"
 	"github.com/google/go-cmp/cmp"
+	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -120,7 +121,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"name": "a", "guid": "abc", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileSpaces, Guid: "abc"}
+			expected := recon.Job{Type: ReconcileSpaces, Guid: "abc"}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -133,7 +134,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"name": "a", "guid": "abc", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileApps, Guid: "abc"}
+			expected := recon.Job{Type: ReconcileApps, Guid: "abc"}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -145,7 +146,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"guid": "main", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileOrganizations, Guid: "main"}
+			expected := recon.Job{Type: ReconcileOrganizations, Guid: "main"}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -157,7 +158,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"name": "a", "guid": "abc"},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := ReconcileJob{Type: ReconcileSpaces, Guid: "abc"}
+			expected := recon.Job{Type: ReconcileSpaces, Guid: "abc"}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))

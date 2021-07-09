@@ -2,19 +2,6 @@ package cloudfoundry
 
 import "time"
 
-type ReconcileType string
-
-const (
-	ReconcileOrganizations ReconcileType = "organizations"
-	ReconcileSpaces        ReconcileType = "spaces"
-	ReconcileApps          ReconcileType = "apps"
-)
-
-type ReconcileJob struct {
-	Type ReconcileType
-	Guid string
-}
-
 type CFInfo struct {
 	Guid string
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/rs/zerolog/log"
 	"net/http"
-	"strconv"
 )
 import "github.com/gorilla/mux"
 
@@ -82,32 +81,4 @@ func respond(w http.ResponseWriter, r response) {
 	if err != nil {
 		log.Error().Interface("response", r).Err(err).Msg("error writing response")
 	}
-}
-
-func mustQueryInt(r *http.Request, queryKey string) (int, error) {
-	valueStr := r.FormValue(queryKey)
-	if valueStr == "" {
-		return 0, errExpectedQueryParamMissing
-	}
-
-	value, err := strconv.Atoi(valueStr)
-	if err != nil {
-		return 0, err
-	}
-
-	return value, nil
-}
-
-func defaultQueryInt(r *http.Request, queryKey string, defaultValue int) (int, error) {
-	valueStr := r.FormValue(queryKey)
-	if valueStr == "" {
-		return defaultValue, nil
-	}
-
-	value, err := strconv.Atoi(valueStr)
-	if err != nil {
-		return 0, err
-	}
-
-	return value, nil
 }

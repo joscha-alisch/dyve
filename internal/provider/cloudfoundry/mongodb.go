@@ -2,6 +2,7 @@ package cloudfoundry
 
 import (
 	"context"
+	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -214,7 +215,7 @@ func (d *mongoDatabase) deleteBy(coll *mongo.Collection, filter bson.M) (bool, e
 	return res.DeletedCount > 0, nil
 }
 
-func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool) {
+func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
 	t := currentTime()
 
 	j, ok := d.acceptCollectionReconcileJob(d.orgs, t, olderThan)
@@ -235,10 +236,10 @@ func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Duration) (ReconcileJo
 		return j, true
 	}
 
-	return ReconcileJob{}, false
+	return recon.Job{}, false
 }
 
-func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, t time.Time, olderThan time.Duration) (ReconcileJob, bool) {
+func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, t time.Time, olderThan time.Duration) (recon.Job, bool) {
 	lessThanTime := t.Add(-olderThan)
 	res := coll.FindOneAndUpdate(context.Background(), bson.M{
 		"$or": bson.A{
@@ -253,10 +254,10 @@ func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, t t
 		},
 	}, options.FindOneAndUpdate().SetSort(bson.D{{"lastUpdated", 1}}))
 
-	j := ReconcileJob{}
+	j := recon.Job{}
 	err := res.Decode(&j)
 	if err != nil {
-		return ReconcileJob{}, false
+		return recon.Job{}, false
 	}
 	return j, true
 }

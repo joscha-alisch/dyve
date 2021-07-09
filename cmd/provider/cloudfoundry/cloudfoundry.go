@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/joscha-alisch/dyve/internal/provider/cloudfoundry"
+	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"os"
 	"time"
@@ -31,7 +32,7 @@ func main() {
 	}
 
 	r := cloudfoundry.NewReconciler(db, cf)
-	s := cloudfoundry.NewScheduler(r)
+	s := recon.NewScheduler(r)
 	p := cloudfoundry.NewAppProvider(db)
 
 	err = s.Run(8, 10*time.Second)

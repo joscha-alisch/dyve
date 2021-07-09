@@ -1,9 +1,12 @@
 package cloudfoundry
 
-import "time"
+import (
+	"github.com/joscha-alisch/dyve/internal/reconciliation"
+	"time"
+)
 
 type Database interface {
-	AcceptReconcileJob(olderThan time.Duration) (ReconcileJob, bool)
+	AcceptReconcileJob(olderThan time.Duration) (reconciliation.Job, bool)
 
 	UpsertOrgs(cfGuid string, orgs []Org) error
 	UpsertOrgSpaces(orgGuid string, spaces []Space) error

@@ -1,15 +1,15 @@
-package cloudfoundry
+package reconciliation
 
 import (
 	"github.com/rs/zerolog/log"
 	"time"
 )
 
-type ReconciliationScheduler interface {
+type Scheduler interface {
 	Run(n int, d time.Duration) error
 }
 
-func NewScheduler(r Reconciler) ReconciliationScheduler {
+func NewScheduler(r Reconciler) Scheduler {
 	return &scheduler{
 		r: r,
 	}
