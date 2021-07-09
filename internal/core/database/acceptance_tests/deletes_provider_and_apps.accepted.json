@@ -1,0 +1,21 @@
+{
+    "apps": [
+        {
+            "id": "app-c",
+            "name": "app-c",
+            "provider": "provider-b"
+        },
+        {
+            "id": "app-d",
+            "name": "app-d",
+            "provider": "provider-b"
+        }
+    ],
+    "providers": [
+        {
+            "id": "provider-b",
+            "lastUpdated": "2006-01-01T14:58:30Z",
+            "type": "apps"
+        }
+    ]
+}
