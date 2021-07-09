@@ -14,6 +14,5 @@ type Database interface {
 	DeleteApp(guid string)
 
 	ListApps() ([]App, error)
-	ListAppsPaged(page int, perPage int) (int, []App, error)
 	GetApp(id string) (App, error)
 }

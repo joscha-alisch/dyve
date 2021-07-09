@@ -3,7 +3,6 @@ package cloudfoundry
 import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"math"
 	"testing"
 	"time"
 )
@@ -170,19 +169,6 @@ func (f *fakeCf) GetApp(guid string) (App, error) {
 type fakeDb struct {
 	job *ReconcileJob
 	b   backend
-}
-
-func (f *fakeDb) ListAppsPaged(page int, perPage int) (int, []App, error) {
-	apps, err := f.ListApps()
-	if err != nil {
-		return 0, nil, err
-	}
-
-	total := len(apps)
-	cursor := perPage * page
-	until := math.Min(float64(total), float64(cursor+perPage))
-
-	return total, apps[cursor:int(until)], nil
 }
 
 func (f *fakeDb) GetApp(id string) (App, error) {

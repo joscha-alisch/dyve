@@ -16,10 +16,8 @@ func ListenAndServeAppProvider(addr string, p AppProvider) error {
 func NewAppProviderHandler(p AppProvider) http.Handler {
 	h := &appProviderHandler{Router: mux.NewRouter(), p: p}
 
-	h.Path("/apps").Queries("perPage", "").HandlerFunc(h.listAppsPaged)
 	h.HandleFunc("/apps", h.listApps)
 	h.HandleFunc("/apps/{id:[0-9a-z-]+}", h.getApp)
-	h.Path("/search").HandlerFunc(h.search)
 
 	return h
 }
@@ -59,59 +57,6 @@ func (h *appProviderHandler) getApp(w http.ResponseWriter, r *http.Request) {
 	respondOk(w, app)
 }
 
-func (h *appProviderHandler) search(w http.ResponseWriter, r *http.Request) {
-	term := r.FormValue("term")
-	limitStr := r.FormValue("limit")
-
-	var err error
-	var limit = 10
-
-	if term == "" {
-		respondErr(w, http.StatusBadRequest, errors.New("query param 'term' is required"))
-		return
-	}
-
-	if limitStr != "" {
-		limit, err = strconv.Atoi(limitStr)
-		if err != nil {
-			respondErr(w, http.StatusBadRequest, errors.New("query param 'limit' is not an integer"))
-			return
-		}
-	}
-
-	matches, err := h.p.Search(term, limit)
-	if err != nil {
-		panic(err)
-	}
-
-	respondOk(w, matches)
-}
-
-func (h *appProviderHandler) listAppsPaged(w http.ResponseWriter, r *http.Request) {
-	perPage, err := mustQueryInt(r, "perPage")
-	if err != nil {
-		if errors.Is(err, errExpectedQueryParamMissing) {
-			respondErr(w, http.StatusInternalServerError, ErrInternal)
-			return
-		}
-		respondErr(w, http.StatusBadRequest, ErrQueryPerPageMalformed)
-		return
-	}
-
-	page, err := defaultQueryInt(r, "page", 0)
-	if err != nil {
-		 respondErr(w, http.StatusBadRequest, ErrQueryPageMalformed)
-		return
-	}
-
-	apps, err := h.p.ListAppsPaged(perPage, page)
-	if err != nil {
-		panic(err)
-	}
-
-	respondOk(w, apps)
-}
-
 func respondOk(w http.ResponseWriter, result interface{}) {
 	respond(w, response{
 		Status: http.StatusOK,
@@ -138,7 +83,6 @@ func respond(w http.ResponseWriter, r response) {
 		log.Error().Interface("response", r).Err(err).Msg("error writing response")
 	}
 }
-
 
 func mustQueryInt(r *http.Request, queryKey string) (int, error) {
 	valueStr := r.FormValue(queryKey)
