@@ -3,10 +3,12 @@ package api
 import (
 	"github.com/approvals/go-approval-tests"
 	"github.com/approvals/go-approval-tests/reporters"
+	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"net/http/httptest"
 	"net/http/httputil"
 	"testing"
+	"time"
 )
 
 func TestName(t *testing.T) {
@@ -51,6 +53,18 @@ func TestName(t *testing.T) {
 
 type fakeDb struct {
 	page sdk.AppPage
+}
+
+func (f *fakeDb) DeleteAppProvider(providerId string) error {
+	panic("implement me")
+}
+
+func (f *fakeDb) UpdateApps(providerId string, apps []sdk.App) error {
+	panic("implement me")
+}
+
+func (f *fakeDb) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
+	panic("implement me")
 }
 
 func (f *fakeDb) ListAppsPaginated(perPage int, page int) (sdk.AppPage, error) {
