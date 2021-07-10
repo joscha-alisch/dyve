@@ -57,6 +57,18 @@ func TestMongoIntegration(t *testing.T) {
 				{"app-b", "new-app-b"},
 			})
 		}},
+		{desc: "gets app", state: baseState, f: func(db Database, tt *testing.T) error {
+			app, err := db.GetApp("app-a")
+			expected := sdk.App{
+				Id:   "app-a",
+				Name: "app-a",
+			}
+			if !cmp.Equal(expected, app) {
+				tt.Errorf("wrong app returned:\n%s\n", cmp.Diff(expected, app))
+			}
+
+			return err
+		}},
 		{desc: "adds new apps", state: baseState, f: func(db Database, tt *testing.T) error {
 			return db.UpdateApps("provider-a", []sdk.App{
 				{"app-a", "app-a"},

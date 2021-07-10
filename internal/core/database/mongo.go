@@ -52,7 +52,17 @@ type mongoDb struct {
 }
 
 func (m *mongoDb) GetApp(id string) (sdk.App, error) {
-	panic("implement me")
+	res := m.apps.FindOne(context.Background(), bson.M{
+		"id": id,
+	})
+
+	a := sdk.App{}
+	err := res.Decode(&a)
+	if err != nil {
+		return sdk.App{}, err
+	}
+
+	return a, nil
 }
 
 func (m *mongoDb) AddAppProvider(providerId string) error {

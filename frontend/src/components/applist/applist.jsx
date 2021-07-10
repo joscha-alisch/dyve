@@ -8,6 +8,7 @@ import {FormControl, InputLabel, MenuItem, Select} from "@material-ui/core";
 import AppCard from "../appcard/appcard";
 import ListContext from "@material-ui/core/List/ListContext";
 import ListControl from "../listcontrol/listcontrol";
+import Heading from "../heading/heading";
 
 const AppList = () => {
     let [apps, setApps] = useState([])
@@ -45,7 +46,7 @@ const AppList = () => {
     }
 
     return <Fragment>
-        <h1>Apps</h1>
+        <Heading title="Apps"/>
         {paginationControl}
         {cards}
         {paginationControl}
