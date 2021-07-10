@@ -13,6 +13,8 @@ import {
     Switch,
     Route,
 } from "react-router-dom";
+import AppList from "./components/applist/applist";
+import AppDetail from "./components/appdetail/appdetail";
 
 function App() {
   return (
@@ -44,8 +46,11 @@ function App() {
             ]}/>
             <main className={styles.Content}>
                 <Switch>
-                    <Route path="/apps/">
-                        <h1>Apps</h1>
+                    <Route exact path="/apps/">
+                        <AppList page={0}/>
+                    </Route>
+                    <Route path="/apps/:id">
+                        <AppDetail/>
                     </Route>
                     <Route path="/pipelines/">
                         <h1>Pipelines</h1>
