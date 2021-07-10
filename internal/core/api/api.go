@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/gorilla/mux"
 	"github.com/joscha-alisch/dyve/internal/core/database"
+	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"strconv"
@@ -16,7 +17,9 @@ func New(db database.Database) http.Handler {
 		db:     db,
 	}
 
-	a.Path("/apps").Queries("perPage", "").HandlerFunc(a.listAppsPaginated)
+	a.Path("/api/apps").Queries("perPage", "").HandlerFunc(a.listAppsPaginated)
+	a.Path("/api/apps/{id:[0-9a-z-]+}").HandlerFunc(a.getApp)
+
 	return a
 }
 
@@ -44,6 +47,18 @@ func (a *api) listAppsPaginated(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondOk(w, apps)
+}
+
+func (a *api) getApp(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	app, err := a.db.GetApp(id)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		return
+	}
+
+	respondOk(w, app)
 }
 
 func mustQueryInt(r *http.Request, queryKey string) (int, error) {

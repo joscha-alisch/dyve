@@ -51,6 +51,10 @@ type mongoDb struct {
 	apps      *mongo.Collection
 }
 
+func (m *mongoDb) GetApp(id string) (sdk.App, error) {
+	panic("implement me")
+}
+
 func (m *mongoDb) AddAppProvider(providerId string) error {
 	_, err := m.providers.UpdateOne(context.Background(), bson.M{
 		"id": providerId,

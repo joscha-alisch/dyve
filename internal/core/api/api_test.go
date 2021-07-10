@@ -11,7 +11,40 @@ import (
 	"time"
 )
 
-func TestName(t *testing.T) {
+func TestGetApp(t *testing.T) {
+	tests := []struct {
+		desc   string
+		state  sdk.App
+		method string
+		path   string
+	}{
+		{"gets app", sdk.App{
+			Id: "guid-a", Name: "name-a",
+		}, "GET", "/api/apps/guid-a"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(tt *testing.T) {
+			h := New(&fakeDb{app: test.state})
+
+			s := httptest.NewServer(h)
+			defer s.Close()
+
+			w := httptest.NewRecorder()
+
+			r := httptest.NewRequest(test.method, s.URL+test.path, nil)
+			h.ServeHTTP(w, r)
+
+			res, _ := httputil.DumpResponse(w.Result(), true)
+			approvals.UseFolder("testdata")
+			approvals.UseReporter(reporters.NewGoLandReporter())
+			approvals.VerifyString(tt, string(res))
+		})
+	}
+
+}
+
+func TestListApps(t *testing.T) {
 	tests := []struct {
 		desc   string
 		state  sdk.AppPage
@@ -27,12 +60,12 @@ func TestName(t *testing.T) {
 				{Id: "guid-a", Name: "name-a"},
 				{Id: "guid-b", Name: "name-b"},
 			},
-		}, "GET", "/apps?perPage=2&page=5"},
+		}, "GET", "/api/apps?perPage=2&page=5"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
-			h := New(&fakeDb{test.state})
+			h := New(&fakeDb{page: test.state})
 
 			s := httptest.NewServer(h)
 			defer s.Close()
@@ -53,6 +86,18 @@ func TestName(t *testing.T) {
 
 type fakeDb struct {
 	page sdk.AppPage
+	app  sdk.App
+}
+
+func (f *fakeDb) GetApp(id string) (sdk.App, error) {
+	if f.app.Id == id {
+		return f.app, nil
+	}
+	return sdk.App{}, sdk.ErrNotFound
+}
+
+func (f *fakeDb) AddAppProvider(providerId string) error {
+	panic("implement me")
 }
 
 func (f *fakeDb) DeleteAppProvider(providerId string) error {

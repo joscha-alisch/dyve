@@ -8,6 +8,7 @@ import (
 type Database interface {
 	recon.JobProvider
 	ListAppsPaginated(perPage int, page int) (sdk.AppPage, error)
+	GetApp(id string) (sdk.App, error)
 
 	AddAppProvider(providerId string) error
 	DeleteAppProvider(providerId string) error
