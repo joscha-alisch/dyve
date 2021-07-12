@@ -53,8 +53,8 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 		{desc: "updates existing apps", state: baseState, f: func(db Database, tt *testing.T) error {
 			return db.UpdateApps("provider-a", []sdk.App{
-				{"app-a", "new-app-a"},
-				{"app-b", "new-app-b"},
+				{Id: "app-a", Name: "new-app-a"},
+				{Id: "app-b", Name: "new-app-b"},
 			})
 		}},
 		{desc: "gets app", state: baseState, f: func(db Database, tt *testing.T) error {
@@ -71,14 +71,14 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 		{desc: "adds new apps", state: baseState, f: func(db Database, tt *testing.T) error {
 			return db.UpdateApps("provider-a", []sdk.App{
-				{"app-a", "app-a"},
-				{"app-b", "app-b"},
-				{"app-c", "app-c"},
+				{Id: "app-a", Name: "app-a"},
+				{Id: "app-b", Name: "app-b"},
+				{Id: "app-c", Name: "app-c"},
 			})
 		}},
 		{desc: "removes old apps", state: baseState, f: func(db Database, tt *testing.T) error {
 			return db.UpdateApps("provider-a", []sdk.App{
-				{"app-a", "app-a"},
+				{Id: "app-a", Name: "app-a"},
 			})
 		}},
 		{desc: "deletes provider and apps", state: baseState, f: func(db Database, tt *testing.T) error {
@@ -138,8 +138,8 @@ func TestMongoIntegration(t *testing.T) {
 				PerPage:      2,
 				Page:         1,
 				Apps: []sdk.App{
-					{"app-c", "app-c"},
-					{"app-d", "app-d"},
+					{Id: "app-c", Name: "app-c"},
+					{Id: "app-d", Name: "app-d"},
 				},
 			}
 

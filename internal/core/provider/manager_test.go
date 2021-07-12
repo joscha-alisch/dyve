@@ -28,7 +28,8 @@ func TestGetAppProvider(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
-			m := NewManager(nil)
+			db := &fakeDb{}
+			m := NewManager(db)
 			test.setup(m)
 
 			res, err := m.GetAppProvider("test-id")
@@ -95,6 +96,10 @@ func (f *fakeAppProvider) GetApp(id string) (sdk.App, error) {
 
 type fakeDb struct {
 	added []string
+}
+
+func (f *fakeDb) GetApp(id string) (sdk.App, error) {
+	panic("implement me")
 }
 
 func (f *fakeDb) AddAppProvider(providerId string) error {

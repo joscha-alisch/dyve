@@ -1,6 +1,9 @@
 package cloudfoundry
 
-import "time"
+import (
+	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
+	"time"
+)
 
 type CFInfo struct {
 	Guid string
@@ -44,4 +47,26 @@ type AppInfo struct {
 
 type App struct {
 	AppInfo `bson:",inline"`
+}
+
+func (a App) toSdkApp() sdk.App {
+	app := sdk.App{
+		Id:   a.Guid,
+		Name: a.Name,
+		Meta: map[string]interface{}{},
+	}
+
+	if a.Space.Org.Name != "" {
+		app.Meta["org"] = a.Space.Org.Name
+	}
+
+	if a.Space.Name != "" {
+		app.Meta["space"] = a.Space.Name
+	}
+
+	if len(app.Meta) == 0 {
+		app.Meta = nil
+	}
+
+	return app
 }

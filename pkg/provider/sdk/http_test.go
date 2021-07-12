@@ -9,17 +9,17 @@ import (
 )
 
 var apps = []App{
-	{"a", "name-a"},
-	{"b", "name-b"},
-	{"c", "name-c"},
-	{"d", "name-d"},
-	{"e", "name-e"},
-	{"f", "name-f"},
-	{"g", "name-g"},
-	{"h", "name-h"},
-	{"i", "name-i"},
-	{"j", "name-j"},
-	{"840e560f-38d3-460e-be23-8677a4539f35", "name-k"},
+	{Id: "a", Name: "name-a"},
+	{Id: "b", Name: "name-b"},
+	{Id: "c", Name: "name-c"},
+	{Id: "d", Name: "name-d"},
+	{Id: "e", Name: "name-e"},
+	{Id: "f", Name: "name-f"},
+	{Id: "g", Name: "name-g"},
+	{Id: "h", Name: "name-h"},
+	{Id: "i", Name: "name-i"},
+	{Id: "j", Name: "name-j"},
+	{Id: "840e560f-38d3-460e-be23-8677a4539f35", Name: "name-k"},
 }
 
 func TestName(t *testing.T) {

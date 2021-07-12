@@ -1,4 +1,4 @@
-import {Paper} from "@material-ui/core";
+import {Chip, Paper} from "@material-ui/core";
 import styles from "./appcard.module.sass"
 import {Skeleton} from "@material-ui/lab";
 import {Link} from "react-router-dom";
@@ -16,6 +16,11 @@ const AppCard = ({className, app, loading}) => {
             <span className={styles.Status}/>
             <Link to={"/apps/" + app.id}>{app.name}</Link>
         </h1>
+
+        {Object.keys(app.meta).map((k) => <Chip
+            size="small"
+            label={k+": "+app.meta[k]}
+        />)}
     </Paper>
 }
 

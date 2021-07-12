@@ -22,10 +22,7 @@ func (p *provider) ListApps() ([]sdk.App, error) {
 
 	var res []sdk.App
 	for _, app := range cfApps {
-		res = append(res, sdk.App{
-			Id:   app.Guid,
-			Name: app.Name,
-		})
+		res = append(res, app.toSdkApp())
 	}
 	return res, nil
 }
@@ -36,8 +33,5 @@ func (p *provider) GetApp(id string) (sdk.App, error) {
 		return sdk.App{}, err
 	}
 
-	return sdk.App{
-		Id:   app.Guid,
-		Name: app.Name,
-	}, nil
+	return app.toSdkApp(), nil
 }

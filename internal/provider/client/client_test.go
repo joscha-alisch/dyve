@@ -50,8 +50,8 @@ func TestListApps(t *testing.T) {
 		expectedErr error
 	}{
 		{desc: "returns apps", apps: []sdk.App{
-			{"id-a", "name-a"},
-			{"id-b", "name-b"},
+			{Id: "id-a", Name: "name-a"},
+			{Id: "id-b", Name: "name-b"},
 		}},
 	}
 

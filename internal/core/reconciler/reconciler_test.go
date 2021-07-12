@@ -108,6 +108,14 @@ type fakeDb struct {
 	apps map[string][]sdk.App
 }
 
+func (f *fakeDb) GetApp(id string) (sdk.App, error) {
+	panic("implement me")
+}
+
+func (f *fakeDb) AddAppProvider(providerId string) error {
+	panic("implement me")
+}
+
 func (f *fakeDb) DeleteAppProvider(providerId string) error {
 	delete(f.apps, providerId)
 	return nil
