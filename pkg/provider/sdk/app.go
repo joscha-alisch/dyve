@@ -1,5 +1,10 @@
 package sdk
 
+type AppProvider interface {
+	ListApps() ([]App, error)
+	GetApp(id string) (App, error)
+}
+
 type AppPage struct {
 	TotalResults int   `json:"totalResults"`
 	TotalPages   int   `json:"totalPages"`

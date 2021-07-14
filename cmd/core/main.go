@@ -24,15 +24,15 @@ func main() {
 	}
 
 	m := provider.NewManager(db)
-	cfCli := providerClient.NewAppProviderClient("http://localhost:9003", nil)
-	err = m.AddAppProvider("cloudfoundry", cfCli)
+	demoCli := providerClient.NewAppProviderClient("http://localhost:9003", nil)
+	err = m.AddAppProvider("demo", demoCli)
 	if err != nil {
 		panic(err)
 	}
 
-	r := coreRecon.NewReconciler(db, m)
+	r := coreRecon.NewReconciler(db, m, 5*time.Second)
 	s := recon.NewScheduler(r)
-	err = s.Run(8, 1*time.Minute)
+	err = s.Run(8, 5*time.Second)
 	if err != nil {
 		panic(err)
 	}

@@ -56,7 +56,7 @@ func TestName(t *testing.T) {
 					apps: test.providerApps,
 					err:  test.providerErr,
 				},
-			})
+			}, 1*time.Minute)
 			worked, err := r.Run()
 			if !errors.Is(err, test.expectedErr) {
 				tt.Errorf("\nwanted err %v\n   got err %v", test.expectedErr, err)

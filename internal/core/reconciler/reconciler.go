@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-func NewReconciler(db database.Database, m provider.Manager) recon.Reconciler {
+func NewReconciler(db database.Database, m provider.Manager, olderThan time.Duration) recon.Reconciler {
 	r := &reconciler{
-		Reconciler: recon.NewReconciler(db, 1*time.Minute),
+		Reconciler: recon.NewReconciler(db, olderThan),
 		db:         db,
 		m:          m,
 	}

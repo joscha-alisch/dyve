@@ -2,58 +2,36 @@ package sdk
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"strconv"
+	"time"
 )
-import "github.com/gorilla/mux"
 
-func ListenAndServeAppProvider(addr string, p AppProvider) error {
-	return http.ListenAndServe(addr, NewAppProviderHandler(p))
+type ProviderConfig struct {
+	Apps      AppProvider
+	Pipelines PipelineProvider
 }
 
-func NewAppProviderHandler(p AppProvider) http.Handler {
-	h := &appProviderHandler{Router: mux.NewRouter(), p: p}
+func ListenAndServe(addr string, p ProviderConfig) error {
+	h := mux.NewRouter()
 
-	h.HandleFunc("/apps", h.listApps)
-	h.HandleFunc("/apps/{id:[0-9a-z-]+}", h.getApp)
+	if p.Pipelines != nil {
+		h.PathPrefix("/apps").Handler(NewAppProviderHandler(p.Apps))
+	}
 
-	return h
-}
+	if p.Pipelines != nil {
+		h.PathPrefix("/pipelines").Handler(NewPipelineProviderHandler(p.Pipelines))
+	}
 
-type appProviderHandler struct {
-	*mux.Router
-
-	p AppProvider
+	return http.ListenAndServe(addr, h)
 }
 
 type response struct {
 	Status int         `json:"status"`
 	Err    string      `json:"error,omitempty"`
 	Result interface{} `json:"result,omitempty"`
-}
-
-func (h *appProviderHandler) listApps(w http.ResponseWriter, r *http.Request) {
-	apps, err := h.p.ListApps()
-	if err != nil {
-		respondErr(w, http.StatusInternalServerError, err)
-		return
-	}
-	respondOk(w, apps)
-}
-
-func (h *appProviderHandler) getApp(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["id"]
-	app, err := h.p.GetApp(id)
-	if errors.Is(err, ErrNotFound) {
-		respondErr(w, http.StatusNotFound, err)
-		return
-	} else if err != nil {
-		respondErr(w, http.StatusInternalServerError, err)
-		return
-	}
-
-	respondOk(w, app)
 }
 
 func respondOk(w http.ResponseWriter, result interface{}) {
@@ -81,4 +59,32 @@ func respond(w http.ResponseWriter, r response) {
 	if err != nil {
 		log.Error().Interface("response", r).Err(err).Msg("error writing response")
 	}
+}
+
+func defaultQueryInt(r *http.Request, queryKey string, defaultValue int) (int, error) {
+	valueStr := r.FormValue(queryKey)
+	if valueStr == "" {
+		return defaultValue, nil
+	}
+
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return value, nil
+}
+
+func defaultQueryTime(r *http.Request, queryKey string, defaultValue time.Time) (time.Time, error) {
+	valueStr := r.FormValue(queryKey)
+	if valueStr == "" {
+		return defaultValue, nil
+	}
+
+	value, err := time.Parse(time.RFC3339, valueStr)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return value, nil
 }
