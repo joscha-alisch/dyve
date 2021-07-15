@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+type PipelinePage struct {
+	Pagination
+	Pipelines []Pipeline
+}
+
 type Pipeline struct {
 	Id         string             `json:"id"`
 	Name       string             `json:"name"`

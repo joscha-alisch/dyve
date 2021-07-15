@@ -108,6 +108,26 @@ type fakeDb struct {
 	apps map[string][]sdk.App
 }
 
+func (f *fakeDb) ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error) {
+	panic("implement me")
+}
+
+func (f *fakeDb) GetPipeline(id string) (sdk.Pipeline, error) {
+	panic("implement me")
+}
+
+func (f *fakeDb) AddPipelineProvider(providerId string) error {
+	panic("implement me")
+}
+
+func (f *fakeDb) DeletePipelineProvider(providerId string) error {
+	panic("implement me")
+}
+
+func (f *fakeDb) UpdatePipelines(providerId string, pipelines []sdk.Pipeline) {
+	panic("implement me")
+}
+
 func (f *fakeDb) GetApp(id string) (sdk.App, error) {
 	panic("implement me")
 }

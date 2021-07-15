@@ -24,7 +24,7 @@ import (
 
 var someTime, _ = time.Parse(time.RFC3339, "2006-01-01T15:00:00Z")
 
-var baseState = map[string]interface{}{
+var baseAppState = map[string]interface{}{
 	"providers": []bson.M{
 		{"id": "provider-a", "type": "apps", "lastUpdated": "2006-01-01T14:58:00Z"},
 		{"id": "provider-b", "type": "apps", "lastUpdated": "2006-01-01T14:58:30Z"},
@@ -34,6 +34,19 @@ var baseState = map[string]interface{}{
 		{"provider": "provider-a", "name": "app-b", "id": "app-b"},
 		{"provider": "provider-b", "name": "app-c", "id": "app-c"},
 		{"provider": "provider-b", "name": "app-d", "id": "app-d"},
+	},
+}
+
+var basePipelinesState = map[string]interface{}{
+	"providers": []bson.M{
+		{"id": "provider-a", "type": "pipelines", "lastUpdated": "2006-01-01T14:58:00Z"},
+		{"id": "provider-b", "type": "pipelines", "lastUpdated": "2006-01-01T14:58:30Z"},
+	},
+	"pipelines": []bson.M{
+		{"provider": "provider-a", "name": "pipeline-a", "id": "pipeline-a"},
+		{"provider": "provider-a", "name": "pipeline-b", "id": "pipeline-b"},
+		{"provider": "provider-b", "name": "pipeline-c", "id": "pipeline-c"},
+		{"provider": "provider-b", "name": "pipeline-d", "id": "pipeline-d"},
 	},
 }
 
@@ -48,16 +61,31 @@ func TestMongoIntegration(t *testing.T) {
 		err   error
 		state bson.M
 	}{
-		{desc: "adds app provider", state: baseState, f: func(db Database, tt *testing.T) error {
+		/**
+		Providers
+		*/
+		{desc: "adds app provider", state: baseAppState, f: func(db Database, tt *testing.T) error {
 			return db.AddAppProvider("provider-c")
 		}},
-		{desc: "updates existing apps", state: baseState, f: func(db Database, tt *testing.T) error {
+		{desc: "adds pipeline provider", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.AddPipelineProvider("provider-c")
+		}},
+		{desc: "deletes provider and apps", state: baseAppState, f: func(db Database, tt *testing.T) error {
+			return db.DeleteAppProvider("provider-a")
+		}},
+		{desc: "deletes provider and pipelines", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.DeletePipelineProvider("provider-a")
+		}},
+		/**
+		Apps
+		*/
+		{desc: "updates existing apps", state: baseAppState, f: func(db Database, tt *testing.T) error {
 			return db.UpdateApps("provider-a", []sdk.App{
 				{Id: "app-a", Name: "new-app-a"},
 				{Id: "app-b", Name: "new-app-b"},
 			})
 		}},
-		{desc: "gets app", state: baseState, f: func(db Database, tt *testing.T) error {
+		{desc: "gets app", state: baseAppState, f: func(db Database, tt *testing.T) error {
 			app, err := db.GetApp("app-a")
 			expected := sdk.App{
 				Id:   "app-a",
@@ -69,21 +97,101 @@ func TestMongoIntegration(t *testing.T) {
 
 			return err
 		}},
-		{desc: "adds new apps", state: baseState, f: func(db Database, tt *testing.T) error {
+		{desc: "adds new apps", state: baseAppState, f: func(db Database, tt *testing.T) error {
 			return db.UpdateApps("provider-a", []sdk.App{
 				{Id: "app-a", Name: "app-a"},
 				{Id: "app-b", Name: "app-b"},
 				{Id: "app-c", Name: "app-c"},
 			})
 		}},
-		{desc: "removes old apps", state: baseState, f: func(db Database, tt *testing.T) error {
+		{desc: "removes old apps", state: baseAppState, f: func(db Database, tt *testing.T) error {
 			return db.UpdateApps("provider-a", []sdk.App{
 				{Id: "app-a", Name: "app-a"},
 			})
 		}},
-		{desc: "deletes provider and apps", state: baseState, f: func(db Database, tt *testing.T) error {
-			return db.DeleteAppProvider("provider-a")
+		{desc: "lists apps paginated", state: baseAppState, f: func(db Database, tt *testing.T) error {
+			apps, err := db.ListAppsPaginated(2, 1)
+			if err != nil {
+				return err
+			}
+			expected := sdk.AppPage{
+				Pagination: sdk.Pagination{
+					TotalResults: 4,
+					TotalPages:   2,
+					PerPage:      2,
+					Page:         1,
+				},
+				Apps: []sdk.App{
+					{Id: "app-c", Name: "app-c"},
+					{Id: "app-d", Name: "app-d"},
+				},
+			}
+
+			if !cmp.Equal(expected, apps) {
+				tt.Errorf("wrong apps returned:\n%s\n", cmp.Diff(expected, apps))
+			}
+			return nil
 		}},
+		/**
+		Pipelines
+		*/
+		{desc: "updates existing pipelines", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.UpdatePipelines("provider-a", []sdk.Pipeline{
+				{Id: "pipeline-a", Name: "new-pipeline-a"},
+				{Id: "pipeline-b", Name: "new-pipeline-b"},
+			})
+		}},
+		{desc: "gets pipeline", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			app, err := db.GetPipeline("pipeline-a")
+			expected := sdk.Pipeline{
+				Id:   "pipeline-a",
+				Name: "pipeline-a",
+			}
+			if !cmp.Equal(expected, app) {
+				tt.Errorf("wrong pipeline returned:\n%s\n", cmp.Diff(expected, app))
+			}
+
+			return err
+		}},
+		{desc: "adds new pipelines", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.UpdatePipelines("provider-a", []sdk.Pipeline{
+				{Id: "pipeline-a", Name: "pipeline-a"},
+				{Id: "pipeline-b", Name: "pipeline-b"},
+				{Id: "pipeline-c", Name: "pipeline-c"},
+			})
+		}},
+		{desc: "removes old pipelines", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.UpdatePipelines("provider-a", []sdk.Pipeline{
+				{Id: "pipeline-a", Name: "pipeline-a"},
+			})
+		}},
+		{desc: "lists pipelines paginated", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			apps, err := db.ListPipelinesPaginated(2, 1)
+			if err != nil {
+				return err
+			}
+			expected := sdk.PipelinePage{
+				Pagination: sdk.Pagination{
+					TotalResults: 4,
+					TotalPages:   2,
+					PerPage:      2,
+					Page:         1,
+				},
+				Pipelines: []sdk.Pipeline{
+					{Id: "pipeline-c", Name: "pipeline-c"},
+					{Id: "pipeline-d", Name: "pipeline-d"},
+				},
+			}
+
+			if !cmp.Equal(expected, apps) {
+				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, apps))
+			}
+			return nil
+		}},
+
+		/**
+		Fetch Jobs
+		*/
 		{desc: "fetch app provider job", state: bson.M{
 			"providers": []bson.M{
 				{"id": "provider-a", "type": "apps", "lastUpdated": someTime.Add(-30 * time.Second)},
@@ -124,27 +232,6 @@ func TestMongoIntegration(t *testing.T) {
 			j, ok := db.AcceptReconcileJob(1 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
-			}
-			return nil
-		}},
-		{desc: "lists apps paginated", state: baseState, f: func(db Database, tt *testing.T) error {
-			apps, err := db.ListAppsPaginated(2, 1)
-			if err != nil {
-				return err
-			}
-			expected := sdk.AppPage{
-				TotalResults: 4,
-				TotalPages:   2,
-				PerPage:      2,
-				Page:         1,
-				Apps: []sdk.App{
-					{Id: "app-c", Name: "app-c"},
-					{Id: "app-d", Name: "app-d"},
-				},
-			}
-
-			if !cmp.Equal(expected, apps) {
-				tt.Errorf("wrong apps returned:\n%s\n", cmp.Diff(expected, apps))
 			}
 			return nil
 		}},

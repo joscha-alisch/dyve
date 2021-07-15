@@ -1,0 +1,44 @@
+{
+    "pipelines": [
+        {
+            "definition": {
+                "connections": null,
+                "steps": null
+            },
+            "id": "pipeline-a",
+            "name": "new-pipeline-a",
+            "provider": "provider-a"
+        },
+        {
+            "definition": {
+                "connections": null,
+                "steps": null
+            },
+            "id": "pipeline-b",
+            "name": "new-pipeline-b",
+            "provider": "provider-a"
+        },
+        {
+            "id": "pipeline-c",
+            "name": "pipeline-c",
+            "provider": "provider-b"
+        },
+        {
+            "id": "pipeline-d",
+            "name": "pipeline-d",
+            "provider": "provider-b"
+        }
+    ],
+    "providers": [
+        {
+            "id": "provider-a",
+            "lastUpdated": "2006-01-01T14:58:00Z",
+            "type": "pipelines"
+        },
+        {
+            "id": "provider-b",
+            "lastUpdated": "2006-01-01T14:58:30Z",
+            "type": "pipelines"
+        }
+    ]
+}

@@ -55,7 +55,7 @@ func TestApps(t *testing.T) {
 			Status: http.StatusOK,
 			Result: map[string]interface{}{"id": "840e560f-38d3-460e-be23-8677a4539f35", "name": "name-k"},
 		}},
-		{"returns 404 for non-existent", apps, "GET", "/dont-exist", http.StatusNotFound, response{
+		{"returns 404 for non-existent", apps, "GET", "/apps/dont-exist", http.StatusNotFound, response{
 			Status: http.StatusNotFound,
 			Err:    "not found",
 		}},

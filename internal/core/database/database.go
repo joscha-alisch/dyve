@@ -13,8 +13,16 @@ type Database interface {
 	AddAppProvider(providerId string) error
 	DeleteAppProvider(providerId string) error
 	UpdateApps(providerId string, apps []sdk.App) error
+
+	ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error)
+	GetPipeline(id string) (sdk.Pipeline, error)
+
+	AddPipelineProvider(providerId string) error
+	DeletePipelineProvider(providerId string) error
+	UpdatePipelines(providerId string, pipelines []sdk.Pipeline) error
 }
 
 const (
-	ReconcileAppProvider recon.Type = "app-provider"
+	ReconcileAppProvider      recon.Type = "app-provider"
+	ReconcilePipelineProvider recon.Type = "pipeline-provider"
 )

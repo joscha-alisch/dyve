@@ -52,10 +52,12 @@ func TestListApps(t *testing.T) {
 		path   string
 	}{
 		{"lists apps", sdk.AppPage{
-			TotalResults: 20,
-			TotalPages:   10,
-			PerPage:      2,
-			Page:         5,
+			Pagination: sdk.Pagination{
+				TotalResults: 20,
+				TotalPages:   10,
+				PerPage:      2,
+				Page:         5,
+			},
 			Apps: []sdk.App{
 				{Id: "guid-a", Name: "name-a"},
 				{Id: "guid-b", Name: "name-b"},
@@ -87,6 +89,26 @@ func TestListApps(t *testing.T) {
 type fakeDb struct {
 	page sdk.AppPage
 	app  sdk.App
+}
+
+func (f *fakeDb) ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error) {
+	panic("implement me")
+}
+
+func (f *fakeDb) GetPipeline(id string) (sdk.Pipeline, error) {
+	panic("implement me")
+}
+
+func (f *fakeDb) AddPipelineProvider(providerId string) error {
+	panic("implement me")
+}
+
+func (f *fakeDb) DeletePipelineProvider(providerId string) error {
+	panic("implement me")
+}
+
+func (f *fakeDb) UpdatePipelines(providerId string, pipelines []sdk.Pipeline) {
+	panic("implement me")
 }
 
 func (f *fakeDb) GetApp(id string) (sdk.App, error) {
