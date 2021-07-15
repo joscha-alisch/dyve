@@ -5,7 +5,7 @@ import {Link} from "react-router-dom";
 
 const AppCard = ({className, app, loading}) => {
     if (loading) {
-        return <Paper className={styles.App + " " + className} elevation={1}>
+        return <Paper className={styles.App + " " + className} elevation={0}>
             <Skeleton animation={"wave"} variant={"text"} width="30%" height={30}/>
             <Skeleton animation={"wave"} variant={"text"} width="15%"/>
         </Paper>

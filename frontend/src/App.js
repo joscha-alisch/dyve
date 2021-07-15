@@ -19,31 +19,30 @@ import AppDetail from "./components/appdetail/appdetail";
 function App() {
   return (
     <div className={styles.App + " nodebug"}>
-        <Header className={styles.Header} />
-
+        <SideBar className={styles.SideBar} menuItems={[
+            {
+                title: "Platform",
+                items: [
+                    { title: "Apps", icon: faLaptopCode, route: "/apps/"},
+                    { title: "Pipelines", icon: faRocket, route: "/pipelines/"},
+                    { title: "Logging", icon: faStream, route: "/logging/"},
+                    { title: "Metrics", icon: faChartLine, route: "/metrics/"},
+                    { title: "Error Reporting", icon: faTemperatureHigh, route: "/errors/" },
+                    { title: "Graph", icon: faProjectDiagram, route: "/graph/" },
+                ]
+            },
+            {
+                title: "Tools",
+                items: [
+                    { title: "Insights", icon: faSearchPlus, route: "/todo/" },
+                    { title: "Network", icon: faNetworkWired, route: "/todo/" },
+                    { title: "Teams", icon: faUserFriends, route: "/todo/" },
+                    { title: "Costs", icon: faDollarSign, route: "/todo/"},
+                ]
+            },
+        ]}/>
         <div className={styles.Flex}>
-            <SideBar className={styles.SideBar} menuItems={[
-                {
-                    title: "Platform",
-                    items: [
-                        { title: "Apps", icon: faLaptopCode, route: "/apps/"},
-                        { title: "Pipelines", icon: faRocket, route: "/pipelines/"},
-                        { title: "Logging", icon: faStream, route: "/logging/"},
-                        { title: "Metrics", icon: faChartLine, route: "/metrics/"},
-                        { title: "Error Reporting", icon: faTemperatureHigh, route: "/errors/" },
-                        { title: "Graph", icon: faProjectDiagram, route: "/graph/" },
-                    ]
-                },
-                {
-                    title: "Tools",
-                    items: [
-                        { title: "Insights", icon: faSearchPlus },
-                        { title: "Network", icon: faNetworkWired },
-                        { title: "Teams", icon: faUserFriends },
-                        { title: "Costs", icon: faDollarSign},
-                    ]
-                },
-            ]}/>
+            <Header className={styles.Header} />
             <main className={styles.Content}>
                 <Switch>
                     <Route exact path="/apps/">
