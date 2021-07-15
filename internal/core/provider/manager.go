@@ -8,6 +8,8 @@ import (
 type Manager interface {
 	AddAppProvider(id string, p sdk.AppProvider) error
 	GetAppProvider(id string) (sdk.AppProvider, error)
+	AddPipelineProvider(id string, p sdk.PipelineProvider) error
+	GetPipelineProvider(id string) (sdk.PipelineProvider, error)
 }
 
 func NewManager(db database.Database) Manager {
@@ -17,8 +19,33 @@ func NewManager(db database.Database) Manager {
 }
 
 type manager struct {
-	appProviders map[string]sdk.AppProvider
-	db           database.Database
+	appProviders      map[string]sdk.AppProvider
+	pipelineProviders map[string]sdk.PipelineProvider
+	db                database.Database
+}
+
+func (m *manager) AddPipelineProvider(id string, p sdk.PipelineProvider) error {
+	if p == nil {
+		return ErrNil
+	}
+
+	if m.pipelineProviders == nil {
+		m.pipelineProviders = make(map[string]sdk.PipelineProvider)
+	}
+
+	if m.pipelineProviders[id] != nil {
+		return ErrExists
+	}
+
+	m.pipelineProviders[id] = p
+	return m.db.AddPipelineProvider(id)
+}
+
+func (m *manager) GetPipelineProvider(id string) (sdk.PipelineProvider, error) {
+	if m.pipelineProviders[id] == nil {
+		return nil, ErrNotFound
+	}
+	return m.pipelineProviders[id], nil
 }
 
 func (m *manager) AddAppProvider(id string, p sdk.AppProvider) error {
