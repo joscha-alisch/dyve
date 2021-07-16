@@ -23,6 +23,6 @@ type Database interface {
 }
 
 const (
-	ReconcileAppProvider      recon.Type = "app-provider"
-	ReconcilePipelineProvider recon.Type = "pipeline-provider"
+	ReconcileAppProvider      recon.Type = "apps"
+	ReconcilePipelineProvider recon.Type = "pipelines"
 )

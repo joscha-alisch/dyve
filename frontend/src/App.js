@@ -15,6 +15,8 @@ import {
 } from "react-router-dom";
 import AppList from "./components/applist/applist";
 import AppDetail from "./components/appdetail/appdetail";
+import Pipelinelist from "./components/pipelinelist/pipelinelist";
+import PipelineDetail from "./components/pipelinedetail/pipelineDetail";
 
 function App() {
   return (
@@ -51,8 +53,11 @@ function App() {
                     <Route path="/apps/:id">
                         <AppDetail/>
                     </Route>
-                    <Route path="/pipelines/">
-                        <h1>Pipelines</h1>
+                    <Route exact path="/pipelines/">
+                        <Pipelinelist page={0}/>
+                    </Route>
+                    <Route path="/pipelines/:id">
+                        <PipelineDetail/>
                     </Route>
                     <Route path="/logging/">
                         <h1>Logging</h1>

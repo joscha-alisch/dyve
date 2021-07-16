@@ -15,6 +15,7 @@ func NewReconciler(db database.Database, m provider.Manager, olderThan time.Dura
 		m:          m,
 	}
 	r.Handler(database.ReconcileAppProvider, r.reconcileAppProvider)
+	r.Handler(database.ReconcilePipelineProvider, r.reconcilePipelineProvider)
 
 	return r
 }
@@ -41,6 +42,26 @@ func (r *reconciler) reconcileAppProvider(j recon.Job) error {
 	}
 
 	r.db.UpdateApps(j.Guid, apps)
+
+	return nil
+}
+
+func (r *reconciler) reconcilePipelineProvider(j recon.Job) error {
+	p, err := r.m.GetPipelineProvider(j.Guid)
+	if errors.Is(err, provider.ErrNotFound) {
+		r.db.DeletePipelineProvider(j.Guid)
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	pipelines, err := p.ListPipelines()
+	if err != nil {
+		return err
+	}
+
+	r.db.UpdatePipelines(j.Guid, pipelines)
 
 	return nil
 }

@@ -1,0 +1,4 @@
+HTTP/1.1 200 OK
+Connection: close
+
+{"status":200,"result":{"id":"guid-a","name":"name-a","definition":{}}}

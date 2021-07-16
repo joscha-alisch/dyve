@@ -6,7 +6,7 @@ import (
 
 type PipelinePage struct {
 	Pagination
-	Pipelines []Pipeline
+	Pipelines []Pipeline `json:"pipelines"`
 }
 
 type Pipeline struct {

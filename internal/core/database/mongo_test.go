@@ -206,6 +206,20 @@ func TestMongoIntegration(t *testing.T) {
 			}
 			return nil
 		}},
+		{desc: "fetch pipeline provider job", state: bson.M{
+			"providers": []bson.M{
+				{"id": "provider-a", "type": "pipelines", "lastUpdated": someTime.Add(-30 * time.Second)},
+				{"id": "provider-b", "type": "pipelines", "lastUpdated": someTime.Add(-90 * time.Second)},
+				{"id": "provider-c", "type": "apps", "lastUpdated": someTime.Add(-60 * time.Second)},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := recon.Job{Type: ReconcilePipelineProvider, Guid: "provider-b"}
+			j, ok := db.AcceptReconcileJob(1 * time.Minute)
+			if !ok || !cmp.Equal(expected, j) {
+				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
+			}
+			return nil
+		}},
 		{desc: "fetch no job", state: bson.M{
 			"providers": []bson.M{
 				{"id": "provider-a", "type": "apps", "lastUpdated": someTime.Add(-20 * time.Second)},
@@ -229,6 +243,18 @@ func TestMongoIntegration(t *testing.T) {
 			},
 		}, f: func(db Database, tt *testing.T) error {
 			expected := recon.Job{Type: ReconcileAppProvider, Guid: "provider-a"}
+			j, ok := db.AcceptReconcileJob(1 * time.Minute)
+			if !ok || !cmp.Equal(expected, j) {
+				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
+			}
+			return nil
+		}},
+		{desc: "fetch pipeline job never updated", state: bson.M{
+			"providers": []bson.M{
+				{"id": "provider-a", "type": "pipelines"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := recon.Job{Type: ReconcilePipelineProvider, Guid: "provider-a"}
 			j, ok := db.AcceptReconcileJob(1 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))

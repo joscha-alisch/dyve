@@ -19,6 +19,8 @@ func New(db database.Database) http.Handler {
 
 	a.Path("/api/apps").Queries("perPage", "").HandlerFunc(a.listAppsPaginated)
 	a.Path("/api/apps/{id:[0-9a-z-]+}").HandlerFunc(a.getApp)
+	a.Path("/api/pipelines").Queries("perPage", "").HandlerFunc(a.listPipelinesPaginated)
+	a.Path("/api/pipelines/{id:[0-9a-z-]+}").HandlerFunc(a.getPipeline)
 
 	return a
 }
@@ -59,6 +61,39 @@ func (a *api) getApp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondOk(w, app)
+}
+
+func (a *api) listPipelinesPaginated(w http.ResponseWriter, r *http.Request) {
+	perPage, err := mustQueryInt(r, "perPage")
+	if err != nil {
+		respondErr(w, http.StatusBadRequest, err)
+		return
+	}
+	page, err := defaultQueryInt(r, "page", 0)
+	if err != nil {
+		respondErr(w, http.StatusBadRequest, err)
+		return
+	}
+
+	pipelines, err := a.db.ListPipelinesPaginated(perPage, page)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	respondOk(w, pipelines)
+}
+
+func (a *api) getPipeline(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	pipeline, err := a.db.GetPipeline(id)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		return
+	}
+
+	respondOk(w, pipeline)
 }
 
 func mustQueryInt(r *http.Request, queryKey string) (int, error) {

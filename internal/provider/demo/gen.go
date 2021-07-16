@@ -16,7 +16,7 @@ func appName() string {
 }
 
 func pipelineName() string {
-	return pipelineWords[randomdata.Number(0, len(pipelineWords))] + randomdata.Adjective() + "-" + randomdata.Noun()
+	return pipelineWords[randomdata.Number(0, len(pipelineWords))] + "-" + randomdata.Adjective() + "-" + randomdata.Noun()
 }
 
 func version() string {

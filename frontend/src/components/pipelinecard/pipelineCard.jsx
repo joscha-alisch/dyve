@@ -1,9 +1,9 @@
 import {Chip, Paper} from "@material-ui/core";
-import styles from "./appcard.module.sass"
+import styles from "./pipelineCard.module.sass"
 import {Skeleton} from "@material-ui/lab";
 import {Link} from "react-router-dom";
 
-const AppCard = ({className, app, loading}) => {
+const PipelineCard = ({className, pipeline, loading}) => {
     if (loading) {
         return <Paper className={styles.App + " " + className} elevation={0}>
             <Skeleton animation={"wave"} variant={"text"} width="30%" height={30}/>
@@ -14,14 +14,9 @@ const AppCard = ({className, app, loading}) => {
     return <Paper className={styles.App + " " + className} elevation={0}>
         <h1 className={styles.Name}>
             <span className={styles.Status}/>
-            <Link to={"/apps/" + app.id}>{app.name}</Link>
+            <Link to={"/pipelines/" + pipeline.id}>{pipeline.name}</Link>
         </h1>
-
-        {Object.keys(app.meta).map((k) => <Chip
-            size="small"
-            label={k+": "+app.meta[k]}
-        />)}
     </Paper>
 }
 
-export default AppCard
+export default PipelineCard

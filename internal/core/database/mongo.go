@@ -157,15 +157,10 @@ func (m *mongoDb) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) 
 		panic(err)
 	}
 
-	switch p.ProviderType {
-	case "apps":
-		return recon.Job{
-			Type: ReconcileAppProvider,
-			Guid: p.Id,
-		}, true
-	}
-
-	return recon.Job{}, false
+	return recon.Job{
+		Type: recon.Type(p.ProviderType),
+		Guid: p.Id,
+	}, true
 }
 
 func (m *mongoDb) ListAppsPaginated(perPage int, page int) (sdk.AppPage, error) {
@@ -230,7 +225,7 @@ func (m *mongoDb) updateCollection(c *mongo.Collection, providerId string, items
 		return err
 	}
 
-	_, err = m.apps.DeleteMany(context.Background(), bson.M{
+	_, err = c.DeleteMany(context.Background(), bson.M{
 		"provider": bson.M{
 			"$eq": providerId,
 		},

@@ -10,11 +10,6 @@
             "provider": "provider-a"
         },
         {
-            "id": "pipeline-b",
-            "name": "pipeline-b",
-            "provider": "provider-a"
-        },
-        {
             "id": "pipeline-c",
             "name": "pipeline-c",
             "provider": "provider-b"

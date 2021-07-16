@@ -24,8 +24,14 @@ func main() {
 	}
 
 	m := provider.NewManager(db)
-	demoCli := providerClient.NewAppProviderClient("http://localhost:9003", nil)
-	err = m.AddAppProvider("demo", demoCli)
+	demoAppCli := providerClient.NewAppProviderClient("http://localhost:9003", nil)
+	err = m.AddAppProvider("demo-apps", demoAppCli)
+	if err != nil {
+		panic(err)
+	}
+
+	demoPipelineCli := providerClient.NewPipelineProviderClient("http://localhost:9003", nil)
+	err = m.AddPipelineProvider("demo-pipelines", demoPipelineCli)
 	if err != nil {
 		panic(err)
 	}
