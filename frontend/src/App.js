@@ -17,6 +17,7 @@ import AppList from "./components/applist/applist";
 import AppDetail from "./components/appdetail/appdetail";
 import Pipelinelist from "./components/pipelinelist/pipelinelist";
 import PipelineDetail from "./components/pipelinedetail/pipelineDetail";
+import Pipeline from "./components/pipeline/pipeline";
 
 function App() {
   return (
@@ -70,6 +71,10 @@ function App() {
                     </Route>
                     <Route path="/graph/">
                         <h1>Graph</h1>
+                    </Route>
+                    <Route path="/pipeline/">
+                        <h1>Pipeline</h1>
+                        <Pipeline />
                     </Route>
                 </Switch>
             </main>
