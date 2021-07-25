@@ -19,15 +19,15 @@ func TestApproval(t *testing.T) {
 	}{
 		{"simple", Graph{
 			Nodes: []Node{
-				{Id: 0, Label: "build", Class: "step"},
-				{Id: 1, Label: "test", Class: "step"},
+				{Id: 0, Label: "build", Class: "running"},
+				{Id: 1, Label: "test", Class: "succeeded"},
 			},
 		}},
 		{"two inputs", Graph{
 			Nodes: []Node{
 				{Id: 0, Label: "build-a", Class: "step"},
-				{Id: 1, Label: "test-a", Class: "step"},
-				{Id: 2, Label: "deploy", Class: "step"},
+				{Id: 1, Label: "test-a", Class: "running"},
+				{Id: 2, Label: "deploy", Class: "succeeded"},
 			},
 			Edges: []Edge{
 				{From: 0, To: 2},
@@ -36,8 +36,8 @@ func TestApproval(t *testing.T) {
 		}},
 		{"two outputs", Graph{
 			Nodes: []Node{
-				{Id: 0, Label: "build-a", Class: "step"},
-				{Id: 1, Label: "notify", Class: "step"},
+				{Id: 0, Label: "build-a", Class: "running"},
+				{Id: 1, Label: "notify", Class: "succeeded"},
 				{Id: 2, Label: "deploy", Class: "step"},
 			},
 			Edges: []Edge{
@@ -47,15 +47,84 @@ func TestApproval(t *testing.T) {
 		}},
 		{"multiple columns", Graph{
 			Nodes: []Node{
-				{Id: 0, Label: "build-a", Class: "step"},
-				{Id: 1, Label: "build-b", Class: "step"},
-				{Id: 2, Label: "test", Class: "step"},
-				{Id: 3, Label: "deploy", Class: "step"},
+				{Id: 0, Label: "build-a", Class: "succeeded"},
+				{Id: 1, Label: "build-b", Class: "running"},
+				{Id: 2, Label: "test", Class: "succeeded"},
+				{Id: 3, Label: "deploy", Class: "failed"},
 			},
 			Edges: []Edge{
 				{From: 0, To: 2},
 				{From: 2, To: 3},
 				{From: 1, To: 3},
+			},
+		}},
+		{"different col lengths", Graph{
+			Nodes: []Node{
+				{Id: 0, Label: "build-a", Class: "succeeded"},
+				{Id: 1, Label: "test-a", Class: "running"},
+				{Id: 2, Label: "deploy-a", Class: "running"},
+				{Id: 3, Label: "build-b", Class: "failed"},
+				{Id: 4, Label: "deploy-b", Class: "failed"},
+				{Id: 5, Label: "notification", Class: "succeeded"},
+			},
+			Edges: []Edge{
+				{From: 0, To: 1},
+				{From: 1, To: 2},
+				{From: 2, To: 5},
+				{From: 3, To: 4},
+				{From: 4, To: 5},
+			},
+		}},
+		{"cross link", Graph{
+			Nodes: []Node{
+				{Id: 0, Label: "build-a", Class: "failed"},
+				{Id: 1, Label: "test-ab", Class: "running"},
+				{Id: 2, Label: "deploy-a", Class: "succeeded"},
+				{Id: 3, Label: "build-b", Class: "failed"},
+				{Id: 4, Label: "deploy-b", Class: "succeeded"},
+				{Id: 5, Label: "notification", Class: "failed"},
+			},
+			Edges: []Edge{
+				{From: 0, To: 1},
+				{From: 1, To: 2},
+				{From: 2, To: 5},
+				{From: 3, To: 4},
+				{From: 4, To: 5},
+				{From: 1, To: 4},
+			},
+		}},
+		{"2 to 4", Graph{
+			Nodes: []Node{
+				{Id: 0, Label: "first-a", Class: "succeeded"},
+				{Id: 1, Label: "first-b", Class: "running"},
+				{Id: 2, Label: "second-a", Class: "succeeded"},
+				{Id: 3, Label: "second-b", Class: "failed"},
+				{Id: 4, Label: "second-c", Class: "succeeded"},
+				{Id: 5, Label: "second-d", Class: "failed"},
+			},
+			Edges: []Edge{
+				{From: 0, To: 2},
+				{From: 0, To: 3},
+				{From: 1, To: 4},
+				{From: 1, To: 5},
+			},
+		}},
+		{"2 to 5", Graph{
+			Nodes: []Node{
+				{Id: 0, Label: "first-a", Class: "failed"},
+				{Id: 1, Label: "first-b", Class: "running"},
+				{Id: 2, Label: "second-a", Class: "succeeded"},
+				{Id: 3, Label: "second-b", Class: "failed"},
+				{Id: 4, Label: "second-c", Class: "succeeded"},
+				{Id: 5, Label: "second-d", Class: "succeeded"},
+				{Id: 6, Label: "second-e", Class: "succeeded"},
+			},
+			Edges: []Edge{
+				{From: 0, To: 2},
+				{From: 0, To: 3},
+				{From: 1, To: 4},
+				{From: 1, To: 5},
+				{From: 1, To: 6},
 			},
 		}},
 	}
