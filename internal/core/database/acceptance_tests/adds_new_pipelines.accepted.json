@@ -1,18 +1,40 @@
 {
+    "pipeline_runs": [
+        {
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a",
+            "started": "2006-01-01T16:00:00+01:00"
+        },
+        {
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a",
+            "started": "2006-01-01T15:59:00+01:00"
+        },
+        {
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a",
+            "started": "2006-01-01T15:59:59+01:00"
+        },
+        {
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a",
+            "started": "2006-01-01T15:58:00+01:00"
+        }
+    ],
     "pipelines": [
         {
-            "definition": {
-                "connections": null,
-                "steps": null
+            "current": {
+                "created": "0001-01-01T00:53:28+00:53",
+                "definition": {}
             },
             "id": "pipeline-a",
             "name": "pipeline-a",
             "provider": "provider-a"
         },
         {
-            "definition": {
-                "connections": null,
-                "steps": null
+            "current": {
+                "created": "0001-01-01T00:53:28+00:53",
+                "definition": {}
             },
             "id": "pipeline-b",
             "name": "pipeline-b",
@@ -29,9 +51,9 @@
             "provider": "provider-b"
         },
         {
-            "definition": {
-                "connections": null,
-                "steps": null
+            "current": {
+                "created": "0001-01-01T00:53:28+00:53",
+                "definition": {}
             },
             "id": "pipeline-c",
             "name": "pipeline-c",

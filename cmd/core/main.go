@@ -7,6 +7,7 @@ import (
 	coreRecon "github.com/joscha-alisch/dyve/internal/core/reconciler"
 	providerClient "github.com/joscha-alisch/dyve/internal/provider/client"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
+	"github.com/joscha-alisch/dyve/pkg/pipeviz"
 	"net/http"
 	"os"
 	"time"
@@ -43,7 +44,7 @@ func main() {
 		panic(err)
 	}
 
-	a := api.New(db)
+	a := api.New(db, pipeviz.New())
 
 	err = http.ListenAndServe(":9001", a)
 	if err != nil {

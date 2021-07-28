@@ -1,4 +1,30 @@
 HTTP/1.1 200 OK
 Connection: close
 
-{"status":200,"result":{"totalResults":20,"totalPages":10,"perPage":2,"page":5,"pipelines":[{"id":"guid-a","name":"name-a","definition":{}},{"id":"guid-b","name":"name-b","definition":{}}]}}
+{
+    "result": {
+        "page": 5,
+        "perPage": 2,
+        "pipelines": [
+            {
+                "current": {
+                    "created": "0001-01-01T00:00:00Z",
+                    "definition": {}
+                },
+                "id": "guid-a",
+                "name": "name-a"
+            },
+            {
+                "current": {
+                    "created": "0001-01-01T00:00:00Z",
+                    "definition": {}
+                },
+                "id": "guid-b",
+                "name": "name-b"
+            }
+        ],
+        "totalPages": 10,
+        "totalResults": 20
+    },
+    "status": 200
+}

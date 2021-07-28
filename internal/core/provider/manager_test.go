@@ -164,7 +164,7 @@ func (f *fakeProvider) GetPipeline(id string) (sdk.Pipeline, error) {
 	panic("implement me")
 }
 
-func (f *fakeProvider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineRun, error) {
+func (f *fakeProvider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineStatus, error) {
 	panic("implement me")
 }
 
@@ -179,6 +179,14 @@ func (f *fakeProvider) GetApp(id string) (sdk.App, error) {
 type fakeDb struct {
 	addedAppProviders      []string
 	addedPipelineProviders []string
+}
+
+func (f *fakeDb) ListPipelineRuns(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineStatusList, error) {
+	panic("implement me")
+}
+
+func (f *fakeDb) AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error {
+	panic("implement me")
 }
 
 func (f *fakeDb) ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error) {

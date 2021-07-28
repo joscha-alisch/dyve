@@ -48,6 +48,12 @@ var basePipelinesState = map[string]interface{}{
 		{"provider": "provider-b", "name": "pipeline-c", "id": "pipeline-c"},
 		{"provider": "provider-b", "name": "pipeline-d", "id": "pipeline-d"},
 	},
+	"pipeline_runs": []bson.M{
+		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime},
+		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime.Add(-1 * time.Minute)},
+		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime.Add(-1 * time.Second)},
+		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime.Add(-2 * time.Minute)},
+	},
 }
 
 func TestMongoIntegration(t *testing.T) {
@@ -187,6 +193,54 @@ func TestMongoIntegration(t *testing.T) {
 				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, apps))
 			}
 			return nil
+		}},
+		{desc: "lists pipeline runs", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			runs, err := db.ListPipelineRuns("pipeline-a", someTime.Add(-1*time.Minute), someTime)
+			if err != nil {
+				return err
+			}
+			expected := sdk.PipelineStatusList{
+				{
+					PipelineId: "pipeline-a",
+					Started:    someTime.Add(-1 * time.Minute),
+					Steps:      nil,
+				},
+				{
+					PipelineId: "pipeline-a",
+					Started:    someTime.Add(-1 * time.Second),
+					Steps:      nil,
+				},
+			}
+
+			if !cmp.Equal(expected, runs) {
+				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, runs))
+			}
+			return nil
+		}},
+		{desc: "adds pipeline runs", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.AddPipelineRuns("provider-a", sdk.PipelineStatusList{
+				{
+					PipelineId: "pipeline-b",
+					Started:    someTime.Add(1 * time.Minute),
+					Steps:      nil,
+				},
+			})
+		}},
+		{desc: "updates pipeline runs", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.AddPipelineRuns("provider-a", sdk.PipelineStatusList{
+				{
+					PipelineId: "pipeline-a",
+					Started:    someTime,
+					Steps: []sdk.StepRun{
+						{
+							StepId:  1,
+							Status:  "succeeded",
+							Started: someTime,
+							Ended:   someTime.Add(1 * time.Minute),
+						},
+					},
+				},
+			})
 		}},
 
 		/**
@@ -355,7 +409,10 @@ func acceptanceTesting(
 		acceptedContents = before
 	}
 
-	if !cmp.Equal(acceptedContents, contents) {
+	acceptedBytes, _ := json.Marshal(acceptedContents)
+	actualBytes, _ := json.Marshal(contents)
+
+	if !cmp.Equal(acceptedBytes, actualBytes) {
 		tt.Errorf("found diff between accepted and actual contents. Rename file to .accepted.json to accept changes:\n%s\n", cmp.Diff(acceptedContents, contents))
 
 		bytes, err := json.MarshalIndent(contents, "", "    ")

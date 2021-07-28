@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"math"
+	"sort"
 	"time"
 )
 
@@ -35,22 +36,80 @@ func NewMongoDB(l MongoLogin) (Database, error) {
 	db := c.Database(l.DB)
 
 	m := &mongoDb{
-		cli:       c,
-		db:        db,
-		providers: db.Collection("providers"),
-		apps:      db.Collection("apps"),
-		pipelines: db.Collection("pipelines"),
+		cli:          c,
+		db:           db,
+		providers:    db.Collection("providers"),
+		apps:         db.Collection("apps"),
+		pipelines:    db.Collection("pipelines"),
+		pipelineRuns: db.Collection("pipeline_runs"),
 	}
 
 	return m, nil
 }
 
 type mongoDb struct {
-	cli       *mongo.Client
-	db        *mongo.Database
-	providers *mongo.Collection
-	apps      *mongo.Collection
-	pipelines *mongo.Collection
+	cli          *mongo.Client
+	db           *mongo.Database
+	providers    *mongo.Collection
+	apps         *mongo.Collection
+	pipelines    *mongo.Collection
+	pipelineRuns *mongo.Collection
+}
+
+func (m *mongoDb) AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error {
+	models := make([]mongo.WriteModel, len(runs))
+
+	for i, run := range runs {
+		model := mongo.NewUpdateOneModel()
+		model.SetUpsert(true).SetFilter(bson.M{
+			"provider": bson.M{
+				"$eq": providerId,
+			},
+			"pipelineId": bson.M{
+				"$eq": run.PipelineId,
+			},
+			"started": bson.M{
+				"$eq": run.Started,
+			},
+		}).SetUpdate(bson.D{
+			bson.E{Key: "$set", Value: bson.M{"provider": providerId}},
+			bson.E{Key: "$set", Value: run},
+		})
+		models[i] = model
+	}
+
+	_, err := m.pipelineRuns.BulkWrite(context.Background(), models)
+	return err
+}
+
+func (m *mongoDb) ListPipelineRuns(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineStatusList, error) {
+	res, err := m.pipelineRuns.Find(context.Background(), bson.M{
+		"pipelineId": bson.M{
+			"$eq": id,
+		},
+		"started": bson.M{
+			"$lt":  toExcl,
+			"$gte": fromIncl,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var runs sdk.PipelineStatusList
+
+	for res.Next(context.Background()) {
+		run := sdk.PipelineStatus{}
+		err = res.Decode(&run)
+		if err != nil {
+			return nil, err
+		}
+
+		runs = append(runs, run)
+	}
+
+	sort.Sort(runs)
+	return runs, nil
 }
 
 func (m *mongoDb) ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error) {

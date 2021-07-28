@@ -96,10 +96,9 @@ func TestGetHistory(t *testing.T) {
 		expectedErr error
 	}{
 		{desc: "returns history", id: "a", before: someTime, limit: 20, state: fakePipelineProvider{
-			history: []sdk.PipelineRun{
+			history: []sdk.PipelineStatus{
 				{
-					PipelineId: "a",
-					Start:      someTime,
+					Started: someTime,
 					Steps: []sdk.StepRun{
 						{
 							StepId:  0,
@@ -151,7 +150,7 @@ type fakePipelineProvider struct {
 	recordedId     string
 	recordedBefore time.Time
 	recordedLimit  int
-	history        []sdk.PipelineRun
+	history        []sdk.PipelineStatus
 }
 
 func (f *fakePipelineProvider) ListPipelines() ([]sdk.Pipeline, error) {
@@ -170,7 +169,7 @@ func (f *fakePipelineProvider) GetPipeline(id string) (sdk.Pipeline, error) {
 	return f.pipeline, nil
 }
 
-func (f *fakePipelineProvider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineRun, error) {
+func (f *fakePipelineProvider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineStatus, error) {
 	f.recordedId = id
 	f.recordedBefore = before
 	f.recordedLimit = limit

@@ -14,22 +14,25 @@ var someTime, _ = time.Parse(time.RFC3339, "2006-01-01T15:00:00Z")
 var otherTime, _ = time.Parse(time.RFC3339, "2006-01-01T13:00:00Z")
 
 var pipelines = []Pipeline{
-	{Id: "a", Name: "name-a", Definition: PipelineDefinition{
-		Connections: []PipelineConnection{
-			{From: 0, To: 1, Manual: true},
-		},
-		Steps: []PipelineStep{
-			{Name: "test", Id: 0},
-			{Name: "build", Id: 1, AppDeployments: []string{"app-a"}},
+	{Id: "a", Name: "name-a", Current: PipelineVersion{
+		Created: someTime,
+		Definition: PipelineDefinition{
+			Connections: []PipelineConnection{
+				{From: 0, To: 1, Manual: true},
+			},
+			Steps: []PipelineStep{
+				{Name: "test", Id: 0},
+				{Name: "build", Id: 1, AppDeployments: []string{"app-a"}},
+			},
 		},
 	}},
 	{Id: "840e560f-38d3-460e-be23-8677a4539f35", Name: "name-b"},
 }
 
-var runs = []PipelineRun{
+var runs = []PipelineStatus{
 	{
 		PipelineId: "a",
-		Start:      someTime,
+		Started:    someTime,
 		Steps: []StepRun{
 			{
 				StepId:  0,
@@ -62,16 +65,22 @@ func TestPipelines(t *testing.T) {
 		}, method: "GET", path: "/pipelines", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
 			Result: []interface{}{
-				map[string]interface{}{"id": "a", "name": "name-a", "definition": map[string]interface{}{
-					"connections": []interface{}{
-						map[string]interface{}{"from": float64(0), "to": float64(1), "manual": true},
-					},
-					"steps": []interface{}{
-						map[string]interface{}{"name": "test", "id": float64(0)},
-						map[string]interface{}{"name": "build", "id": float64(1), "appDeployments": []interface{}{"app-a"}},
+				map[string]interface{}{"id": "a", "name": "name-a", "current": map[string]interface{}{
+					"created": "2006-01-01T15:00:00Z",
+					"definition": map[string]interface{}{
+						"connections": []interface{}{
+							map[string]interface{}{"from": float64(0), "to": float64(1), "manual": true},
+						},
+						"steps": []interface{}{
+							map[string]interface{}{"name": "test", "id": float64(0)},
+							map[string]interface{}{"name": "build", "id": float64(1), "appDeployments": []interface{}{"app-a"}},
+						},
 					},
 				}},
-				map[string]interface{}{"id": "840e560f-38d3-460e-be23-8677a4539f35", "name": "name-b", "definition": map[string]interface{}{}},
+				map[string]interface{}{"id": "840e560f-38d3-460e-be23-8677a4539f35", "name": "name-b", "current": map[string]interface{}{
+					"created":    "0001-01-01T00:00:00Z",
+					"definition": map[string]interface{}{},
+				}},
 			},
 		}},
 		{desc: "returns pipelines with trailing slash", state: fakePipelineProvider{
@@ -90,13 +99,16 @@ func TestPipelines(t *testing.T) {
 			pipeline: pipelines[0],
 		}, method: "GET", path: "/pipelines/a", expectedRecordedId: "a", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
-			Result: map[string]interface{}{"id": "a", "name": "name-a", "definition": map[string]interface{}{
-				"connections": []interface{}{
-					map[string]interface{}{"from": float64(0), "to": float64(1), "manual": true},
-				},
-				"steps": []interface{}{
-					map[string]interface{}{"name": "test", "id": float64(0)},
-					map[string]interface{}{"name": "build", "id": float64(1), "appDeployments": []interface{}{"app-a"}},
+			Result: map[string]interface{}{"id": "a", "name": "name-a", "current": map[string]interface{}{
+				"created": "2006-01-01T15:00:00Z",
+				"definition": map[string]interface{}{
+					"connections": []interface{}{
+						map[string]interface{}{"from": float64(0), "to": float64(1), "manual": true},
+					},
+					"steps": []interface{}{
+						map[string]interface{}{"name": "test", "id": float64(0)},
+						map[string]interface{}{"name": "build", "id": float64(1), "appDeployments": []interface{}{"app-a"}},
+					},
 				},
 			}},
 		}},
@@ -122,7 +134,7 @@ func TestPipelines(t *testing.T) {
 				Status: http.StatusOK,
 				Result: []interface{}{
 					map[string]interface{}{
-						"pipelineId": "a", "start": someTime.Format(time.RFC3339), "steps": []interface{}{
+						"pipelineId": "a", "started": someTime.Format(time.RFC3339), "steps": []interface{}{
 							map[string]interface{}{
 								"stepId":  float64(0),
 								"started": someTime.Format(time.RFC3339),
@@ -134,7 +146,7 @@ func TestPipelines(t *testing.T) {
 				},
 			}},
 		{desc: "returns history with query params", state: fakePipelineProvider{
-			history: []PipelineRun{},
+			history: []PipelineStatus{},
 		}, method: "GET", path: "/pipelines/a/history?before=2006-01-01T13:00:00Z&limit=20",
 			expectedRecordedId:    "a",
 			expectedRecordedTime:  otherTime,
@@ -203,7 +215,7 @@ func TestPipelines(t *testing.T) {
 type fakePipelineProvider struct {
 	pipelines []Pipeline
 	pipeline  Pipeline
-	history   []PipelineRun
+	history   []PipelineStatus
 	err       error
 
 	recordedId    string
@@ -228,7 +240,7 @@ func (f *fakePipelineProvider) GetPipeline(id string) (Pipeline, error) {
 	return f.pipeline, nil
 }
 
-func (f *fakePipelineProvider) GetHistory(id string, since time.Time, limit int) ([]PipelineRun, error) {
+func (f *fakePipelineProvider) GetHistory(id string, since time.Time, limit int) ([]PipelineStatus, error) {
 	if f.err != nil {
 		return nil, f.err
 	}

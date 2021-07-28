@@ -3,6 +3,7 @@ package database
 import (
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
+	"time"
 )
 
 type Database interface {
@@ -16,10 +17,12 @@ type Database interface {
 
 	ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error)
 	GetPipeline(id string) (sdk.Pipeline, error)
+	ListPipelineRuns(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineStatusList, error)
 
 	AddPipelineProvider(providerId string) error
 	DeletePipelineProvider(providerId string) error
 	UpdatePipelines(providerId string, pipelines []sdk.Pipeline) error
+	AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error
 }
 
 const (

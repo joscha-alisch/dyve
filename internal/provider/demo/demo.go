@@ -18,7 +18,7 @@ func NewProvider() *Provider {
 type Provider struct {
 	apps      []sdk.App
 	pipelines []sdk.Pipeline
-	history   map[string][]sdk.PipelineRun
+	history   map[string][]sdk.PipelineStatus
 }
 
 func (d *Provider) GenerateApps() {
@@ -43,16 +43,18 @@ func (d *Provider) GeneratePipelines() {
 		pipelines = append(pipelines, sdk.Pipeline{
 			Id:   id(),
 			Name: pipelineName(),
-			Definition: sdk.PipelineDefinition{
-				Steps: []sdk.PipelineStep{
-					{Name: "Build", Id: 0},
-					{Name: "Deploy", Id: 1, AppDeployments: []string{"app"}},
-				},
-				Connections: []sdk.PipelineConnection{
-					{
-						From:   0,
-						To:     1,
-						Manual: false,
+			Current: sdk.PipelineVersion{
+				Definition: sdk.PipelineDefinition{
+					Steps: []sdk.PipelineStep{
+						{Name: "Build", Id: 0},
+						{Name: "Deploy", Id: 1, AppDeployments: []string{"app"}},
+					},
+					Connections: []sdk.PipelineConnection{
+						{
+							From:   0,
+							To:     1,
+							Manual: false,
+						},
 					},
 				},
 			},
@@ -62,17 +64,16 @@ func (d *Provider) GeneratePipelines() {
 }
 
 func (d *Provider) GenerateHistory() {
-	history := make(map[string][]sdk.PipelineRun)
+	history := make(map[string][]sdk.PipelineStatus)
 	for _, pipeline := range d.pipelines {
 		now := time.Now()
 		start := now.Add(-(time.Hour * 24) * time.Duration(randomdata.Number(1, 365)))
 
 		for start.Before(now) {
-			run := sdk.PipelineRun{
-				PipelineId: pipeline.Id,
-				Start:      start,
+			run := sdk.PipelineStatus{
+				Started: start,
 			}
-			for _, step := range pipeline.Definition.Steps {
+			for _, step := range pipeline.Current.Definition.Steps {
 				end := start.Add(time.Second * time.Duration(randomdata.Number(20, 180)))
 
 				run.Steps = append(run.Steps, sdk.StepRun{
@@ -105,12 +106,12 @@ func (d *Provider) GetPipeline(id string) (sdk.Pipeline, error) {
 	return sdk.Pipeline{}, sdk.ErrNotFound
 }
 
-func (d *Provider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineRun, error) {
+func (d *Provider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineStatus, error) {
 	runs := d.history[id]
 
-	var res []sdk.PipelineRun
+	var res []sdk.PipelineStatus
 	for i := len(runs) - 1; i > 0; i-- {
-		if runs[i].Start.Before(before) {
+		if runs[i].Started.Before(before) {
 			res = append(res, runs[i])
 			if len(res) == limit {
 				break

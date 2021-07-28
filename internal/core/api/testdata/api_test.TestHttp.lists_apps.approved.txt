@@ -1,4 +1,22 @@
 HTTP/1.1 200 OK
 Connection: close
 
-{"status":200,"result":{"totalResults":20,"totalPages":10,"perPage":2,"page":5,"apps":[{"id":"guid-a","name":"name-a"},{"id":"guid-b","name":"name-b"}]}}
+{
+    "result": {
+        "apps": [
+            {
+                "id": "guid-a",
+                "name": "name-a"
+            },
+            {
+                "id": "guid-b",
+                "name": "name-b"
+            }
+        ],
+        "page": 5,
+        "perPage": 2,
+        "totalPages": 10,
+        "totalResults": 20
+    },
+    "status": 200
+}

@@ -1,4 +1,14 @@
 HTTP/1.1 200 OK
 Connection: close
 
-{"status":200,"result":{"id":"guid-a","name":"name-a","definition":{}}}
+{
+    "result": {
+        "current": {
+            "created": "0001-01-01T00:00:00Z",
+            "definition": {}
+        },
+        "id": "guid-a",
+        "name": "name-a"
+    },
+    "status": 200
+}

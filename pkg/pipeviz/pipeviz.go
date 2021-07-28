@@ -1,6 +1,7 @@
 package pipeviz
 
 import (
+	"bytes"
 	"io"
 )
 
@@ -21,7 +22,29 @@ type Edge struct {
 	Class string
 }
 
-func Create(graph Graph, w io.Writer) {
+type PipeViz interface {
+	Write(graph Graph, w io.Writer)
+	Generate(graph Graph) []byte
+}
+
+func New() PipeViz {
+	return &pipeViz{}
+}
+
+type pipeViz struct{}
+
+func (p *pipeViz) Write(graph Graph, w io.Writer) {
 	ir := generateLayout(graph)
 	generateSvg(ir, w)
+}
+
+func (p *pipeViz) Generate(graph Graph) []byte {
+	var buf bytes.Buffer
+	p.Write(graph, &buf)
+	return buf.Bytes()
+}
+
+func Generate(graph Graph, w io.Writer) {
+	p := pipeViz{}
+	p.Write(graph, w)
 }

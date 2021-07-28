@@ -28,7 +28,7 @@ type getPipelineResponse struct {
 type getHistoryResponse struct {
 	Status int
 	Err    string
-	Result []sdk.PipelineRun
+	Result []sdk.PipelineStatus
 }
 
 type pipelineProviderClient struct {
@@ -53,7 +53,7 @@ func (p *pipelineProviderClient) GetPipeline(id string) (sdk.Pipeline, error) {
 	return r.Result, nil
 }
 
-func (p *pipelineProviderClient) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineRun, error) {
+func (p *pipelineProviderClient) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineStatus, error) {
 	r := getHistoryResponse{}
 	err := p.get(&r, map[string]string{
 		"before": before.Format(time.RFC3339),

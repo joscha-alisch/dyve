@@ -175,7 +175,7 @@ func loadApproved(fileName string) []byte {
 func createActual(g Graph) []byte {
 	var buf bytes.Buffer
 
-	Create(g, &buf)
+	Generate(g, &buf)
 
 	return buf.Bytes()
 }
