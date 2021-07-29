@@ -56,6 +56,14 @@ type mongoDb struct {
 	pipelineRuns *mongo.Collection
 }
 
+func (m *mongoDb) ListPipelineRunsLimit(id string, toExcl time.Time, limit int) (sdk.PipelineStatusList, error) {
+	panic("implement me")
+}
+
+func (m *mongoDb) ListPipelineVersions(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineVersionList, error) {
+	panic("implement me")
+}
+
 func (m *mongoDb) AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error {
 	models := make([]mongo.WriteModel, len(runs))
 

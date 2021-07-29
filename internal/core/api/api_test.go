@@ -96,6 +96,46 @@ func TestHttp(t *testing.T) {
 				},
 			},
 		}}, "GET", "/api/pipelines/pipeline-a/status"},
+		{"gets pipeline runs", fakeDb{runs: []sdk.PipelineStatus{
+			{
+				PipelineId: "pipeline-a",
+				Started:    someTime.Add(-2 * time.Minute),
+				Steps: []sdk.StepRun{
+					{
+						StepId:  0,
+						Status:  "succeeded",
+						Started: someTime.Add(-2 * time.Minute),
+						Ended:   someTime.Add(-1 * time.Minute),
+					},
+				},
+			},
+		}, versions: []sdk.PipelineVersion{
+			{
+				PipelineId: "pipeline-a",
+				Created:    someTime.Add(-3 * time.Minute),
+				Definition: sdk.PipelineDefinition{
+					Steps: []sdk.PipelineStep{
+						{
+							Name:           "step-a",
+							Id:             0,
+							AppDeployments: nil,
+						},
+						{
+							Name:           "step-b",
+							Id:             1,
+							AppDeployments: nil,
+						},
+					},
+					Connections: []sdk.PipelineConnection{
+						{
+							From:   0,
+							To:     1,
+							Manual: false,
+						},
+					},
+				},
+			},
+		}}, "GET", "/api/pipelines/pipeline-a/runs"},
 	}
 
 	currentTime = func() time.Time {
@@ -136,6 +176,31 @@ type fakeDb struct {
 	pipelinePage sdk.PipelinePage
 	pipeline     sdk.Pipeline
 	runs         []sdk.PipelineStatus
+	versions     []sdk.PipelineVersion
+}
+
+func (f *fakeDb) ListPipelineRunsLimit(id string, toExcl time.Time, limit int) (sdk.PipelineStatusList, error) {
+	var res []sdk.PipelineStatus
+	for _, run := range f.runs {
+		if run.PipelineId == id && run.Started.Before(toExcl) {
+			res = append(res, run)
+		}
+		if len(res) >= limit {
+			break
+		}
+	}
+
+	return res, nil
+}
+
+func (f *fakeDb) ListPipelineVersions(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineVersionList, error) {
+	var res sdk.PipelineVersionList
+	for _, version := range f.versions {
+		if version.PipelineId == id {
+			res = append(res, version)
+		}
+	}
+	return res, nil
 }
 
 func (f *fakeDb) AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error {

@@ -1,0 +1,21 @@
+HTTP/1.1 200 OK
+Connection: close
+
+{
+    "result": [
+        {
+            "pipelineId": "pipeline-a",
+            "started": "2006-01-01T14:58:00Z",
+            "steps": [
+                {
+                    "ended": "2006-01-01T14:59:00Z",
+                    "started": "2006-01-01T14:58:00Z",
+                    "status": "succeeded",
+                    "stepId": 0
+                }
+            ],
+            "svg": "fake svg: {\"Nodes\":[{\"Id\":0,\"Label\":\"step-a\",\"Class\":\"succeeded\"},{\"Id\":1,\"Label\":\"step-b\",\"Class\":\"\"}],\"Edges\":[{\"From\":0,\"To\":1,\"Class\":\"\"}]}"
+        }
+    ],
+    "status": 200
+}

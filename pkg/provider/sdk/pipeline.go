@@ -15,7 +15,31 @@ type Pipeline struct {
 	Current PipelineVersion `json:"current" bson:"current"`
 }
 
+type PipelineVersionList []PipelineVersion
+
+func (pl PipelineVersionList) Len() int {
+	return len(pl)
+}
+
+func (pl PipelineVersionList) Less(i, j int) bool {
+	return pl[i].Created.Before(pl[j].Created)
+}
+
+func (pl PipelineVersionList) Swap(i, j int) {
+	pl[i], pl[j] = pl[j], pl[i]
+}
+
+func (pl PipelineVersionList) VersionAt(t time.Time) PipelineVersion {
+	for i := len(pl) - 1; i >= 0; i-- {
+		if pl[i].Created.Before(t) {
+			return pl[i]
+		}
+	}
+	return PipelineVersion{}
+}
+
 type PipelineVersion struct {
+	PipelineId string             `json:"pipelineId" bson:"pipelineId"`
 	Created    time.Time          `json:"created" bson:"created"`
 	Definition PipelineDefinition `json:"definition" bson:"definition"`
 }
@@ -69,6 +93,10 @@ type PipelineProvider interface {
 }
 
 func (pl PipelineStatusList) Fold() PipelineStatus {
+	if len(pl) == 1 {
+		return pl[0]
+	}
+
 	s := PipelineStatus{}
 	for _, status := range pl {
 		s = s.Fold(status)

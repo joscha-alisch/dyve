@@ -18,6 +18,8 @@ type Database interface {
 	ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error)
 	GetPipeline(id string) (sdk.Pipeline, error)
 	ListPipelineRuns(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineStatusList, error)
+	ListPipelineRunsLimit(id string, toExcl time.Time, limit int) (sdk.PipelineStatusList, error)
+	ListPipelineVersions(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineVersionList, error)
 
 	AddPipelineProvider(providerId string) error
 	DeletePipelineProvider(providerId string) error
