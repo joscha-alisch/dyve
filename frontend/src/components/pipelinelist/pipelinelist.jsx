@@ -18,6 +18,7 @@ const Pipelinelist = () => {
     let [totalPages, setTotalPages] = useState(0)
     let [totalResults, setTotalResults] = useState(0)
     let [loading, setLoading] = useState(true)
+    let [svg, setSvg] = useState({})
 
     useEffect(() => {
         setLoading(true)
@@ -32,6 +33,13 @@ const Pipelinelist = () => {
             })
     }, [page, perPage])
 
+    useEffect(() => {
+        pipelines.forEach(p => fetch("/api/pipelines/" + p.id + "/status")
+            .then(res => res.json())
+            .then((data) => setSvg(prev => ({...prev, [p.id]: data.result.svg})))
+        )
+    }, [pipelines])
+
     let paginationControl = <ListControl totalResults={totalResults} totalPages={totalPages} page={page} perPage={perPage} setPerPage={setPerPage} />
 
     let cards
@@ -44,7 +52,8 @@ const Pipelinelist = () => {
             <PipelineCard className={styles.AppCard} loading/>
         </Fragment>
     } else {
-        cards = pipelines.map((pipeline) => <PipelineCard className={styles.AppCard} pipeline={pipeline}/>)
+        cards = pipelines.map((pipeline) => <li key={pipeline.id} className={styles.ListItem}><PipelineCard
+            className={styles.AppCard} pipeline={pipeline} svg={svg}/></li>)
     }
 
     return <Fragment>

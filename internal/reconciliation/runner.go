@@ -12,8 +12,9 @@ type JobProvider interface {
 type Type string
 type ReconcileHandler func(j Job) error
 type Job struct {
-	Type Type
-	Guid string
+	Type        Type
+	Guid        string
+	LastUpdated time.Time
 }
 
 type Reconciler interface {

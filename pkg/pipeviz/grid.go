@@ -50,7 +50,7 @@ func (g *grid) addBox(id int) {
 	g.height++
 
 	p := &position{
-		row:    g.height-1,
+		row:    g.height - 1,
 		col:    0,
 		width:  1,
 		height: 1,
@@ -90,7 +90,7 @@ func (g *grid) constrainRightOf(src, target int) {
 		return
 	}
 
-	g.boxes[src].col = targetCol+1
+	g.boxes[src].col = targetCol + 1
 	if g.cols[targetCol+1] == nil {
 		g.cols[targetCol+1] = make(map[int]bool)
 	}
@@ -116,7 +116,7 @@ func (g *grid) layout() {
 		}
 		g.boxes[id].width = maxY - g.boxes[id].col
 
-		for col := g.boxes[id].col; col < g.boxes[id].col + g.boxes[id].width ; col++ {
+		for col := g.boxes[id].col; col < g.boxes[id].col+g.boxes[id].width; col++ {
 			g.cols[col][id] = true
 		}
 	}
@@ -133,11 +133,16 @@ func (g *grid) layout() {
 
 	for col := range g.cols {
 		resizable := make([]*int, g.height)
+		resizables := 0
 		for id := range g.cols[col] {
 			id := id
 			if g.boxes[id].width == 1 {
 				resizable[g.boxes[id].row] = &id
+				resizables++
 			}
+		}
+		if resizables == 0 {
+			continue
 		}
 
 		space := g.height - len(g.cols[col])

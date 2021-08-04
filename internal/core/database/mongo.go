@@ -36,32 +36,144 @@ func NewMongoDB(l MongoLogin) (Database, error) {
 	db := c.Database(l.DB)
 
 	m := &mongoDb{
-		cli:          c,
-		db:           db,
-		providers:    db.Collection("providers"),
-		apps:         db.Collection("apps"),
-		pipelines:    db.Collection("pipelines"),
-		pipelineRuns: db.Collection("pipeline_runs"),
+		cli:              c,
+		db:               db,
+		providers:        db.Collection("providers"),
+		apps:             db.Collection("apps"),
+		pipelines:        db.Collection("pipelines"),
+		pipelineRuns:     db.Collection("pipeline_runs"),
+		pipelineVersions: db.Collection("pipeline_versions"),
 	}
+
+	m.pipelineRuns.Indexes().CreateOne(context.Background(), mongo.IndexModel{
+		Keys: bson.M{
+			"providerId": 1,
+			"pipelineId": 1,
+			"started":    1,
+		},
+		Options: options.Index().SetUnique(true),
+	})
 
 	return m, nil
 }
 
 type mongoDb struct {
-	cli          *mongo.Client
-	db           *mongo.Database
-	providers    *mongo.Collection
-	apps         *mongo.Collection
-	pipelines    *mongo.Collection
-	pipelineRuns *mongo.Collection
+	cli              *mongo.Client
+	db               *mongo.Database
+	providers        *mongo.Collection
+	apps             *mongo.Collection
+	pipelines        *mongo.Collection
+	pipelineRuns     *mongo.Collection
+	pipelineVersions *mongo.Collection
+}
+
+type mongoPipelineStatus struct {
+	sdk.PipelineStatus
+	ProviderId string `bson:"providerId"`
+}
+
+func (m *mongoDb) AddPipelineVersions(providerId string, versions sdk.PipelineVersionList) error {
+	models := make([]mongo.WriteModel, len(versions))
+
+	for i, version := range versions {
+		model := mongo.NewUpdateOneModel()
+		model.SetUpsert(true).SetFilter(bson.M{
+			"provider": bson.M{
+				"$eq": providerId,
+			},
+			"pipelineId": bson.M{
+				"$eq": version.PipelineId,
+			},
+			"created": bson.M{
+				"$eq": version.Created,
+			},
+		}).SetUpdate(bson.D{
+			bson.E{Key: "$set", Value: bson.M{"provider": providerId}},
+			bson.E{Key: "$set", Value: version},
+		})
+		models[i] = model
+	}
+
+	_, err := m.pipelineVersions.BulkWrite(context.Background(), models)
+	return err
 }
 
 func (m *mongoDb) ListPipelineRunsLimit(id string, toExcl time.Time, limit int) (sdk.PipelineStatusList, error) {
-	panic("implement me")
+	res, err := m.pipelineRuns.Find(context.Background(), bson.M{
+		"pipelineId": bson.M{
+			"$eq": id,
+		},
+		"started": bson.M{
+			"$lt": toExcl,
+		},
+	}, options.Find().SetLimit(int64(limit)).SetSort(bson.M{"started": -1}))
+	if err != nil {
+		return nil, err
+	}
+
+	var runs sdk.PipelineStatusList
+
+	for res.Next(context.Background()) {
+		run := sdk.PipelineStatus{}
+		err = res.Decode(&run)
+		if err != nil {
+			return nil, err
+		}
+
+		runs = append(runs, run)
+	}
+
+	sort.Sort(runs)
+	return runs, nil
 }
 
 func (m *mongoDb) ListPipelineVersions(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineVersionList, error) {
-	panic("implement me")
+	res, err := m.pipelineVersions.Find(context.Background(), bson.M{
+		"pipelineId": bson.M{
+			"$eq": id,
+		},
+		"created": bson.M{
+			"$lt":  toExcl,
+			"$gte": fromIncl,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var versions sdk.PipelineVersionList
+
+	for res.Next(context.Background()) {
+		version := sdk.PipelineVersion{}
+		err = res.Decode(&version)
+		if err != nil {
+			return nil, err
+		}
+
+		versions = append(versions, version)
+	}
+
+	sort.Sort(versions)
+
+	if len(versions) == 0 || versions[0].Created != fromIncl {
+		res := m.pipelineVersions.FindOne(context.Background(), bson.M{
+			"pipelineId": bson.M{
+				"$eq": id,
+			},
+			"created": bson.M{
+				"$lt": fromIncl,
+			},
+		}, options.FindOne().SetSort(bson.M{"created": -1}))
+		version := sdk.PipelineVersion{}
+		err = res.Decode(&version)
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return versions, nil
+		}
+
+		versions = append(sdk.PipelineVersionList{version}, versions...)
+	}
+
+	return versions, nil
 }
 
 func (m *mongoDb) AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error {
@@ -86,7 +198,7 @@ func (m *mongoDb) AddPipelineRuns(providerId string, runs sdk.PipelineStatusList
 		models[i] = model
 	}
 
-	_, err := m.pipelineRuns.BulkWrite(context.Background(), models)
+	_, err := m.pipelineRuns.BulkWrite(context.Background(), models, options.BulkWrite().SetOrdered(false))
 	return err
 }
 
@@ -193,7 +305,8 @@ func (m *mongoDb) AddAppProvider(providerId string) error {
 
 type provider struct {
 	Id           string
-	ProviderType string `bson:"type"`
+	ProviderType string    `bson:"type"`
+	LastUpdated  time.Time `bson:"lastUpdated"`
 }
 
 func (m *mongoDb) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
@@ -225,8 +338,9 @@ func (m *mongoDb) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) 
 	}
 
 	return recon.Job{
-		Type: recon.Type(p.ProviderType),
-		Guid: p.Id,
+		Type:        recon.Type(p.ProviderType),
+		Guid:        p.Id,
+		LastUpdated: p.LastUpdated,
 	}, true
 }
 

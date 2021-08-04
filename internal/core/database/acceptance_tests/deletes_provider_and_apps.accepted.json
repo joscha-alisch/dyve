@@ -11,6 +11,7 @@
             "provider": "provider-b"
         }
     ],
+    "pipeline_runs": [],
     "providers": [
         {
             "id": "provider-b",

@@ -19,6 +19,7 @@ type Provider struct {
 	apps      []sdk.App
 	pipelines []sdk.Pipeline
 	history   map[string][]sdk.PipelineStatus
+	versions  map[string]sdk.PipelineVersionList
 }
 
 func (d *Provider) GenerateApps() {
@@ -65,13 +66,24 @@ func (d *Provider) GeneratePipelines() {
 
 func (d *Provider) GenerateHistory() {
 	history := make(map[string][]sdk.PipelineStatus)
-	for _, pipeline := range d.pipelines {
+	versions := make(map[string]sdk.PipelineVersionList)
+
+	for i, pipeline := range d.pipelines {
 		now := time.Now()
 		start := now.Add(-(time.Hour * 24) * time.Duration(randomdata.Number(1, 365)))
 
+		pVersion := sdk.PipelineVersion{
+			PipelineId: pipeline.Id,
+			Created:    start,
+			Definition: d.generatePipelineDef(),
+		}
+		versions[pipeline.Id] = append(versions[pipeline.Id], pVersion)
+		d.pipelines[i].Current = pVersion
+
 		for start.Before(now) {
 			run := sdk.PipelineStatus{
-				Started: start,
+				Started:    start,
+				PipelineId: pipeline.Id,
 			}
 			for _, step := range pipeline.Current.Definition.Steps {
 				end := start.Add(time.Second * time.Duration(randomdata.Number(20, 180)))
@@ -91,6 +103,50 @@ func (d *Provider) GenerateHistory() {
 		}
 	}
 	d.history = history
+	d.versions = versions
+}
+
+func (d *Provider) generatePipelineDef() sdk.PipelineDefinition {
+	def := sdk.PipelineDefinition{}
+	hasEdge := make(map[int]int)
+	id := 0
+	columns := make([][]sdk.PipelineStep, randomdata.Number(2, 6))
+	for col := 0; col < len(columns); col++ {
+		rows := randomdata.Number(1, 4)
+		for row := 0; row < rows; row++ {
+			step := sdk.PipelineStep{
+				Name:           pipelineStep(),
+				Id:             id,
+				AppDeployments: nil,
+			}
+			columns[col] = append(columns[col], step)
+			def.Steps = append(def.Steps, step)
+
+			conns := 0
+			prevCol := col - 1
+			if prevCol >= 0 {
+				for _, prevStep := range columns[prevCol] {
+					target := 0.2
+					target += 0.05 * float64(hasEdge[prevStep.Id])
+					target += float64(col-prevCol) * 0.2
+					target += float64(conns) * 0.1
+					if randomdata.Decimal(0, 1) > target {
+						def.Connections = append(def.Connections, sdk.PipelineConnection{
+							From:   prevStep.Id,
+							To:     step.Id,
+							Manual: randomdata.Boolean(),
+						})
+						hasEdge[prevStep.Id]++
+						conns++
+					}
+				}
+			}
+
+			id++
+		}
+	}
+
+	return def
 }
 
 func (d *Provider) ListPipelines() ([]sdk.Pipeline, error) {
@@ -106,7 +162,7 @@ func (d *Provider) GetPipeline(id string) (sdk.Pipeline, error) {
 	return sdk.Pipeline{}, sdk.ErrNotFound
 }
 
-func (d *Provider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineStatus, error) {
+func (d *Provider) GetHistory(id string, before time.Time, limit int) (sdk.PipelineStatusList, error) {
 	runs := d.history[id]
 
 	var res []sdk.PipelineStatus
@@ -133,4 +189,34 @@ func (d *Provider) GetApp(id string) (sdk.App, error) {
 		}
 	}
 	return sdk.App{}, sdk.ErrNotFound
+}
+
+func (d *Provider) ListUpdates(since time.Time) (sdk.PipelineUpdates, error) {
+	updates := sdk.PipelineUpdates{}
+
+	for _, pipelineStatuses := range d.history {
+		for _, i := range pipelineStatuses {
+			if i.Started.After(since) {
+				updates.Runs = append(updates.Runs, i)
+				continue
+			}
+
+			for _, step := range i.Steps {
+				if step.Started.After(since) || step.Ended.After(since) {
+					updates.Runs = append(updates.Runs, i)
+					break
+				}
+			}
+		}
+	}
+
+	for _, pipelineVersions := range d.versions {
+		for _, pipelineVersion := range pipelineVersions {
+			if pipelineVersion.Created.After(since) {
+				updates.Versions = append(updates.Versions, pipelineVersion)
+			}
+		}
+	}
+
+	return updates, nil
 }

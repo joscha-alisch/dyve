@@ -37,7 +37,8 @@ func generateLayout(in Graph) layouted {
 
 	for _, n := range in.Nodes {
 		layout.addBox(n.Id)
-
+	}
+	for _, n := range in.Nodes {
 		to := g.To(int64(n.Id))
 		for to.Next() {
 			layout.constrainRightOf(n.Id, int(to.Node().ID()))

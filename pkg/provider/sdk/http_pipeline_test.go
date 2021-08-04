@@ -76,10 +76,12 @@ func TestPipelines(t *testing.T) {
 							map[string]interface{}{"name": "build", "id": float64(1), "appDeployments": []interface{}{"app-a"}},
 						},
 					},
+					"pipelineId": "",
 				}},
 				map[string]interface{}{"id": "840e560f-38d3-460e-be23-8677a4539f35", "name": "name-b", "current": map[string]interface{}{
 					"created":    "0001-01-01T00:00:00Z",
 					"definition": map[string]interface{}{},
+					"pipelineId": "",
 				}},
 			},
 		}},
@@ -110,6 +112,7 @@ func TestPipelines(t *testing.T) {
 						map[string]interface{}{"name": "build", "id": float64(1), "appDeployments": []interface{}{"app-a"}},
 					},
 				},
+				"pipelineId": "",
 			}},
 		}},
 		{desc: "returns pipeline not found", state: fakePipelineProvider{
@@ -178,6 +181,55 @@ func TestPipelines(t *testing.T) {
 			Status: http.StatusBadRequest,
 			Err:    ErrQuerySinceMalformed.Error(),
 		}},
+		{desc: "returns updates", state: fakePipelineProvider{
+			updates: PipelineUpdates{
+				Runs: PipelineStatusList{
+					{
+						PipelineId: "a",
+						Started:    someTime,
+					},
+				},
+				Versions: PipelineVersionList{
+					{
+						PipelineId: "a",
+						Created:    someTime,
+					},
+				},
+			},
+		}, method: "GET", path: "/pipelines/updates?since=2006-01-01T15:00:00Z", expectedRecordedTime: someTime, expectedStatus: http.StatusOK, expectedResp: response{
+			Status: http.StatusOK,
+			Result: map[string]interface{}{
+				"runs": []interface{}{
+					map[string]interface{}{
+						"pipelineId": "a",
+						"started":    "2006-01-01T15:00:00Z",
+					},
+				},
+				"versions": []interface{}{
+					map[string]interface{}{
+						"pipelineId": "a",
+						"created":    "2006-01-01T15:00:00Z",
+						"definition": map[string]interface{}{},
+					},
+				},
+			},
+		}},
+		{desc: "returns updates internal error", state: fakePipelineProvider{
+			err: errors.New("error that should not be returned"),
+		}, method: "GET", path: "/pipelines/updates", expectedStatus: http.StatusInternalServerError, expectedResp: response{
+			Status: http.StatusInternalServerError,
+			Err:    ErrInternal.Error(),
+		}},
+		{desc: "returns updates since malformed error", state: fakePipelineProvider{},
+			method: "GET", path: "/pipelines/updates?since=blabla", expectedStatus: http.StatusBadRequest, expectedResp: response{
+				Status: http.StatusBadRequest,
+				Err:    ErrQuerySinceMalformed.Error(),
+			}},
+		{desc: "returns updates with defaults", state: fakePipelineProvider{},
+			method: "GET", path: "/pipelines/updates", expectedRecordedTime: someTime, expectedStatus: http.StatusOK, expectedResp: response{
+				Status: http.StatusOK,
+				Result: map[string]interface{}{},
+			}},
 	}
 
 	for _, test := range tests {
@@ -216,11 +268,21 @@ type fakePipelineProvider struct {
 	pipelines []Pipeline
 	pipeline  Pipeline
 	history   []PipelineStatus
+	updates   PipelineUpdates
 	err       error
 
 	recordedId    string
 	recordedTime  time.Time
 	recordedLimit int
+}
+
+func (f *fakePipelineProvider) ListUpdates(since time.Time) (PipelineUpdates, error) {
+	if f.err != nil {
+		return PipelineUpdates{}, f.err
+	}
+
+	f.recordedTime = since
+	return f.updates, nil
 }
 
 func (f *fakePipelineProvider) ListPipelines() ([]Pipeline, error) {
@@ -240,13 +302,13 @@ func (f *fakePipelineProvider) GetPipeline(id string) (Pipeline, error) {
 	return f.pipeline, nil
 }
 
-func (f *fakePipelineProvider) GetHistory(id string, since time.Time, limit int) ([]PipelineStatus, error) {
+func (f *fakePipelineProvider) GetHistory(id string, before time.Time, limit int) (PipelineStatusList, error) {
 	if f.err != nil {
 		return nil, f.err
 	}
 
 	f.recordedId = id
-	f.recordedTime = since
+	f.recordedTime = before
 	f.recordedLimit = limit
 
 	return f.history, nil

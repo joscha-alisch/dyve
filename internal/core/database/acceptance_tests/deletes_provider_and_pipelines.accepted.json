@@ -21,6 +21,28 @@
             "started": "2006-01-01T15:58:00+01:00"
         }
     ],
+    "pipeline_versions": [
+        {
+            "created": "2006-01-01T16:00:00+01:00",
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a"
+        },
+        {
+            "created": "2006-01-01T15:59:00+01:00",
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a"
+        },
+        {
+            "created": "2006-01-01T15:59:59+01:00",
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a"
+        },
+        {
+            "created": "2006-01-01T15:58:00+01:00",
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a"
+        }
+    ],
     "pipelines": [
         {
             "id": "pipeline-c",

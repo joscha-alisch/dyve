@@ -54,6 +54,12 @@ var basePipelinesState = map[string]interface{}{
 		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime.Add(-1 * time.Second)},
 		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime.Add(-2 * time.Minute)},
 	},
+	"pipeline_versions": []bson.M{
+		{"provider": "provider-a", "pipelineId": "pipeline-a", "created": someTime},
+		{"provider": "provider-a", "pipelineId": "pipeline-a", "created": someTime.Add(-1 * time.Minute)},
+		{"provider": "provider-a", "pipelineId": "pipeline-a", "created": someTime.Add(-1 * time.Second)},
+		{"provider": "provider-a", "pipelineId": "pipeline-a", "created": someTime.Add(-2 * time.Minute)},
+	},
 }
 
 func TestMongoIntegration(t *testing.T) {
@@ -217,6 +223,62 @@ func TestMongoIntegration(t *testing.T) {
 			}
 			return nil
 		}},
+		{desc: "lists pipeline runs with limit", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			runs, err := db.ListPipelineRunsLimit("pipeline-a", someTime, 1)
+			if err != nil {
+				return err
+			}
+			expected := sdk.PipelineStatusList{
+				{
+					PipelineId: "pipeline-a",
+					Started:    someTime.Add(-1 * time.Second),
+					Steps:      nil,
+				},
+			}
+
+			if !cmp.Equal(expected, runs) {
+				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, runs))
+			}
+			return nil
+		}},
+		{desc: "lists pipeline versions", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			runs, err := db.ListPipelineVersions("pipeline-a", someTime.Add(-time.Minute), someTime)
+			if err != nil {
+				return err
+			}
+			expected := sdk.PipelineVersionList{
+				{
+					PipelineId: "pipeline-a",
+					Created:    someTime.Add(-1 * time.Minute),
+				},
+				{
+					PipelineId: "pipeline-a",
+					Created:    someTime.Add(-1 * time.Second),
+				},
+			}
+
+			if !cmp.Equal(expected, runs) {
+				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, runs))
+			}
+			return nil
+		}},
+		{desc: "includes last pipeline version before", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			runs, err := db.ListPipelineVersions("pipeline-a", someTime.Add(-59*time.Second), someTime.Add(-58*time.Second))
+			if err != nil {
+				return err
+			}
+			expected := sdk.PipelineVersionList{
+				{
+					PipelineId: "pipeline-a",
+					Created:    someTime.Add(-1 * time.Minute),
+				},
+			}
+
+			if !cmp.Equal(expected, runs) {
+				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, runs))
+			}
+			return nil
+		}},
 		{desc: "adds pipeline runs", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
 			return db.AddPipelineRuns("provider-a", sdk.PipelineStatusList{
 				{
@@ -242,6 +304,30 @@ func TestMongoIntegration(t *testing.T) {
 				},
 			})
 		}},
+		{desc: "adds pipeline versions", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.AddPipelineVersions("provider-a", sdk.PipelineVersionList{
+				{
+					PipelineId: "pipeline-b",
+					Created:    someTime.Add(1 * time.Minute),
+				},
+			})
+		}},
+		{desc: "updates pipeline version", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
+			return db.AddPipelineVersions("provider-a", sdk.PipelineVersionList{
+				{
+					PipelineId: "pipeline-a",
+					Created:    someTime,
+					Definition: sdk.PipelineDefinition{
+						Steps: []sdk.PipelineStep{
+							{
+								Name: "step",
+								Id:   0,
+							},
+						},
+					},
+				},
+			})
+		}},
 
 		/**
 		Fetch Jobs
@@ -253,7 +339,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"id": "provider-c", "type": "apps", "lastUpdated": someTime.Add(-60 * time.Second)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcileAppProvider, Guid: "provider-b"}
+			expected := recon.Job{Type: ReconcileAppProvider, Guid: "provider-b", LastUpdated: someTime.Add(-90 * time.Second)}
 			j, ok := db.AcceptReconcileJob(1 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -267,7 +353,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"id": "provider-c", "type": "apps", "lastUpdated": someTime.Add(-60 * time.Second)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcilePipelineProvider, Guid: "provider-b"}
+			expected := recon.Job{Type: ReconcilePipelineProvider, Guid: "provider-b", LastUpdated: someTime.Add(-90 * time.Second)}
 			j, ok := db.AcceptReconcileJob(1 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))

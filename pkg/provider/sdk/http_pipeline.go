@@ -18,6 +18,7 @@ func NewPipelineProviderHandler(p PipelineProvider) http.Handler {
 
 	h.HandleFunc("/pipelines", h.listPipelines)
 	h.HandleFunc("/pipelines/", h.listPipelines)
+	h.HandleFunc("/pipelines/updates", h.listPipelineUpdates)
 	h.HandleFunc("/pipelines/{id:[0-9a-z-]+}", h.getPipeline)
 	h.HandleFunc("/pipelines/{id:[0-9a-z-]+}/history", h.getHistory)
 
@@ -77,4 +78,19 @@ func (h *pipelineProviderHandler) getHistory(w http.ResponseWriter, r *http.Requ
 	}
 
 	respondOk(w, history)
+}
+
+func (h *pipelineProviderHandler) listPipelineUpdates(w http.ResponseWriter, r *http.Request) {
+	since, err := defaultQueryTime(r, "since", currentTime())
+	if err != nil {
+		respondErr(w, http.StatusBadRequest, ErrQuerySinceMalformed)
+		return
+	}
+
+	updates, err := h.p.ListUpdates(since)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, ErrInternal)
+		return
+	}
+	respondOk(w, updates)
 }

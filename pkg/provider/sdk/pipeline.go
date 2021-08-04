@@ -9,6 +9,10 @@ type PipelinePage struct {
 	Pipelines []Pipeline `json:"pipelines" bson:"pipelines"`
 }
 
+type PipelineUpdates struct {
+	Runs     PipelineStatusList  `json:"runs,omitempty" bson:"runs,omitempty"`
+	Versions PipelineVersionList `json:"versions,omitempty" bson:"versions,omitempty"`
+}
 type Pipeline struct {
 	Id      string          `json:"id" bson:"id"`
 	Name    string          `json:"name" bson:"name"`
@@ -66,7 +70,7 @@ type PipelineStatusList []PipelineStatus
 type PipelineStatus struct {
 	PipelineId string    `json:"pipelineId" bson:"pipelineId"`
 	Started    time.Time `json:"started" bson:"started"`
-	Steps      []StepRun `json:"steps" bson:"steps"`
+	Steps      []StepRun `json:"steps,omitempty" bson:"steps,omitempty"`
 }
 
 type StepRun struct {
@@ -88,8 +92,9 @@ const (
 
 type PipelineProvider interface {
 	ListPipelines() ([]Pipeline, error)
+	ListUpdates(since time.Time) (PipelineUpdates, error)
 	GetPipeline(id string) (Pipeline, error)
-	GetHistory(id string, before time.Time, limit int) ([]PipelineStatus, error)
+	GetHistory(id string, before time.Time, limit int) (PipelineStatusList, error)
 }
 
 func (pl PipelineStatusList) Fold() PipelineStatus {

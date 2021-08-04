@@ -19,6 +19,12 @@ type listPipelinesResponse struct {
 	Result []sdk.Pipeline
 }
 
+type listPipelineUpdatesResponse struct {
+	Status int
+	Err    string
+	Result sdk.PipelineUpdates
+}
+
 type getPipelineResponse struct {
 	Status int
 	Err    string
@@ -33,6 +39,17 @@ type getHistoryResponse struct {
 
 type pipelineProviderClient struct {
 	baseClient
+}
+
+func (p *pipelineProviderClient) ListUpdates(since time.Time) (sdk.PipelineUpdates, error) {
+	r := listPipelineUpdatesResponse{}
+	err := p.get(&r, map[string]string{
+		"since": since.Format(time.RFC3339),
+	}, "updates")
+	if err != nil {
+		return sdk.PipelineUpdates{}, err
+	}
+	return r.Result, nil
 }
 
 func (p *pipelineProviderClient) ListPipelines() ([]sdk.Pipeline, error) {
@@ -53,7 +70,7 @@ func (p *pipelineProviderClient) GetPipeline(id string) (sdk.Pipeline, error) {
 	return r.Result, nil
 }
 
-func (p *pipelineProviderClient) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineStatus, error) {
+func (p *pipelineProviderClient) GetHistory(id string, before time.Time, limit int) (sdk.PipelineStatusList, error) {
 	r := getHistoryResponse{}
 	err := p.get(&r, map[string]string{
 		"before": before.Format(time.RFC3339),

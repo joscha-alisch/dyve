@@ -21,11 +21,34 @@
             "started": "2006-01-01T15:58:00+01:00"
         }
     ],
+    "pipeline_versions": [
+        {
+            "created": "2006-01-01T16:00:00+01:00",
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a"
+        },
+        {
+            "created": "2006-01-01T15:59:00+01:00",
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a"
+        },
+        {
+            "created": "2006-01-01T15:59:59+01:00",
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a"
+        },
+        {
+            "created": "2006-01-01T15:58:00+01:00",
+            "pipelineId": "pipeline-a",
+            "provider": "provider-a"
+        }
+    ],
     "pipelines": [
         {
             "current": {
                 "created": "0001-01-01T00:53:28+00:53",
-                "definition": {}
+                "definition": {},
+                "pipelineId": ""
             },
             "id": "pipeline-a",
             "name": "pipeline-a",
@@ -34,7 +57,8 @@
         {
             "current": {
                 "created": "0001-01-01T00:53:28+00:53",
-                "definition": {}
+                "definition": {},
+                "pipelineId": ""
             },
             "id": "pipeline-b",
             "name": "pipeline-b",
@@ -53,7 +77,8 @@
         {
             "current": {
                 "created": "0001-01-01T00:53:28+00:53",
-                "definition": {}
+                "definition": {},
+                "pipelineId": ""
             },
             "id": "pipeline-c",
             "name": "pipeline-c",

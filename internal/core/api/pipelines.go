@@ -60,15 +60,20 @@ func (a *api) listPipelineRuns(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(runs) == 0 {
+		respondOk(w, []pipelineStatus{})
+		return
+	}
+
 	sort.Sort(runs)
 
+	var res []pipelineStatus
 	versions, err := a.db.ListPipelineVersions(id, runs[0].Started, before)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return
 	}
 
-	var res []pipelineStatus
 	for _, run := range runs {
 		version := versions.VersionAt(run.Started)
 		if version.PipelineId == "" {

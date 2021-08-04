@@ -136,6 +136,33 @@ func TestHttp(t *testing.T) {
 				},
 			},
 		}}, "GET", "/api/pipelines/pipeline-a/runs"},
+		{"gets empty pipeline runs", fakeDb{runs: []sdk.PipelineStatus{}, versions: []sdk.PipelineVersion{
+			{
+				PipelineId: "pipeline-a",
+				Created:    someTime.Add(-3 * time.Minute),
+				Definition: sdk.PipelineDefinition{
+					Steps: []sdk.PipelineStep{
+						{
+							Name:           "step-a",
+							Id:             0,
+							AppDeployments: nil,
+						},
+						{
+							Name:           "step-b",
+							Id:             1,
+							AppDeployments: nil,
+						},
+					},
+					Connections: []sdk.PipelineConnection{
+						{
+							From:   0,
+							To:     1,
+							Manual: false,
+						},
+					},
+				},
+			},
+		}}, "GET", "/api/pipelines/pipeline-a/runs"},
 	}
 
 	currentTime = func() time.Time {
@@ -177,6 +204,10 @@ type fakeDb struct {
 	pipeline     sdk.Pipeline
 	runs         []sdk.PipelineStatus
 	versions     []sdk.PipelineVersion
+}
+
+func (f *fakeDb) AddPipelineVersions(providerId string, versions sdk.PipelineVersionList) error {
+	panic("implement me")
 }
 
 func (f *fakeDb) ListPipelineRunsLimit(id string, toExcl time.Time, limit int) (sdk.PipelineStatusList, error) {

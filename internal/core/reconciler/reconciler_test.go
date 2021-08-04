@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var someTime, _ = time.Parse(time.RFC3339, "2006-01-01T15:00:00Z")
+
 func TestName(t *testing.T) {
 	tests := []struct {
 		desc           string
@@ -21,6 +23,7 @@ func TestName(t *testing.T) {
 		after          map[string][]interface{}
 		expectedErr    error
 		expectedWorked bool
+		recordedTime   time.Time
 	}{
 		{desc: "adds apps", job: recon.Job{
 			Type: database.ReconcileAppProvider,
@@ -34,18 +37,24 @@ func TestName(t *testing.T) {
 				&sdk.App{Id: "app-b", Name: "app-b"},
 			},
 		}, expectedWorked: true},
-		{desc: "adds pipelines", job: recon.Job{
-			Type: database.ReconcilePipelineProvider,
-			Guid: "pipeline-provider",
+		{desc: "adds pipelines, runs and versions", job: recon.Job{
+			Type:        database.ReconcilePipelineProvider,
+			Guid:        "pipeline-provider",
+			LastUpdated: someTime,
 		}, providerId: "pipeline-provider", provider: fakeProvider{pipelines: []sdk.Pipeline{
 			{Id: "pipeline-a", Name: "pipeline-a"},
 			{Id: "pipeline-b", Name: "pipeline-b"},
+		}, updates: sdk.PipelineUpdates{
+			Versions: sdk.PipelineVersionList{{PipelineId: "pipeline-a", Created: someTime}},
+			Runs:     sdk.PipelineStatusList{{PipelineId: "pipeline-a", Started: someTime}},
 		}}, after: map[string][]interface{}{
 			"pipeline-provider": {
 				&sdk.Pipeline{Id: "pipeline-a", Name: "pipeline-a"},
 				&sdk.Pipeline{Id: "pipeline-b", Name: "pipeline-b"},
+				&sdk.PipelineVersion{PipelineId: "pipeline-a", Created: someTime},
+				&sdk.PipelineStatus{PipelineId: "pipeline-a", Started: someTime},
 			},
-		}, expectedWorked: true},
+		}, expectedWorked: true, recordedTime: someTime},
 		{desc: "removes apps if provider not found", job: recon.Job{
 			Type: database.ReconcileAppProvider,
 			Guid: "not-exist",
@@ -80,6 +89,10 @@ func TestName(t *testing.T) {
 
 			if worked != test.expectedWorked {
 				tt.Errorf("\nwanted worked: %v\n   got worked: %v", test.expectedWorked, worked)
+			}
+
+			if test.provider.recordedTime != test.recordedTime {
+				tt.Errorf("\nwanted time: %v\n   got time: %v", test.recordedTime, test.provider.recordedTime)
 			}
 
 			if !cmp.Equal(test.after, db.content) {
@@ -118,9 +131,16 @@ func (f *fakeManager) GetAppProvider(id string) (sdk.AppProvider, error) {
 }
 
 type fakeProvider struct {
-	apps      []sdk.App
-	err       error
-	pipelines []sdk.Pipeline
+	apps         []sdk.App
+	err          error
+	pipelines    []sdk.Pipeline
+	updates      sdk.PipelineUpdates
+	recordedTime time.Time
+}
+
+func (f *fakeProvider) ListUpdates(since time.Time) (sdk.PipelineUpdates, error) {
+	f.recordedTime = since
+	return f.updates, nil
 }
 
 func (f fakeProvider) ListPipelines() ([]sdk.Pipeline, error) {
@@ -131,7 +151,7 @@ func (f fakeProvider) GetPipeline(id string) (sdk.Pipeline, error) {
 	panic("implement me")
 }
 
-func (f fakeProvider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineStatus, error) {
+func (f fakeProvider) GetHistory(id string, before time.Time, limit int) (sdk.PipelineStatusList, error) {
 	panic("implement me")
 }
 
@@ -148,12 +168,40 @@ type fakeDb struct {
 	content map[string][]interface{}
 }
 
+func (f *fakeDb) ListPipelineRunsLimit(id string, toExcl time.Time, limit int) (sdk.PipelineStatusList, error) {
+	panic("implement me")
+}
+
+func (f *fakeDb) ListPipelineVersions(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineVersionList, error) {
+	panic("implement me")
+}
+
+func (f *fakeDb) AddPipelineVersions(providerId string, versions sdk.PipelineVersionList) error {
+	if f.content == nil {
+		f.content = make(map[string][]interface{})
+	}
+
+	for _, p := range versions {
+		p := p
+		f.content[providerId] = append(f.content[providerId], &p)
+	}
+	return nil
+}
+
 func (f *fakeDb) ListPipelineRuns(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineStatusList, error) {
 	panic("implement me")
 }
 
 func (f *fakeDb) AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error {
-	panic("implement me")
+	if f.content == nil {
+		f.content = make(map[string][]interface{})
+	}
+
+	for _, p := range runs {
+		p := p
+		f.content[providerId] = append(f.content[providerId], &p)
+	}
+	return nil
 }
 
 func (f *fakeDb) ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error) {
@@ -178,10 +226,9 @@ func (f *fakeDb) UpdatePipelines(providerId string, pipelines []sdk.Pipeline) er
 		f.content = make(map[string][]interface{})
 	}
 
-	f.content[providerId] = make([]interface{}, len(pipelines))
-	for i, p := range pipelines {
+	for _, p := range pipelines {
 		p := p
-		f.content[providerId][i] = &p
+		f.content[providerId] = append(f.content[providerId], &p)
 	}
 	return nil
 }

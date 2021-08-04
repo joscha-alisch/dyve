@@ -96,7 +96,7 @@ func TestGetHistory(t *testing.T) {
 		expectedErr error
 	}{
 		{desc: "returns history", id: "a", before: someTime, limit: 20, state: fakePipelineProvider{
-			history: []sdk.PipelineStatus{
+			history: sdk.PipelineStatusList{
 				{
 					Started: someTime,
 					Steps: []sdk.StepRun{
@@ -137,7 +137,116 @@ func TestGetHistory(t *testing.T) {
 			}
 
 			if !cmp.Equal(test.state.history, pipelines) {
-				tt.Errorf("\ndiff between pipelines\n%s\n", cmp.Diff(test.state.pipelines, pipelines))
+				tt.Errorf("\ndiff between pipelines\n%s\n", cmp.Diff(test.state.history, pipelines))
+			}
+		})
+	}
+}
+
+func TestListUpdates(t *testing.T) {
+	tests := []struct {
+		desc            string
+		since           time.Time
+		state           fakePipelineProvider
+		expectedUpdates sdk.PipelineUpdates
+		expectedErr     error
+	}{
+		{desc: "returns updates", since: someTime.Add(-time.Minute), state: fakePipelineProvider{
+			history: []sdk.PipelineStatus{
+				{
+					Started: someTime,
+					Steps: []sdk.StepRun{
+						{
+							StepId: 0,
+							Status: sdk.StatusSuccess,
+						},
+					},
+				},
+				{
+					Steps: []sdk.StepRun{
+						{
+							StepId:  0,
+							Started: someTime,
+							Status:  sdk.StatusSuccess,
+						},
+					},
+				},
+				{
+					Steps: []sdk.StepRun{
+						{
+							StepId: 0,
+							Ended:  someTime,
+							Status: sdk.StatusSuccess,
+						},
+					},
+				},
+				{
+					Started: someTime.Add(-time.Hour),
+				},
+			},
+			versions: sdk.PipelineVersionList{
+				{
+					Created: someTime,
+				},
+				{
+					Created: someTime.Add(-time.Hour),
+				},
+			},
+		},
+			expectedUpdates: sdk.PipelineUpdates{
+				Runs: sdk.PipelineStatusList{
+					{
+						Started: someTime,
+						Steps: []sdk.StepRun{
+							{
+								StepId: 0,
+								Status: sdk.StatusSuccess,
+							},
+						},
+					},
+					{
+						Steps: []sdk.StepRun{
+							{
+								StepId:  0,
+								Started: someTime,
+								Status:  sdk.StatusSuccess,
+							},
+						},
+					},
+					{
+						Steps: []sdk.StepRun{
+							{
+								StepId: 0,
+								Ended:  someTime,
+								Status: sdk.StatusSuccess,
+							},
+						},
+					},
+				},
+				Versions: sdk.PipelineVersionList{
+					{
+						Created: someTime,
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(tt *testing.T) {
+			handler := sdk.NewPipelineProviderHandler(&test.state)
+			s := httptest.NewServer(handler)
+			defer s.Close()
+
+			c := NewPipelineProviderClient(s.URL, nil)
+
+			updates, err := c.ListUpdates(test.since)
+			if !errors.Is(err, test.expectedErr) {
+				tt.Errorf("\nwanted err: %v\ngot: %v", test.expectedErr, err)
+			}
+
+			if !cmp.Equal(test.expectedUpdates, updates) {
+				tt.Errorf("\ndiff between pipelines\n%s\n", cmp.Diff(test.expectedUpdates, updates))
 			}
 		})
 	}
@@ -150,7 +259,34 @@ type fakePipelineProvider struct {
 	recordedId     string
 	recordedBefore time.Time
 	recordedLimit  int
-	history        []sdk.PipelineStatus
+	history        sdk.PipelineStatusList
+	versions       sdk.PipelineVersionList
+}
+
+func (f *fakePipelineProvider) ListUpdates(since time.Time) (sdk.PipelineUpdates, error) {
+	updates := sdk.PipelineUpdates{}
+
+	for _, version := range f.versions {
+		if version.Created.After(since) {
+			updates.Versions = append(updates.Versions, version)
+		}
+	}
+
+	for _, status := range f.history {
+		if status.Started.After(since) {
+			updates.Runs = append(updates.Runs, status)
+			continue
+		}
+
+		for _, step := range status.Steps {
+			if step.Started.After(since) || step.Ended.After(since) {
+				updates.Runs = append(updates.Runs, status)
+				break
+			}
+		}
+	}
+
+	return updates, nil
 }
 
 func (f *fakePipelineProvider) ListPipelines() ([]sdk.Pipeline, error) {
@@ -169,7 +305,7 @@ func (f *fakePipelineProvider) GetPipeline(id string) (sdk.Pipeline, error) {
 	return f.pipeline, nil
 }
 
-func (f *fakePipelineProvider) GetHistory(id string, before time.Time, limit int) ([]sdk.PipelineStatus, error) {
+func (f *fakePipelineProvider) GetHistory(id string, before time.Time, limit int) (sdk.PipelineStatusList, error) {
 	f.recordedId = id
 	f.recordedBefore = before
 	f.recordedLimit = limit

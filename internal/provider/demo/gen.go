@@ -31,6 +31,10 @@ func team() string {
 	return strings.ToLower(randomdata.FirstName(randomdata.RandomGender)) + "s-" + randomdata.Adjective() + "-" + strings.ToLower(randomdata.Noun()) + "s"
 }
 
+func pipelineStep() string {
+	return pipelineStepNames[randomdata.Number(0, len(pipelineStepNames)-1)]
+}
+
 var appWords = []string{
 	"generator",
 	"service",
@@ -92,4 +96,24 @@ var pipelineWords = []string{
 	"deploy",
 	"build",
 	"test",
+	"clean",
+	"verify",
+	"notify",
+}
+
+var pipelineStepNames = []string{
+	"build docker",
+	"build image",
+	"remove image",
+	"build app",
+	"test",
+	"cdc",
+	"run-cdc",
+	"verify cdc",
+	"clean repo",
+	"notify slack",
+	"slack",
+	"tool",
+	"build",
+	"verify",
 }

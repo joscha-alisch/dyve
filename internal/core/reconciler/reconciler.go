@@ -61,7 +61,10 @@ func (r *reconciler) reconcilePipelineProvider(j recon.Job) error {
 		return err
 	}
 
-	r.db.UpdatePipelines(j.Guid, pipelines)
+	updates, err := p.ListUpdates(j.LastUpdated)
 
+	r.db.UpdatePipelines(j.Guid, pipelines)
+	r.db.AddPipelineVersions(j.Guid, updates.Versions)
+	r.db.AddPipelineRuns(j.Guid, updates.Runs)
 	return nil
 }

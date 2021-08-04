@@ -25,6 +25,7 @@ type Database interface {
 	DeletePipelineProvider(providerId string) error
 	UpdatePipelines(providerId string, pipelines []sdk.Pipeline) error
 	AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error
+	AddPipelineVersions(providerId string, versions sdk.PipelineVersionList) error
 }
 
 const (
