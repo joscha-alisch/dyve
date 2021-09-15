@@ -1,0 +1,6 @@
+.idea/**/*
+.idea
+infra/data/**/*
+infra/data
+.git/**/*
+.git
