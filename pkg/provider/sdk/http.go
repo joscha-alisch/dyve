@@ -17,7 +17,7 @@ type ProviderConfig struct {
 func ListenAndServe(addr string, p ProviderConfig) error {
 	h := mux.NewRouter()
 
-	if p.Pipelines != nil {
+	if p.Apps != nil {
 		h.PathPrefix("/apps").Handler(NewAppProviderHandler(p.Apps))
 	}
 

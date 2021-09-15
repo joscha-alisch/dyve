@@ -12,9 +12,9 @@ type JobProvider interface {
 type Type string
 type ReconcileHandler func(j Job) error
 type Job struct {
-	Type        Type
-	Guid        string
-	LastUpdated time.Time
+	Type        Type      `gson:"type"`
+	Guid        string    `gson:"guid"`
+	LastUpdated time.Time `gson:"lastUpdated" json:"lastUpdated"`
 }
 
 type Reconciler interface {

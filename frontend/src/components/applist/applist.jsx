@@ -23,10 +23,12 @@ const AppList = () => {
         fetch("/api/apps?perPage=" + perPage + "&page=" + (page-1))
             .then(res => res.json())
             .then((data) => {
-                setApps(data.result.apps)
-                setTotalPages(data.result.totalPages)
-                setTotalResults(data.result.totalResults)
-                setLoading(false)
+                if(data.result.apps) {
+                    setApps(data.result.apps)
+                    setTotalPages(data.result.totalPages)
+                    setTotalResults(data.result.totalResults)
+                    setLoading(false)
+                }
             })
     }, [page, perPage])
 

@@ -5,16 +5,16 @@
      xmlns:xlink="http://www.w3.org/1999/xlink">
 <rect x="0.00" y="0.00" width="1400.00" height="350.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ff0000" stroke-width="2" />
 <text x="550.00" y="183.00" font-size="60" dominant-baseline="middle" >first-a</text>
+<path d="M 1400.000000 175.000000 C 1460.000000 175.000000 1440.000000 55.000000 1500.000000 55.000000" fill="none" stroke="#aaa" stroke-width="4" stroke-dasharray="10" />
 <path d="M 1400.000000 175.000000 C 1460.000000 175.000000 1440.000000 175.000000 1500.000000 175.000000" fill="none" stroke="#aaa" stroke-width="4" stroke-dasharray="10" />
-<path d="M 1400.000000 175.000000 C 1460.000000 175.000000 1440.000000 295.000000 1500.000000 295.000000" fill="none" stroke="#aaa" stroke-width="4" stroke-dasharray="10" />
 <rect x="0.00" y="360.00" width="1400.00" height="230.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ccc" />
 <text x="550.00" y="483.00" font-size="48" dominant-baseline="middle" >first-b</text>
+<path d="M 1400.000000 475.000000 C 1460.000000 475.000000 1440.000000 295.000000 1500.000000 295.000000" fill="none" stroke="#aaa" stroke-width="4" stroke-dasharray="10" />
 <path d="M 1400.000000 475.000000 C 1460.000000 475.000000 1440.000000 415.000000 1500.000000 415.000000" fill="none" stroke="#aaa" stroke-width="4" stroke-dasharray="10" />
 <path d="M 1400.000000 475.000000 C 1460.000000 475.000000 1440.000000 535.000000 1500.000000 535.000000" fill="none" stroke="#aaa" stroke-width="4" stroke-dasharray="10" />
-<path d="M 1400.000000 475.000000 C 1460.000000 475.000000 1440.000000 55.000000 1500.000000 55.000000" fill="none" stroke="#aaa" stroke-width="4" stroke-dasharray="10" />
-<rect x="1500.00" y="120.00" width="1400.00" height="110.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ccc" />
-<rect x="1500.00" y="240.00" width="1400.00" height="110.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ff0000" stroke-width="2" />
+<rect x="1500.00" y="0.00" width="1400.00" height="110.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ccc" />
+<rect x="1500.00" y="120.00" width="1400.00" height="110.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ff0000" stroke-width="2" />
+<rect x="1500.00" y="240.00" width="1400.00" height="110.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ccc" />
 <rect x="1500.00" y="360.00" width="1400.00" height="110.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ccc" />
 <rect x="1500.00" y="480.00" width="1400.00" height="110.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ccc" />
-<rect x="1500.00" y="0.00" width="1400.00" height="110.00" rx="10.00" ry="10.00" fill="#eee" stroke="#ccc" />
 </svg>

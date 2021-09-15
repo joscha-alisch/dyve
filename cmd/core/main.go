@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/joscha-alisch/dyve/internal/core/api"
+	"github.com/joscha-alisch/dyve/internal/core/config"
 	coreDb "github.com/joscha-alisch/dyve/internal/core/database"
 	"github.com/joscha-alisch/dyve/internal/core/provider"
 	coreRecon "github.com/joscha-alisch/dyve/internal/core/reconciler"
@@ -9,32 +11,30 @@ import (
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/pipeviz"
 	"net/http"
-	"os"
 	"time"
 )
 
 func main() {
-	c := getConfig()
+	c, err := config.LoadFrom("./config.yaml")
+	if err != nil {
+		panic(err)
+	}
 
 	db, err := coreDb.NewMongoDB(coreDb.MongoLogin{
-		Uri: c.mongoUri,
-		DB:  c.mongoDb,
+		Uri: c.Database.URI,
+		DB:  c.Database.Database,
 	})
 	if err != nil {
 		panic(err)
 	}
 
 	m := provider.NewManager(db)
-	demoAppCli := providerClient.NewAppProviderClient("http://localhost:9003", nil)
-	err = m.AddAppProvider("demo-apps", demoAppCli)
-	if err != nil {
-		panic(err)
-	}
-
-	demoPipelineCli := providerClient.NewPipelineProviderClient("http://localhost:9003", nil)
-	err = m.AddPipelineProvider("demo-pipelines", demoPipelineCli)
-	if err != nil {
-		panic(err)
+	for _, appProvider := range c.AppProviders {
+		p := providerClient.NewAppProviderClient(appProvider.Host, nil)
+		err = m.AddAppProvider(appProvider.Name, p)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	r := coreRecon.NewReconciler(db, m, 5*time.Second)
@@ -46,28 +46,8 @@ func main() {
 
 	a := api.New(db, pipeviz.New())
 
-	err = http.ListenAndServe(":9001", a)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", c.Port), a)
 	if err != nil {
 		panic(err)
 	}
-}
-
-type config struct {
-	mongoUri string
-	mongoDb  string
-}
-
-func getConfig() config {
-	return config{
-		mongoUri: mustGetEnv("MONGO_URI"),
-		mongoDb:  mustGetEnv("MONGO_DB"),
-	}
-}
-
-func mustGetEnv(env string) string {
-	v, ok := os.LookupEnv(env)
-	if !ok {
-		panic("could not find env " + env)
-	}
-	return v
 }

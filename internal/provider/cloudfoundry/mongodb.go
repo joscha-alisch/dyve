@@ -218,28 +218,25 @@ func (d *mongoDatabase) deleteBy(coll *mongo.Collection, filter bson.M) (bool, e
 func (d *mongoDatabase) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
 	t := currentTime()
 
-	j, ok := d.acceptCollectionReconcileJob(d.orgs, t, olderThan)
+	j, ok := d.acceptCollectionReconcileJob(ReconcileSpaces, d.orgs, t, olderThan)
 	if ok {
-		j.Type = ReconcileSpaces
 		return j, true
 	}
 
-	j, ok = d.acceptCollectionReconcileJob(d.spaces, t, olderThan)
+	j, ok = d.acceptCollectionReconcileJob(ReconcileApps, d.spaces, t, olderThan)
 	if ok {
-		j.Type = ReconcileApps
 		return j, true
 	}
 
-	j, ok = d.acceptCollectionReconcileJob(d.cfInfos, t, olderThan)
+	j, ok = d.acceptCollectionReconcileJob(ReconcileOrganizations, d.cfInfos, t, olderThan)
 	if ok {
-		j.Type = ReconcileOrganizations
 		return j, true
 	}
 
 	return recon.Job{}, false
 }
 
-func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, t time.Time, olderThan time.Duration) (recon.Job, bool) {
+func (d *mongoDatabase) acceptCollectionReconcileJob(typ recon.Type, coll *mongo.Collection, t time.Time, olderThan time.Duration) (recon.Job, bool) {
 	lessThanTime := t.Add(-olderThan)
 	res := coll.FindOneAndUpdate(context.Background(), bson.M{
 		"$or": bson.A{
@@ -259,6 +256,9 @@ func (d *mongoDatabase) acceptCollectionReconcileJob(coll *mongo.Collection, t t
 	if err != nil {
 		return recon.Job{}, false
 	}
+
+	j.Type = typ
+
 	return j, true
 }
 
