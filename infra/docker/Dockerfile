@@ -14,7 +14,11 @@ FROM build AS build-provider-cloudfoundry
 RUN go build -o out/core ./cmd/provider/cloudfoundry/*.go
 
 FROM alpine AS core
-COPY --from=build-core /build/out/core /app
+WORKDIR /app
+COPY --from=build-core /build/out/core /app/core
+ENTRYPOINT ["/app/core", "--config", "/app/config.yaml"]
 
 FROM alpine AS provider-cloudfoundry
-COPY --from=build-provider-cloudfoundry /build/out/core /app
+WORKDIR /app
+COPY --from=build-provider-cloudfoundry /build/out/core /app/provider-cloudfoundry
+ENTRYPOINT ["/app/provider-cloudfoundry", "--config", "/app/config.yaml"]
