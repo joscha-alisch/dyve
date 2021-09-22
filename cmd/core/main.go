@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/joscha-alisch/dyve/internal/core/api"
 	"github.com/joscha-alisch/dyve/internal/core/config"
@@ -14,8 +15,14 @@ import (
 	"time"
 )
 
+var configPath string
+
+func init() {
+	flag.StringVar(&configPath, "config", "./config.yaml", "path to config file")
+}
+
 func main() {
-	c, err := config.LoadFrom("./config.yaml")
+	c, err := config.LoadFrom(configPath)
 	if err != nil {
 		panic(err)
 	}
