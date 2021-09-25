@@ -11,9 +11,9 @@ type Config struct {
 }
 
 type CfConfig struct {
-	Api      string `yaml:"host" mapstructure:"DYVE_CLOUDFOUNDRY_API"`
+	Api      string `yaml:"api"`
 	User     string `yaml:"user"`
-	Password string
+	Password string `yaml:"password"`
 }
 
 type DatabaseConfig struct {
