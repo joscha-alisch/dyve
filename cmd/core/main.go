@@ -29,7 +29,7 @@ func main() {
 
 	db, err := coreDb.NewMongoDB(coreDb.MongoLogin{
 		Uri: c.Database.URI,
-		DB:  c.Database.Database,
+		DB:  c.Database.Name,
 	})
 	if err != nil {
 		panic(err)

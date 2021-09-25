@@ -18,8 +18,8 @@ type AppProviderConfig struct {
 }
 
 type DatabaseConfig struct {
-	URI      string `yaml:"uri"`
-	Database string `yaml:"database"`
+	URI  string `yaml:"uri"`
+	Name string `yaml:"name"`
 }
 
 func LoadFrom(path string) (Config, error) {

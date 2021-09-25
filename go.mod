@@ -13,6 +13,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/rs/zerolog v1.25.0
+	github.com/spf13/viper v1.7.0
 	go.mongodb.org/mongo-driver v1.0.3
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/yaml.v2 v2.4.0

@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/joscha-alisch/dyve/internal/provider/cloudfoundry"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
-	"os"
 	"time"
 )
 
@@ -17,16 +17,19 @@ type config struct {
 }
 
 func main() {
-	c := getConfig()
+	c, err := LoadFrom("./config.yaml")
+	if err != nil {
+		panic(err)
+	}
 
 	cf, err := cloudfoundry.NewDefaultApi(cloudfoundry.CFLogin{
-		Api: c.cfApi, User: c.cfUser, Pass: c.cfPass,
+		Api: c.CloudFoundry.Api, User: c.CloudFoundry.User, Pass: c.CloudFoundry.Password,
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	db, err := cloudfoundry.NewMongoDatabase(cloudfoundry.MongoLogin{Uri: c.mongoUri, DB: c.mongoDb})
+	db, err := cloudfoundry.NewMongoDatabase(cloudfoundry.MongoLogin{Uri: c.Database.URI, DB: c.Database.Name})
 	if err != nil {
 		panic(err)
 	}
@@ -40,26 +43,8 @@ func main() {
 		panic(err)
 	}
 
-	err = sdk.ListenAndServeAppProvider(":9003", p)
+	err = sdk.ListenAndServeAppProvider(fmt.Sprintf(":%d", c.Port), p)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func getConfig() config {
-	return config{
-		cfApi:    mustGetEnv("CF_API"),
-		cfUser:   mustGetEnv("CF_USER"),
-		cfPass:   mustGetEnv("CF_PASS"),
-		mongoUri: mustGetEnv("MONGO_URI"),
-		mongoDb:  mustGetEnv("MONGO_DB"),
-	}
-}
-
-func mustGetEnv(env string) string {
-	v, ok := os.LookupEnv(env)
-	if !ok {
-		panic("could not find env " + env)
-	}
-	return v
 }
