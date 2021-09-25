@@ -16,7 +16,7 @@ RUN go build -o out/core ./cmd/provider/cloudfoundry/*.go
 
 FROM node:16-alpine AS build-frontend
 WORKDIR /build
-COPY ./frontend/package.json yarn.lock /build/
+COPY ./frontend/package.json ./frontend/yarn.lock /build/
 RUN yarn install --frozen-lockfile
 COPY ./frontend/src /build/src
 COPY ./frontend/public /build/public
