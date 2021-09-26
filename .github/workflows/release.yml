@@ -121,7 +121,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-multi-buildx
 
-      - name: Build Provider CloudFoundry
+      - name: Build Frontend
         uses: docker/build-push-action@v2
         with:
           context: .
