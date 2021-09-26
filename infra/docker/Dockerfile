@@ -14,9 +14,9 @@ RUN go build -o out/core ./cmd/core/*.go
 FROM build-go AS build-provider-cloudfoundry
 RUN go build -o out/core ./cmd/provider/cloudfoundry/*.go
 
-FROM node:16-alpine AS build-frontend
+FROM node:16 AS build-frontend
 ENV PYTHONUNBUFFERED=1
-RUN apk add --update --no-cache python2 make g++ && ln -sf python2 /usr/bin/python
+#RUN apk add --update --no-cache python2 make g++ && ln -sf python2 /usr/bin/python
 WORKDIR /build
 COPY ./frontend/package.json ./frontend/yarn.lock /build/
 RUN yarn install --frozen-lockfile
