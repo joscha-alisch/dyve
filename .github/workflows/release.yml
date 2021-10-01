@@ -1,5 +1,9 @@
 name: Release Latest
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - infra/helm/**
+
 
 env:
   REGISTRY: ghcr.io
