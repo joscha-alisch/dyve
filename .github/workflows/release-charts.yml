@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - .github/workflows/release-charts.yml
       - infra/helm/**
 
 jobs:
