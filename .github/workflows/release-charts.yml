@@ -26,6 +26,13 @@ jobs:
         with:
           version: v3.4.0
 
+      - name: Add Helm dependencies
+        run: |
+          for d in infra/helm/*/ ; do
+              echo "$d"
+              helm dependency update $d
+          done
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.2.1
         with:
