@@ -1,0 +1,11 @@
+apiVersion: v2
+name: dyve
+version: 0.1.0
+description: Deploys dyve
+appVersion: "0.0.1"
+
+dependencies:
+  - name: mongodb
+    version: "10.26.3"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: mongodb.enabled

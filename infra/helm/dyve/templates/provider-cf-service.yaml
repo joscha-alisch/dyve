@@ -1,0 +1,16 @@
+{{ if .Values.providers.cloudfoundry.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dyve.fullname" . }}-cloudfoundry
+  labels:
+{{ include "dyve.labels" . | indent 4 }}
+spec:
+  selector:
+    dyve: provider-cloudfoundry
+{{ include "dyve.labels" . | indent 4 }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: http
+ {{- end }}

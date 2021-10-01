@@ -7,4 +7,4 @@ appProviders:
 
 database:
     uri: mongodb://localhost:9503
-    database: dyve_core
+    name: dyve_core

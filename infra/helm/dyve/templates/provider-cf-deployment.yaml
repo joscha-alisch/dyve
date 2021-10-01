@@ -1,0 +1,67 @@
+{{ if .Values.providers.cloudfoundry.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dyve.fullname" . }}-cloudfoundry
+  labels:
+{{ include "dyve.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.providers.cloudfoundry.replicas }}
+  selector:
+    matchLabels:
+      dyve: provider-cloudfoundry
+{{ include "dyve.labels" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+        dyve: provider-cloudfoundry
+{{ include "dyve.labels" . | indent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/provider-cf-config.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: provider-cloudfoundry
+          image: {{.Values.providers.cloudfoundry.image.repository}}:{{.Values.providers.cloudfoundry.image.tag}}
+          imagePullPolicy: {{.Values.providers.cloudfoundry.image.pullPolicy}}
+          {{- if .Values.providers.cloudfoundry.args }}
+          args:
+            {{- .Values.providers.cloudfoundry.args | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.providers.cloudfoundry.probe }}
+          readinessProbe:
+            exec:
+              command:
+                {{- .Values.providers.cloudfoundry.probe.command | toYaml | nindent 16 }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                {{- .Values.providers.cloudfoundry.probe.command | toYaml | nindent 16 }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - mountPath: /app/config.yaml
+              name: config
+              subPath: config.yaml
+          {{if $.Values.providers.cloudfoundry.resources}}
+          resources:
+{{- toYaml $.Values.providers.cloudfoundry.resources | nindent 12 }}
+          {{end}}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "dyve.fullname" . }}-provider-cloudfoundry
+      {{- with .Values.providers.cloudfoundry.affinity }}
+      affinity:
+      {{- toYaml $.Values.providers.cloudfoundry.affinity | nindent 8 }}
+      {{- end }}
+      {{- with .Values.providers.cloudfoundry.tolerations }}
+      tolerations:
+      {{- toYaml $.Values.providers.cloudfoundry.tolerations | nindent 8 }}
+      {{- end }}
+{{- end }}

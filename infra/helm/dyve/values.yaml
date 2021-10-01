@@ -1,0 +1,41 @@
+core:
+  image:
+    repository: ghcr.io/joscha-alisch/dyve-core
+    tag: main
+    pullPolicy: Always
+  args:
+    - "--config"
+    - "/app/config.yaml"
+  config:
+    port: 8080
+    database:
+      uri: mongodb://dyve-mongodb:27017
+      name: core
+
+frontend:
+  image:
+    repository: ghcr.io/joscha-alisch/dyve-frontend
+    tag: main
+    pullPolicy: Always
+
+  ingress:
+    enabled: false
+
+providers:
+  cloudfoundry:
+    enabled: false
+    image:
+      repository: ghcr.io/joscha-alisch/dyve-provider-cf
+      tag: main
+      pullPolicy: Always
+    config:
+      port: 8080
+      database:
+        uri: mongodb://dyve-mongodb:27017
+        name: provider_cf
+
+mongodb:
+  enabled: true
+  auth:
+    enabled: false
+

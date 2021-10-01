@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dyve.fullname" . }}-frontend
+  labels:
+{{ include "dyve.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      dyve: frontend
+{{ include "dyve.labels" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+        dyve: frontend
+{{ include "dyve.labels" . | indent 8 }}
+    spec:
+      containers:
+        - name: dyve
+          image: {{.Values.frontend.image.repository}}:{{.Values.frontend.image.tag}}
+          imagePullPolicy: {{.Values.frontend.image.pullPolicy}}
+          {{- if .Values.frontend.args }}
+          args:
+            {{- .Values.frontend.args | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.frontend.probe }}
+          readinessProbe:
+            exec:
+              command:
+                {{- .Values.frontend.probe.command | toYaml | nindent 16 }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                {{- .Values.frontend.probe.command | toYaml | nindent 16 }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          {{if $.Values.frontend.resources}}
+          resources:
+    {{- toYaml $.Values.frontend.resources | nindent 12 }}
+      {{end}}
+      {{- with .Values.frontend.affinity }}
+    affinity:
+      {{- toYaml $.Values.frontend.affinity | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.tolerations }}
+    tolerations:
+      {{- toYaml $.Values.frontend.tolerations | nindent 8 }}
+      {{- end }}

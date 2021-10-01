@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dyve.fullname" . }}-core
+  labels:
+{{ include "dyve.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.core.replicas }}
+  selector:
+    matchLabels:
+      dyve: core
+{{ include "dyve.labels" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+        dyve: core
+{{ include "dyve.labels" . | indent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/core-config.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: dyve
+          image: {{.Values.core.image.repository}}:{{.Values.core.image.tag}}
+          imagePullPolicy: {{.Values.core.image.pullPolicy}}
+          {{- if .Values.core.args }}
+          args:
+            {{- .Values.core.args | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.core.probe }}
+          readinessProbe:
+            exec:
+              command:
+                {{- .Values.core.probe.command | toYaml | nindent 16 }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                {{- .Values.core.probe.command | toYaml | nindent 16 }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - mountPath: /app/config.yaml
+              name: config
+              subPath: config.yaml
+          {{if $.Values.core.resources}}
+          resources:
+{{- toYaml $.Values.core.resources | nindent 12 }}
+          {{end}}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "dyve.fullname" . }}-core
+      {{- with .Values.core.affinity }}
+      affinity:
+      {{- toYaml $.Values.core.affinity | nindent 8 }}
+      {{- end }}
+      {{- with .Values.core.tolerations }}
+      tolerations:
+      {{- toYaml $.Values.core.tolerations | nindent 8 }}
+      {{- end }}
