@@ -28,6 +28,7 @@ jobs:
 
       - name: Add Helm dependencies
         run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
           for d in infra/helm/*/ ; do
               echo "$d"
               helm dependency update $d
