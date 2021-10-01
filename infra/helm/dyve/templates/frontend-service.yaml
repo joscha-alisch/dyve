@@ -7,7 +7,6 @@ metadata:
 spec:
   selector:
     dyve: frontend
-{{ include "dyve.labels" . | indent 4 }}
   ports:
     - protocol: TCP
       port: 80

@@ -8,7 +8,6 @@ metadata:
 spec:
   selector:
     dyve: provider-cloudfoundry
-{{ include "dyve.labels" . | indent 4 }}
   ports:
     - protocol: TCP
       port: 80
