@@ -9,12 +9,10 @@ spec:
   selector:
     matchLabels:
       dyve: core
-{{ include "dyve.labels" . | indent 6 }}
   template:
     metadata:
       labels:
         dyve: core
-{{ include "dyve.labels" . | indent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/core-config.yaml") . | sha256sum }}
     spec:

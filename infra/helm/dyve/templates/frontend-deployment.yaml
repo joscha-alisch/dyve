@@ -9,12 +9,10 @@ spec:
   selector:
     matchLabels:
       dyve: frontend
-{{ include "dyve.labels" . | indent 6 }}
   template:
     metadata:
       labels:
         dyve: frontend
-{{ include "dyve.labels" . | indent 8 }}
     spec:
       containers:
         - name: dyve

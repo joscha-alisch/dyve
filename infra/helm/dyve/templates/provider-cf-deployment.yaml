@@ -10,12 +10,10 @@ spec:
   selector:
     matchLabels:
       dyve: provider-cloudfoundry
-{{ include "dyve.labels" . | indent 6 }}
   template:
     metadata:
       labels:
         dyve: provider-cloudfoundry
-{{ include "dyve.labels" . | indent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/provider-cf-config.yaml") . | sha256sum }}
     spec:
