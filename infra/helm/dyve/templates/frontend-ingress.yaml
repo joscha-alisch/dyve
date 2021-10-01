@@ -14,6 +14,13 @@ spec:
     - host: {{ .Values.frontend.ingress.host }}
       http:
         paths:
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "dyve.fullname" . }}-core
+                port:
+                  number: 80
           - path: /
             pathType: Prefix
             backend:
