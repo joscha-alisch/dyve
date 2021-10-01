@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - infra/helm
+      - infra/helm/**
 
 jobs:
   release:
