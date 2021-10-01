@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dyve.fullname" . }}-core
+  labels:
+{{ include "dyve.labels" . | indent 4 }}
+spec:
+  selector:
+    dyve: core
+{{ include "dyve.labels" . | indent 4 }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: http

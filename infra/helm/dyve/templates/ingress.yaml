@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "dyve.fullname" . }}-frontend
+  name: {{ include "dyve.fullname" . }}
   annotations:
 {{ .Values.frontend.ingress.annotations | toYaml | indent 4 }}
 spec:
