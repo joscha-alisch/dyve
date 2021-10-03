@@ -44,9 +44,9 @@ func main() {
 		}
 	}
 
-	r := coreRecon.NewReconciler(db, m, 5*time.Second)
+	r := coreRecon.NewReconciler(db, m, time.Duration(c.Reconciliation.CacheSeconds)*time.Second)
 	s := recon.NewScheduler(r)
-	err = s.Run(8, 5*time.Second)
+	err = s.Run(8, 10*time.Second)
 	if err != nil {
 		panic(err)
 	}

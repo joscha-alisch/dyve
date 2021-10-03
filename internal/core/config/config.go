@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	AppProviders []AppProviderConfig `yaml:"appProviders"`
-	Database     DatabaseConfig
-	Port         int `yaml:"port"`
+	AppProviders   []AppProviderConfig `yaml:"appProviders"`
+	Database       DatabaseConfig
+	Port           int         `yaml:"port"`
+	Reconciliation ReconConfig `yaml:"reconciliation"`
 }
 
 type AppProviderConfig struct {
@@ -20,6 +21,10 @@ type AppProviderConfig struct {
 type DatabaseConfig struct {
 	URI  string `yaml:"uri"`
 	Name string `yaml:"name"`
+}
+
+type ReconConfig struct {
+	CacheSeconds int `yaml:"cacheSeconds"`
 }
 
 func LoadFrom(path string) (Config, error) {

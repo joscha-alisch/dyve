@@ -18,9 +18,13 @@ item via the CloudFoundry API.
 
 It returns true, if there was work to be done and false, if there was no open reconciliation work.
 */
-func NewReconciler(db Database, cf API) recon.Reconciler {
+func NewReconciler(db Database, cf API, olderThan time.Duration) recon.Reconciler {
+	if olderThan == 0 {
+		olderThan = time.Minute
+	}
+
 	r := &reconciler{
-		Reconciler: recon.NewReconciler(db, 1*time.Minute),
+		Reconciler: recon.NewReconciler(db, olderThan),
 		db:         db,
 		cf:         cf,
 	}

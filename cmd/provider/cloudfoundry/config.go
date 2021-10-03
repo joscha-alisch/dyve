@@ -5,9 +5,10 @@ import (
 )
 
 type Config struct {
-	Database     DatabaseConfig
-	Port         int      `yaml:"port"`
-	CloudFoundry CfConfig `yaml:"cloudfoundry"`
+	Database       DatabaseConfig
+	Port           int         `yaml:"port"`
+	CloudFoundry   CfConfig    `yaml:"cloudfoundry"`
+	Reconciliation ReconConfig `yaml:"reconciliation"`
 }
 
 type CfConfig struct {
@@ -19,6 +20,10 @@ type CfConfig struct {
 type DatabaseConfig struct {
 	URI  string `yaml:"uri"`
 	Name string `yaml:"name"`
+}
+
+type ReconConfig struct {
+	CacheSeconds int `yaml:"cacheSeconds"`
 }
 
 func LoadFrom(path string) (Config, error) {

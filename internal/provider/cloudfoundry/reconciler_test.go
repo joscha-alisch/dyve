@@ -100,7 +100,7 @@ func TestReconciler(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
-			r := NewReconciler(&test.db, &test.cf)
+			r := NewReconciler(&test.db, &test.cf, 1*time.Minute)
 			worked, err := r.Run()
 			if worked == test.sleep {
 				tt.Errorf("\nexpected return: %v, was: %v", !test.sleep, worked)

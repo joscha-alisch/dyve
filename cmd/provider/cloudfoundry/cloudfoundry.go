@@ -34,7 +34,7 @@ func main() {
 		panic(err)
 	}
 
-	r := cloudfoundry.NewReconciler(db, cf)
+	r := cloudfoundry.NewReconciler(db, cf, time.Duration(c.Reconciliation.CacheSeconds)*time.Second)
 	s := recon.NewScheduler(r)
 	p := cloudfoundry.NewAppProvider(db)
 

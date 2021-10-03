@@ -9,6 +9,10 @@ import (
 )
 
 func NewReconciler(db database.Database, m provider.Manager, olderThan time.Duration) recon.Reconciler {
+	if olderThan == 0 {
+		olderThan = time.Minute
+	}
+
 	r := &reconciler{
 		Reconciler: recon.NewReconciler(db, olderThan),
 		db:         db,
