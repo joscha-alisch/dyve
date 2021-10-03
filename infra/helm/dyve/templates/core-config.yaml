@@ -5,11 +5,11 @@ metadata:
   labels:
 {{ include "dyve.labels" . | indent 4 }}
 data:
-  config.yaml: >
+  config.yaml: |
   {{- if .Values.core.fullConfig}}
-{{ .Values.core.fullConfig | toYaml | toString | indent 4 }}
+{{ .Values.core.fullConfig | toYaml | indent 4 }}
   {{else}}
-{{ .Values.core.config | toYaml | toString | indent 4 }}
+{{ .Values.core.config | toYaml | indent 4 }}
 
     appProviders:
   {{- if .Values.providers.cloudfoundry.enabled }}
