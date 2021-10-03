@@ -6,10 +6,10 @@ metadata:
   labels:
 {{ include "dyve.labels" . | indent 4 }}
 data:
-  config.yaml: >
+  config.yaml: |
   {{- if .Values.providers.cloudfoundry.fullConfig}}
-{{ .Values.providers.cloudfoundry.fullConfig | toYaml | toString | indent 4 }}
+{{ .Values.providers.cloudfoundry.fullConfig | toYaml | indent 4 }}
   {{else}}
-{{ .Values.providers.cloudfoundry.config | toYaml | toString | indent 4 }}
+{{ .Values.providers.cloudfoundry.config | toYaml | indent 4 }}
   {{end}}
 {{end}}
