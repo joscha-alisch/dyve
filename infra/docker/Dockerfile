@@ -35,4 +35,5 @@ ENTRYPOINT ["/app/provider-cloudfoundry"]
 
 FROM nginx:alpine AS frontend
 WORKDIR /usr/share/nginx/html
+COPY ./frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build-frontend /build/build /usr/share/nginx/html
