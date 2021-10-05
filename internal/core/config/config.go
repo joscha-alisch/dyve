@@ -1,16 +1,16 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
-	"io"
-	"os"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
+	DevMode        bool                `yaml:"devMode"`
 	AppProviders   []AppProviderConfig `yaml:"appProviders"`
 	Database       DatabaseConfig
 	Port           int         `yaml:"port"`
 	Reconciliation ReconConfig `yaml:"reconciliation"`
+	Auth           AuthConfig  `yaml:"auth"`
 }
 
 type AppProviderConfig struct {
@@ -27,20 +27,31 @@ type ReconConfig struct {
 	CacheSeconds int `yaml:"cacheSeconds"`
 }
 
-func LoadFrom(path string) (Config, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return Config{}, err
-	}
-	return Load(f)
+type AuthConfig struct {
+	Secret string             `yaml:"secret"`
+	GitHub AuthProviderConfig `yaml:"github"`
+}
+type AuthProviderConfig struct {
+	Enabled bool
+	Id      string
+	Secret  string
+	Org     string
 }
 
-func Load(r io.Reader) (Config, error) {
-	c := Config{}
-	err := yaml.NewDecoder(r).Decode(&c)
+func LoadFrom(path string) (Config, error) {
+	viper.SetConfigFile(path)
+	viper.SetEnvPrefix("dyve")
+	err := viper.ReadInConfig()
 	if err != nil {
 		return Config{}, err
 	}
 
-	return c, nil
+	viper.AutomaticEnv()
+
+	c := Config{}
+	err = viper.Unmarshal(&c)
+	if err != nil {
+		return Config{}, err
+	}
+	return c, err
 }

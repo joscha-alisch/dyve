@@ -1,7 +1,5 @@
-import styles from "./pipelineDetail.module.sass"
 import {useParams} from "react-router";
 import {Fragment, useEffect, useState} from "react";
-import {Link} from "react-router-dom";
 import Heading from "../heading/heading";
 
 const PipelineDetail = () => {

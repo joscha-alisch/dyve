@@ -1,19 +1,13 @@
 import {Fragment, useEffect, useState} from "react";
 import styles from "./pipelinelist.module.sass"
 import { useQueryParam, NumberParam, withDefault } from 'use-query-params';
-import {Link} from "react-router-dom";
-import Pagination from '@material-ui/lab/Pagination';
-import {PaginationItem, Skeleton} from "@material-ui/lab";
-import {FormControl, InputLabel, MenuItem, Select} from "@material-ui/core";
-import AppCard from "../appcard/appcard";
-import ListContext from "@material-ui/core/List/ListContext";
 import ListControl from "../listcontrol/listcontrol";
 import Heading from "../heading/heading";
 import PipelineCard from "../pipelinecard/pipelineCard";
 
 const Pipelinelist = () => {
     let [pipelines, setPipelines] = useState([])
-    let [page, setPage] = useQueryParam("page", withDefault(NumberParam, 1))
+    let [page] = useQueryParam("page", withDefault(NumberParam, 1))
     let [perPage, setPerPage] = useQueryParam("perPage", withDefault(NumberParam, 20))
     let [totalPages, setTotalPages] = useState(0)
     let [totalResults, setTotalResults] = useState(0)

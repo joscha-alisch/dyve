@@ -2,18 +2,30 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
-import {
-    BrowserRouter as Router, Route,
-} from "react-router-dom";
-import { QueryParamProvider } from 'use-query-params';
+import {AppProviders} from "./context/providers";
+import {invalidateAuth} from "./context/auth";
+import axios from "axios";
+
+function getCookies() {
+    return document.cookie.split("; ").reduce((c, x) => {
+        const splitted = x.split("=");
+        c[splitted[0]] = splitted[1];
+        return c;
+    }, {});
+}
+
+axios.interceptors.request.use(function (config) {
+    const token = getCookies()["XSRF-TOKEN"];
+    config.headers["X-XSRF-TOKEN"] = token;
+
+    return config;
+});
 
 ReactDOM.render(
   <React.StrictMode>
-      <Router>
-          <QueryParamProvider ReactRouterRoute={Route}>
-              <App />
-          </QueryParamProvider>
-      </Router>
+      <AppProviders>
+          <App />
+      </AppProviders>
   </React.StrictMode>,
   document.getElementById('root')
 );

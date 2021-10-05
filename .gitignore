@@ -2,3 +2,4 @@
 infra/data
 /values.yaml
 .DS_Store
+config.yaml

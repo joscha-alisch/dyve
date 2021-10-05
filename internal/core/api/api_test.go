@@ -171,7 +171,7 @@ func TestHttp(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
-			h := New(&test.state, &test.state)
+			h := New(&test.state, &test.state, Opts{})
 
 			s := httptest.NewServer(h)
 			defer s.Close()

@@ -1,0 +1,69 @@
+@import "src/styles/shared"
+
+.Wrapper
+    width: 100%
+    height: 100vh
+    background: linear-gradient(250deg, $paletteAccent3 0%, $paletteAccent3 15%, rgba(0,0,0,0) 15.1%), linear-gradient(280deg, $paletteAccent4 0%, $paletteAccent4 23%, rgba(0,0,0,0) 23.1%), linear-gradient(45deg, $paletteAccent1 0%, $paletteAccent1 25%, rgba(0,0,0,0) 25.1%), linear-gradient(65deg, $paletteAccent2 0%, $paletteAccent2 25%, rgba(0,0,0,0) 25.1%), $paletteMain
+    position: absolute
+    overflow: hidden
+
+.Logo
+    margin: 150px auto 0
+    display: block
+
+.Box
+    max-width: 400px
+    background-color: $paletteAccent2
+    margin: 50px auto 0
+    border-radius: 6px
+    position: relative
+    box-shadow: 0px 0px 15px -6px #000000
+
+    h1
+        text-align: center
+        padding-top: 30px
+        color: $paletteMain
+
+.LoginProviders
+    margin: 0
+    padding: 50px
+    box-sizing: border-box
+
+    li
+        list-style: none
+        width: 100%
+        box-sizing: border-box
+        color: white
+        position: relative
+        transition: transform 100ms ease-in-out
+
+        &:hover
+            transform: scale(1.05)
+
+        svg
+            position: absolute
+            left: 30px
+            top: 16px
+        a
+            color: white
+            text-decoration: none
+            width: 100%
+            min-height: 50px
+            display: block
+            border-radius: 10px
+            margin-top: 20px
+            margin-bottom: 20px
+            padding-top: 14px
+            text-align: center
+
+            &:hover
+                box-shadow: 0 0 15px -6px #000000
+
+
+    .ProviderGitHub
+        background-color: $brandGitHubGrey
+
+
+    .ProviderGeneric
+        background-color: $paletteAccent1
+

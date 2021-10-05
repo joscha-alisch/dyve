@@ -1,4 +1,4 @@
-import {Chip, Paper} from "@material-ui/core";
+import {Paper} from "@material-ui/core";
 import styles from "./pipelineCard.module.sass"
 import {Skeleton} from "@material-ui/lab";
 import {Link} from "react-router-dom";

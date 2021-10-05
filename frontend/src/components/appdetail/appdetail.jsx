@@ -1,8 +1,7 @@
-import styles from "./appdetail.module.sass"
 import {useParams} from "react-router";
 import {Fragment, useEffect, useState} from "react";
-import {Link} from "react-router-dom";
 import Heading from "../heading/heading";
+import axios from "axios";
 
 const AppDetail = () => {
     const {id} = useParams()
@@ -10,8 +9,8 @@ const AppDetail = () => {
     const [app, setApp] = useState({})
 
     useEffect(() => {
-        fetch("/api/apps/" + id)
-            .then(res => res.json())
+        axios.get("/api/apps/" + id)
+            .then(res => res.data)
             .then((data) => {
                 setApp(data.result)
             })

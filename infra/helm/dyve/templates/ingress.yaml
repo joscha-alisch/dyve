@@ -21,6 +21,13 @@ spec:
                 name: {{ include "dyve.fullname" . }}-core
                 port:
                   number: 80
+          - path: /auth/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "dyve.fullname" . }}-core
+                port:
+                  number: 80
           - path: /
             pathType: Prefix
             backend:

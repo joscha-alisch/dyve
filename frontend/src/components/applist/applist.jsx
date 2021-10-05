@@ -1,18 +1,15 @@
 import {Fragment, useEffect, useState} from "react";
 import styles from "./applist.module.sass"
 import { useQueryParam, NumberParam, withDefault } from 'use-query-params';
-import {Link} from "react-router-dom";
-import Pagination from '@material-ui/lab/Pagination';
-import {PaginationItem, Skeleton} from "@material-ui/lab";
-import {FormControl, InputLabel, MenuItem, Select} from "@material-ui/core";
 import AppCard from "../appcard/appcard";
-import ListContext from "@material-ui/core/List/ListContext";
 import ListControl from "../listcontrol/listcontrol";
 import Heading from "../heading/heading";
+import axios from "axios";
+import {useAuth} from "../../context/auth";
 
 const AppList = () => {
     let [apps, setApps] = useState([])
-    let [page, setPage] = useQueryParam("page", withDefault(NumberParam, 1))
+    let [page] = useQueryParam("page", withDefault(NumberParam, 1))
     let [perPage, setPerPage] = useQueryParam("perPage", withDefault(NumberParam, 20))
     let [totalPages, setTotalPages] = useState(0)
     let [totalResults, setTotalResults] = useState(0)
@@ -20,8 +17,8 @@ const AppList = () => {
 
     useEffect(() => {
         setLoading(true)
-        fetch("/api/apps?perPage=" + perPage + "&page=" + (page-1))
-            .then(res => res.json())
+        axios.get("/api/apps?perPage=" + perPage + "&page=" + (page-1))
+            .then(res => res.data)
             .then((data) => {
                 if(data.result.apps) {
                     setApps(data.result.apps)

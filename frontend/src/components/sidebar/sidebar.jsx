@@ -2,16 +2,16 @@ import styles from "./sidebar.module.sass"
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {NavLink} from "react-router-dom";
 import {
-    faArrowLeft,
-    faArrowRight,
-    faChevronCircleLeft, faChevronLeft,
+    faChevronLeft,
     faChevronRight,
     faSearch
 } from "@fortawesome/free-solid-svg-icons";
 import useLocalStorage from "../../hooks/useLocalStorage";
+import {useAuth} from "../../context/auth";
 
 const SideBar = ({className, menuItems}) => {
     let [collapsed, setCollapsed] = useLocalStorage("sidebarCollapsed", false)
+    let {logout} = useAuth()
 
     return <aside className={styles.SideBar + " " + className + (collapsed ? " " + styles.Collapsed : "")}>
         <a className={styles.Toggle} onClick={() => setCollapsed(!collapsed)}>{collapsed ?
@@ -30,10 +30,10 @@ const SideBar = ({className, menuItems}) => {
                         </li>
                     </ul>
                 </li>
-                {menuItems.map((item) => <li>
+                {menuItems.map((item) => <li key={item.title}>
                     <header>{item.title}</header>
                     <ul>
-                        {item.items.map((subItem) => <li><NavLink activeClassName={styles.active}
+                        {item.items.map((subItem) => <li key={subItem.title}><NavLink activeClassName={styles.active}
                                                                   to={subItem.route || "#"}>
                             <span className={styles.MenuIcon}>
                                 <FontAwesomeIcon icon={subItem.icon}/>
@@ -50,7 +50,7 @@ const SideBar = ({className, menuItems}) => {
 
         </nav>
         <footer>
-            dyve<br/>v0.0.1
+            dyve<br/>v0.0.1<br/><a href="#" onClick={logout}>Logout</a>
         </footer>
     </aside>
 }

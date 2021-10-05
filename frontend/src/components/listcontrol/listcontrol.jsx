@@ -1,7 +1,7 @@
 import Pagination from "@material-ui/lab/Pagination";
 import {PaginationItem} from "@material-ui/lab";
 import {Link} from "react-router-dom";
-import {FormControl, FormGroup, FormHelperText, Grid, InputLabel, MenuItem, Select} from "@material-ui/core";
+import {FormControl, FormHelperText, Grid, InputLabel, MenuItem, Select} from "@material-ui/core";
 import styles from "./listcontrol.module.sass"
 
 const ListControl = ({totalResults, totalPages, page, perPage, setPerPage}) => <Grid container direction="row"

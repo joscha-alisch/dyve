@@ -51,7 +51,11 @@ func main() {
 		panic(err)
 	}
 
-	a := api.New(db, pipeviz.New())
+	a := api.New(db, pipeviz.New(), api.Opts{
+		DevMode: c.DevMode,
+		Url:     fmt.Sprintf("http://localhost:%d", c.Port),
+		Auth:    c.Auth,
+	})
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", c.Port), a)
 	if err != nil {
