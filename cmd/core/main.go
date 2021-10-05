@@ -53,7 +53,7 @@ func main() {
 
 	a := api.New(db, pipeviz.New(), api.Opts{
 		DevMode: c.DevMode,
-		Url:     fmt.Sprintf("http://localhost:%d", c.Port),
+		Url:     c.ExternalUrl,
 		Auth:    c.Auth,
 	})
 

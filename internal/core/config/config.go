@@ -11,6 +11,7 @@ type Config struct {
 	Port           int         `yaml:"port"`
 	Reconciliation ReconConfig `yaml:"reconciliation"`
 	Auth           AuthConfig  `yaml:"auth"`
+	ExternalUrl    string      `yaml:"externalUrl"`
 }
 
 type AppProviderConfig struct {
