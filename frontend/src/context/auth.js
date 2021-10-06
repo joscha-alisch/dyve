@@ -26,7 +26,7 @@ export const AuthProvider = ({children}) => {
         if (error.response.status === 401) {
             invalidateAuth()
         }
-        return error;
+        return Promise.reject(error);
     });
 
     useEffect(() => {

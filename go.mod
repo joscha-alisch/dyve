@@ -11,12 +11,13 @@ require (
 	github.com/concourse/concourse v1.6.1-0.20210729233333-b047d257f253
 	github.com/go-pkgz/auth v1.18.0
 	github.com/google/go-cmp v0.5.6
+	github.com/google/go-github/v39 v39.1.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/rs/zerolog v1.25.0
 	github.com/spf13/viper v1.7.0
 	go.mongodb.org/mongo-driver v1.7.1
-	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
 	gonum.org/v1/gonum v0.9.3
-	gopkg.in/yaml.v2 v2.4.0
 )
+
+replace github.com/go-pkgz/auth => github.com/joscha-alisch/auth v1.18.1-0.20211006101921-5702e9e067f9

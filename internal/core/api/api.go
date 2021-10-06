@@ -2,14 +2,17 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-pkgz/auth"
 	"github.com/go-pkgz/auth/avatar"
 	"github.com/go-pkgz/auth/token"
+	"github.com/google/go-github/v39/github"
 	"github.com/gorilla/mux"
 	"github.com/joscha-alisch/dyve/internal/core/config"
 	"github.com/joscha-alisch/dyve/internal/core/database"
 	"github.com/joscha-alisch/dyve/pkg/pipeviz"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -41,6 +44,12 @@ func New(db database.Database, pipeGen pipeviz.PipeViz, opts Opts) http.Handler 
 		AvatarStore:     avatar.NewLocalFS("/tmp"),
 		AvatarRoutePath: "/auth/avatars",
 		Validator: token.ValidatorFunc(func(_ string, claims token.Claims) bool {
+			if opts.Auth.GitHub.Enabled && strings.HasPrefix(claims.User.ID, "github") {
+				if !userIsInOrg(claims.User, opts.Auth.GitHub.Org) {
+					return false
+				}
+			}
+
 			return claims.User != nil
 		}),
 	}
@@ -59,7 +68,26 @@ func New(db database.Database, pipeGen pipeviz.PipeViz, opts Opts) http.Handler 
 		}()
 	} else {
 		if opts.Auth.GitHub.Enabled {
-			service.AddProvider("github", opts.Auth.GitHub.Id, opts.Auth.GitHub.Secret)
+			service.AddProviderWithOptions("github", opts.Auth.GitHub.Id, opts.Auth.GitHub.Secret, []string{"read:org"}, func(c *http.Client, u token.User) token.User {
+				gh := github.NewClient(c)
+				t, _, _ := gh.Teams.ListUserTeams(context.Background(), &github.ListOptions{})
+
+				orgs := make(map[string]bool)
+				var teams []string
+				for _, team := range t {
+					orgs[team.Organization.GetLogin()] = true
+					teams = append(teams, fmt.Sprintf("%s:%s", team.Organization.GetLogin(), team.GetName()))
+				}
+
+				var orgList []string
+				for org := range orgs {
+					orgList = append(orgList, org)
+				}
+
+				u.SetSliceAttr("orgs", orgList)
+				u.SetSliceAttr("teams", teams)
+				return u
+			})
 		}
 	}
 
@@ -86,4 +114,14 @@ type api struct {
 	*mux.Router
 	db      database.Database
 	pipeGen pipeviz.PipeViz
+}
+
+func userIsInOrg(user *token.User, org string) bool {
+	orgs := user.SliceAttr("orgstoken.User")
+	for _, s := range orgs {
+		if s == org {
+			return true
+		}
+	}
+	return false
 }

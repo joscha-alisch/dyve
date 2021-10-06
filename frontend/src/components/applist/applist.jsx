@@ -18,12 +18,11 @@ const AppList = () => {
     useEffect(() => {
         setLoading(true)
         axios.get("/api/apps?perPage=" + perPage + "&page=" + (page-1))
-            .then(res => res.data)
-            .then((data) => {
-                if(data.result.apps) {
-                    setApps(data.result.apps)
-                    setTotalPages(data.result.totalPages)
-                    setTotalResults(data.result.totalResults)
+            .then((res) => {
+                if(res.data.result.apps) {
+                    setApps(res.data.result.apps)
+                    setTotalPages(res.data.result.totalPages)
+                    setTotalResults(res.data.result.totalResults)
                     setLoading(false)
                 }
             })
