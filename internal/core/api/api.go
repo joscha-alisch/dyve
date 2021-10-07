@@ -50,7 +50,7 @@ func New(db database.Database, pipeGen pipeviz.PipeViz, opts Opts) http.Handler 
 					log.Debug().
 						Str("user", claims.User.Name).
 						Str("required", opts.Auth.GitHub.Org).
-						Strs("orgs", claims.User.SliceAttr("orgs")).
+						Strs("orgs", getUserOrgs(claims.User)).
 						Msg("token declined because user is not in org")
 					return false
 				}
@@ -125,11 +125,26 @@ type api struct {
 }
 
 func userIsInOrg(user *token.User, org string) bool {
-	orgs := user.SliceAttr("orgs")
+	orgs := getUserOrgs(user)
 	for _, s := range orgs {
 		if s == org {
 			return true
 		}
 	}
 	return false
+}
+
+func getUserOrgs(u *token.User) []string {
+	orgs, ok := u.Attributes["orgs"].([]interface{})
+	if !ok {
+		return nil
+	}
+	var res []string
+	for _, org := range orgs {
+		if orgString, ok := org.(string); ok {
+			res = append(res, orgString)
+		}
+	}
+
+	return res
 }
