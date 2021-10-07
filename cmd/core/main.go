@@ -11,6 +11,8 @@ import (
 	providerClient "github.com/joscha-alisch/dyve/internal/provider/client"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/pipeviz"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
 )
@@ -26,6 +28,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	if c.LogLevel == "" {
+		c.LogLevel = "info"
+	}
+	logLevel, err := zerolog.ParseLevel(c.LogLevel)
+	if err != nil {
+		logLevel = zerolog.InfoLevel
+		log.Error().Err(err).Msg("couldn't parse log level, setting to info")
+	}
+	zerolog.SetGlobalLevel(logLevel)
 
 	db, err := coreDb.NewMongoDB(coreDb.MongoLogin{
 		Uri: c.Database.URI,

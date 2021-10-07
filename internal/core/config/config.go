@@ -5,6 +5,7 @@ import (
 )
 
 type Config struct {
+	LogLevel       string              `yaml:"logLevel"`
 	DevMode        bool                `yaml:"devMode"`
 	AppProviders   []AppProviderConfig `yaml:"appProviders"`
 	Database       DatabaseConfig

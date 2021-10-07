@@ -11,6 +11,7 @@ import (
 	"github.com/joscha-alisch/dyve/internal/core/config"
 	"github.com/joscha-alisch/dyve/internal/core/database"
 	"github.com/joscha-alisch/dyve/pkg/pipeviz"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"strings"
 	"time"
@@ -46,6 +47,11 @@ func New(db database.Database, pipeGen pipeviz.PipeViz, opts Opts) http.Handler 
 		Validator: token.ValidatorFunc(func(_ string, claims token.Claims) bool {
 			if opts.Auth.GitHub.Enabled && strings.HasPrefix(claims.User.ID, "github") {
 				if !userIsInOrg(claims.User, opts.Auth.GitHub.Org) {
+					log.Debug().
+						Str("user", claims.User.Name).
+						Str("required", opts.Auth.GitHub.Org).
+						Strs("orgs", claims.User.SliceAttr("orgs")).
+						Msg("token declined because user is not in org")
 					return false
 				}
 			}
@@ -86,6 +92,8 @@ func New(db database.Database, pipeGen pipeviz.PipeViz, opts Opts) http.Handler 
 
 				u.SetSliceAttr("orgs", orgList)
 				u.SetSliceAttr("teams", teams)
+
+				log.Debug().Str("user", u.Name).Msg("new login")
 				return u
 			})
 		}
