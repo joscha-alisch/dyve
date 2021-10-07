@@ -117,7 +117,7 @@ type api struct {
 }
 
 func userIsInOrg(user *token.User, org string) bool {
-	orgs := user.SliceAttr("orgstoken.User")
+	orgs := user.SliceAttr("orgs")
 	for _, s := range orgs {
 		if s == org {
 			return true
