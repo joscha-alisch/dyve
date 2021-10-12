@@ -48,12 +48,30 @@ func main() {
 	}
 
 	m := provider.NewManager(db)
-	for _, appProvider := range c.AppProviders {
-		p := providerClient.NewAppProviderClient(appProvider.Host, nil)
-		err = m.AddAppProvider(appProvider.Name, p)
-		if err != nil {
-			panic(err)
+	for _, providerConfig := range c.Providers {
+		for _, feature := range providerConfig.Features {
+			switch feature {
+			case provider.TypeApps:
+				p := providerClient.NewAppProviderClient(providerConfig.Host, nil)
+				err = m.AddAppProvider(providerConfig.Name, p)
+				if err != nil {
+					panic(err)
+				}
+			case provider.TypePipelines:
+				p := providerClient.NewPipelineProviderClient(providerConfig.Host, nil)
+				err = m.AddPipelineProvider(providerConfig.Name, p)
+				if err != nil {
+					panic(err)
+				}
+			case provider.TypeGroups:
+				p := providerClient.NewGroupProviderClient(providerConfig.Host, nil)
+				err = m.AddGroupProvider(providerConfig.Name, p)
+				if err != nil {
+					panic(err)
+				}
+			}
 		}
+
 	}
 
 	r := coreRecon.NewReconciler(db, m, time.Duration(c.Reconciliation.CacheSeconds)*time.Second)

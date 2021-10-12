@@ -1,8 +1,15 @@
 package provider
 
 import (
-	"github.com/joscha-alisch/dyve/internal/core/database"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
+)
+
+type Type string
+
+const (
+	TypeApps      Type = "apps"
+	TypePipelines Type = "pipelines"
+	TypeGroups    Type = "groups"
 )
 
 type Manager interface {
@@ -10,9 +17,16 @@ type Manager interface {
 	GetAppProvider(id string) (sdk.AppProvider, error)
 	AddPipelineProvider(id string, p sdk.PipelineProvider) error
 	GetPipelineProvider(id string) (sdk.PipelineProvider, error)
+	AddGroupProvider(id string, p sdk.GroupProvider) error
+	GetGroupProvider(id string) (sdk.GroupProvider, error)
 }
 
-func NewManager(db database.Database) Manager {
+type Store interface {
+	AddProvider(id string, providerType Type) error
+	DeleteProvider(id string, providerType Type) error
+}
+
+func NewManager(db Store) Manager {
 	return &manager{
 		db: db,
 	}
@@ -21,7 +35,32 @@ func NewManager(db database.Database) Manager {
 type manager struct {
 	appProviders      map[string]sdk.AppProvider
 	pipelineProviders map[string]sdk.PipelineProvider
-	db                database.Database
+	groupProviders    map[string]sdk.GroupProvider
+	db                Store
+}
+
+func (m *manager) AddGroupProvider(id string, p sdk.GroupProvider) error {
+	if p == nil {
+		return ErrNil
+	}
+
+	if m.groupProviders == nil {
+		m.groupProviders = make(map[string]sdk.GroupProvider)
+	}
+
+	if m.groupProviders[id] != nil {
+		return ErrExists
+	}
+
+	m.groupProviders[id] = p
+	return m.db.AddProvider(id, TypeGroups)
+}
+
+func (m *manager) GetGroupProvider(id string) (sdk.GroupProvider, error) {
+	if m.groupProviders[id] == nil {
+		return nil, ErrNotFound
+	}
+	return m.groupProviders[id], nil
 }
 
 func (m *manager) AddPipelineProvider(id string, p sdk.PipelineProvider) error {
@@ -38,7 +77,7 @@ func (m *manager) AddPipelineProvider(id string, p sdk.PipelineProvider) error {
 	}
 
 	m.pipelineProviders[id] = p
-	return m.db.AddPipelineProvider(id)
+	return m.db.AddProvider(id, TypePipelines)
 }
 
 func (m *manager) GetPipelineProvider(id string) (sdk.PipelineProvider, error) {
@@ -62,7 +101,7 @@ func (m *manager) AddAppProvider(id string, p sdk.AppProvider) error {
 	}
 
 	m.appProviders[id] = p
-	return m.db.AddAppProvider(id)
+	return m.db.AddProvider(id, TypeApps)
 }
 
 func (m *manager) GetAppProvider(id string) (sdk.AppProvider, error) {

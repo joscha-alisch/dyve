@@ -20,6 +20,7 @@ func NewReconciler(db database.Database, m provider.Manager, olderThan time.Dura
 	}
 	r.Handler(database.ReconcileAppProvider, r.reconcileAppProvider)
 	r.Handler(database.ReconcilePipelineProvider, r.reconcilePipelineProvider)
+	r.Handler(database.ReconcileGroupProvider, r.reconcileGroupProvider)
 
 	return r
 }
@@ -33,8 +34,7 @@ type reconciler struct {
 func (r *reconciler) reconcileAppProvider(j recon.Job) error {
 	p, err := r.m.GetAppProvider(j.Guid)
 	if errors.Is(err, provider.ErrNotFound) {
-		r.db.DeleteAppProvider(j.Guid)
-		return nil
+		return r.db.DeleteProvider(j.Guid, provider.TypeApps)
 	}
 	if err != nil {
 		return err
@@ -45,16 +45,30 @@ func (r *reconciler) reconcileAppProvider(j recon.Job) error {
 		return err
 	}
 
-	r.db.UpdateApps(j.Guid, apps)
+	return r.db.UpdateApps(j.Guid, apps)
+}
 
-	return nil
+func (r *reconciler) reconcileGroupProvider(j recon.Job) error {
+	p, err := r.m.GetGroupProvider(j.Guid)
+	if errors.Is(err, provider.ErrNotFound) {
+		return r.db.DeleteProvider(j.Guid, provider.TypeGroups)
+	}
+	if err != nil {
+		return err
+	}
+
+	groups, err := p.ListGroups()
+	if err != nil {
+		return err
+	}
+
+	return r.db.UpdateGroups(j.Guid, groups)
 }
 
 func (r *reconciler) reconcilePipelineProvider(j recon.Job) error {
 	p, err := r.m.GetPipelineProvider(j.Guid)
 	if errors.Is(err, provider.ErrNotFound) {
-		r.db.DeletePipelineProvider(j.Guid)
-		return nil
+		return r.db.DeleteProvider(j.Guid, provider.TypePipelines)
 	}
 	if err != nil {
 		return err
@@ -67,8 +81,19 @@ func (r *reconciler) reconcilePipelineProvider(j recon.Job) error {
 
 	updates, err := p.ListUpdates(j.LastUpdated)
 
-	r.db.UpdatePipelines(j.Guid, pipelines)
-	r.db.AddPipelineVersions(j.Guid, updates.Versions)
-	r.db.AddPipelineRuns(j.Guid, updates.Runs)
+	err = r.db.UpdatePipelines(j.Guid, pipelines)
+	if err != nil {
+		return err
+	}
+
+	err = r.db.AddPipelineVersions(j.Guid, updates.Versions)
+	if err != nil {
+		return err
+	}
+	err = r.db.AddPipelineRuns(j.Guid, updates.Runs)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

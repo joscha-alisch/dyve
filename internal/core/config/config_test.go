@@ -10,13 +10,13 @@ import (
 
 func TestLoadFile(t *testing.T) {
 	tests := []struct {
-		desc string
-		path string
-		expected Config
+		desc        string
+		path        string
+		expected    Config
 		expectedErr error
 	}{
 		{"basic", "basic.yml", Config{
-			AppProviders: []AppProviderConfig{
+			Providers: []ProviderConfig{
 				{Name: "provider-a", Host: "https://provider-a.com"},
 				{Name: "provider-b", Host: "https://provider-b.com"},
 			},

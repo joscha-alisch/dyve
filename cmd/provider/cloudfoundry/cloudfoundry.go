@@ -8,14 +8,6 @@ import (
 	"time"
 )
 
-type config struct {
-	cfApi    string
-	cfUser   string
-	cfPass   string
-	mongoUri string
-	mongoDb  string
-}
-
 func main() {
 	c, err := LoadFrom("./config.yaml")
 	if err != nil {

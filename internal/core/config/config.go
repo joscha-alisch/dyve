@@ -1,13 +1,14 @@
 package config
 
 import (
+	"github.com/joscha-alisch/dyve/internal/core/provider"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	LogLevel       string              `yaml:"logLevel"`
-	DevMode        bool                `yaml:"devMode"`
-	AppProviders   []AppProviderConfig `yaml:"appProviders"`
+	LogLevel       string           `yaml:"logLevel"`
+	DevMode        bool             `yaml:"devMode"`
+	Providers      []ProviderConfig `yaml:"providers"`
 	Database       DatabaseConfig
 	Port           int         `yaml:"port"`
 	Reconciliation ReconConfig `yaml:"reconciliation"`
@@ -15,9 +16,10 @@ type Config struct {
 	ExternalUrl    string      `yaml:"externalUrl"`
 }
 
-type AppProviderConfig struct {
-	Name string `yaml:"name"`
-	Host string `yaml:"host"`
+type ProviderConfig struct {
+	Name     string          `yaml:"name"`
+	Host     string          `yaml:"host"`
+	Features []provider.Type `yaml:"features"`
 }
 
 type DatabaseConfig struct {
