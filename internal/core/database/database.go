@@ -1,32 +1,30 @@
 package database
 
 import (
-	prov "github.com/joscha-alisch/dyve/internal/core/provider"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
-	"time"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Database interface {
-	recon.JobProvider
-	prov.Store
+	FindOne(coll Collection, filter bson.M, res interface{}) error
+	FindOneById(coll Collection, id string, res interface{}) error
+	FindOneSorted(coll Collection, filter bson.M, sort bson.M, res interface{}) error
+	FindMany(coll Collection, filter bson.M, each func(c *mongo.Cursor) error) error
+	FindManyWithOptions(coll Collection, filter bson.M, each func(c *mongo.Cursor) error, sort bson.M, limit int) error
+	ListPaginated(coll Collection, perPage int, page int, p *sdk.Pagination, each func(c *mongo.Cursor) error) error
 
-	ListAppsPaginated(perPage int, page int) (sdk.AppPage, error)
-	GetApp(id string) (sdk.App, error)
-	UpdateApps(providerId string, apps []sdk.App) error
+	UpdateProvided(coll Collection, provider string, updates map[string]interface{}) error
+	UpdateMany(coll Collection, filters map[string]interface{}, updates map[string]interface{}) error
+	UpdateOne(coll Collection, filter bson.M, createIfMissing bool, update bson.M, res interface{}) error
+	UpdateOneById(coll Collection, id string, createIfMissing bool, update bson.M, res interface{}) error
+	EnsureCreated(coll Collection, data bson.M, res interface{}) error
 
-	ListGroupsPaginated(perPage int, page int) (sdk.GroupPage, error)
-	GetGroup(id string) (sdk.Group, error)
-	UpdateGroups(providerId string, groups []sdk.Group) error
+	DeleteOne(coll Collection, filter bson.M) error
+	DeleteOneById(coll Collection, id string) error
 
-	ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error)
-	GetPipeline(id string) (sdk.Pipeline, error)
-	ListPipelineRuns(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineStatusList, error)
-	ListPipelineRunsLimit(id string, toExcl time.Time, limit int) (sdk.PipelineStatusList, error)
-	ListPipelineVersions(id string, fromIncl time.Time, toExcl time.Time) (sdk.PipelineVersionList, error)
-	UpdatePipelines(providerId string, pipelines []sdk.Pipeline) error
-	AddPipelineRuns(providerId string, runs sdk.PipelineStatusList) error
-	AddPipelineVersions(providerId string, versions sdk.PipelineVersionList) error
+	EnsureIndex(coll Collection, model mongo.IndexModel) error
 }
 
 const (
@@ -34,3 +32,5 @@ const (
 	ReconcilePipelineProvider recon.Type = "pipelines"
 	ReconcileGroupProvider    recon.Type = "groups"
 )
+
+type Collection string

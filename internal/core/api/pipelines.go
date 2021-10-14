@@ -28,7 +28,7 @@ func (a *api) listPipelinesPaginated(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pipelines, err := a.db.ListPipelinesPaginated(perPage, page)
+	pipelines, err := a.core.Pipelines.ListPipelinesPaginated(perPage, page)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, err)
 		return
@@ -40,7 +40,7 @@ func (a *api) listPipelinesPaginated(w http.ResponseWriter, r *http.Request) {
 func (a *api) getPipeline(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	pipeline, err := a.db.GetPipeline(id)
+	pipeline, err := a.core.Pipelines.GetPipeline(id)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return
@@ -54,7 +54,7 @@ func (a *api) listPipelineRuns(w http.ResponseWriter, r *http.Request) {
 	before, _ := defaultQueryTime(r, "before", currentTime())
 	limit, _ := defaultQueryInt(r, "limit", 10)
 
-	runs, err := a.db.ListPipelineRunsLimit(id, before, limit)
+	runs, err := a.core.Pipelines.ListPipelineRunsLimit(id, before, limit)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return
@@ -68,7 +68,7 @@ func (a *api) listPipelineRuns(w http.ResponseWriter, r *http.Request) {
 	sort.Sort(runs)
 
 	var res []pipelineStatus
-	versions, err := a.db.ListPipelineVersions(id, runs[0].Started, before)
+	versions, err := a.core.Pipelines.ListPipelineVersions(id, runs[0].Started, before)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return
@@ -94,13 +94,13 @@ func (a *api) listPipelineRuns(w http.ResponseWriter, r *http.Request) {
 func (a *api) getPipelineStatus(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	pipeline, err := a.db.GetPipeline(id)
+	pipeline, err := a.core.Pipelines.GetPipeline(id)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return
 	}
 
-	runs, err := a.db.ListPipelineRuns(id, pipeline.Current.Created, currentTime())
+	runs, err := a.core.Pipelines.ListPipelineRuns(id, pipeline.Current.Created, currentTime())
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return

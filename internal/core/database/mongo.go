@@ -2,9 +2,6 @@ package database
 
 import (
 	"context"
-	"errors"
-	prov "github.com/joscha-alisch/dyve/internal/core/provider"
-	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -36,115 +33,83 @@ func NewMongoDB(l MongoLogin) (Database, error) {
 	db := c.Database(l.DB)
 
 	m := &mongoDb{
-		cli:              c,
-		db:               db,
-		providers:        db.Collection("providers"),
-		apps:             db.Collection("apps"),
-		pipelines:        db.Collection("pipelines"),
-		pipelineRuns:     db.Collection("pipeline_runs"),
-		pipelineVersions: db.Collection("pipeline_versions"),
-		groups:           db.Collection("groups"),
+		ctx:         context.Background(),
+		cli:         c,
+		db:          db,
+		collections: make(map[Collection]*mongo.Collection),
 	}
-
-	m.pipelineRuns.Indexes().CreateOne(context.Background(), mongo.IndexModel{
-		Keys: bson.M{
-			"providerId": 1,
-			"pipelineId": 1,
-			"started":    1,
-		},
-		Options: options.Index().SetUnique(true),
-	})
 
 	return m, nil
 }
 
 type mongoDb struct {
-	cli              *mongo.Client
-	db               *mongo.Database
-	providers        *mongo.Collection
-	apps             *mongo.Collection
-	pipelines        *mongo.Collection
-	pipelineRuns     *mongo.Collection
-	pipelineVersions *mongo.Collection
-	groups           *mongo.Collection
+	ctx         context.Context
+	cli         *mongo.Client
+	db          *mongo.Database
+	collections map[Collection]*mongo.Collection
 }
 
-func (m *mongoDb) AddProvider(providerId string, providerType prov.Type) error {
-	return m.addProvider(providerId, string(providerType))
+func (m *mongoDb) EnsureIndex(coll Collection, model mongo.IndexModel) error {
+	c := m.collection(coll)
+	_, err := c.Indexes().CreateOne(m.ctx, model)
+	return err
 }
 
-func (m *mongoDb) DeleteProvider(providerId string, providerType prov.Type) error {
-	switch providerType {
-	case prov.TypeApps:
-		return m.deleteProvider(providerId, m.apps)
-	case prov.TypePipelines:
-		return m.deleteProvider(providerId, m.pipelines)
-	case prov.TypeGroups:
-		return m.deleteProvider(providerId, m.groups)
-	default:
-		return errors.New("unknown provider type " + string(providerType))
+func (m *mongoDb) FindManyWithOptions(coll Collection, filter bson.M, each func(c *mongo.Cursor) error, sort bson.M, limit int) error {
+	c := m.collection(coll)
+	o := options.FindOptions{}
+	if sort != nil {
+		o.SetSort(sort)
 	}
-}
 
-type provider struct {
-	Id           string
-	ProviderType string    `bson:"type"`
-	LastUpdated  time.Time `bson:"lastUpdated"`
-}
-
-func (m *mongoDb) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
-	t := currentTime()
-	res := m.providers.FindOneAndUpdate(context.Background(), bson.M{
-		"$or": bson.A{
-			bson.M{
-				"lastUpdated": bson.M{
-					"$lte": t.Add(-olderThan),
-				},
-			},
-			bson.M{
-				"lastUpdated": nil,
-			},
-		},
-	}, bson.M{
-		"$set": bson.M{
-			"lastUpdated": t,
-		},
-	})
-
-	p := provider{}
-	err := res.Decode(&p)
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return recon.Job{}, false
+	if limit > 0 {
+		o.SetLimit(int64(limit))
 	}
+
+	res, err := c.Find(m.ctx, filter, &o)
 	if err != nil {
-		panic(err)
+		return err
 	}
-
-	return recon.Job{
-		Type:        recon.Type(p.ProviderType),
-		Guid:        p.Id,
-		LastUpdated: p.LastUpdated,
-	}, true
+	for res.Next(m.ctx) {
+		err := each(res)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (m *mongoDb) updateCollection(c *mongo.Collection, providerId string, items map[string]interface{}) error {
-	ids := make([]string, len(items))
-	models := make([]mongo.WriteModel, len(items))
+func (m *mongoDb) FindOneSorted(coll Collection, filter bson.M, sort bson.M, res interface{}) error {
+	c := m.collection(coll)
+	findResult := c.FindOne(m.ctx, filter, options.FindOne().SetSort(sort))
+	return findResult.Decode(&res)
+}
+
+func (m *mongoDb) FindMany(coll Collection, filter bson.M, each func(c *mongo.Cursor) error) error {
+	return m.FindManyWithOptions(coll, filter, each, nil, 0)
+}
+
+func Set(d interface{}) bson.M {
+	return bson.M{"$set": d}
+}
+
+func SetOrdered(data ...interface{}) bson.D {
+	res := bson.D{}
+	for _, datum := range data {
+		res = append(res, bson.E{Key: "$set", Value: datum})
+	}
+	return res
+}
+
+func (m *mongoDb) UpdateMany(coll Collection, filters map[string]interface{}, updates map[string]interface{}) error {
+	c := m.collection(coll)
+
+	models := make([]mongo.WriteModel, len(updates))
 	i := 0
-	for k, v := range items {
-		ids[i] = k
+	for k, v := range updates {
+		filter := filters[k]
 		model := mongo.NewUpdateOneModel()
-		model.SetUpsert(true).SetFilter(bson.M{
-			"provider": bson.M{
-				"$eq": providerId,
-			},
-			"id": bson.M{
-				"$eq": k,
-			},
-		}).SetUpdate(bson.D{
-			bson.E{Key: "$set", Value: bson.M{"provider": providerId}},
-			bson.E{Key: "$set", Value: v},
-		})
+		model.SetUpsert(true).SetFilter(filter).SetUpdate(SetOrdered(filter, v))
 		models[i] = model
 		i++
 	}
@@ -155,10 +120,113 @@ func (m *mongoDb) updateCollection(c *mongo.Collection, providerId string, items
 		return err
 	}
 
-	_, err = c.DeleteMany(ctx, bson.M{
-		"provider": bson.M{
-			"$eq": providerId,
-		},
+	return nil
+}
+
+func (m *mongoDb) EnsureCreated(coll Collection, data bson.M, res interface{}) error {
+	return m.UpdateOne(coll, data, true, Set(data), res)
+}
+
+func (m *mongoDb) UpdateOne(coll Collection, filter bson.M, createIfMissing bool, update bson.M, res interface{}) error {
+	c := m.collection(coll)
+
+	if res == nil {
+		o := options.UpdateOptions{}
+		o.SetUpsert(createIfMissing)
+		_, err := c.UpdateOne(m.ctx, filter, update, &o)
+		return err
+	}
+
+	o := options.FindOneAndUpdateOptions{}
+	o.SetUpsert(createIfMissing)
+	findResult := c.FindOneAndUpdate(m.ctx, filter, update, &o)
+	return findResult.Decode(&res)
+}
+
+func (m *mongoDb) UpdateOneById(coll Collection, id string, createIfMissing bool, update bson.M, res interface{}) error {
+	return m.UpdateOne(coll, bson.M{"id": id}, createIfMissing, update, res)
+}
+
+func (m *mongoDb) DeleteOne(coll Collection, filter bson.M) error {
+	c := m.collection(coll)
+	_, err := c.DeleteOne(context.Background(), filter)
+	return err
+}
+
+func (m *mongoDb) DeleteOneById(coll Collection, id string) error {
+	return m.DeleteOne(coll, bson.M{"id": id})
+}
+
+func (m *mongoDb) FindOne(coll Collection, filter bson.M, res interface{}) error {
+	c := m.collection(coll)
+	findResult := c.FindOne(context.Background(), filter)
+	return findResult.Decode(&res)
+}
+
+func (m *mongoDb) FindOneById(coll Collection, id string, res interface{}) error {
+	return m.FindOne(coll, bson.M{"id": id}, res)
+}
+
+func (m *mongoDb) ListPaginated(collName Collection, perPage int, page int, p *sdk.Pagination, each func(c *mongo.Cursor) error) error {
+	coll := m.collection(collName)
+
+	c, err := coll.CountDocuments(context.Background(), bson.M{})
+	if err != nil {
+		return err
+	}
+	pages := int(math.Ceil(float64(c) / float64(perPage)))
+
+	cursor, err := coll.Find(context.Background(), bson.M{}, options.Find().
+		SetSkip(int64(page*perPage)).
+		SetLimit(int64(perPage)),
+	)
+	if err != nil {
+		return err
+	}
+
+	*p = sdk.Pagination{
+		TotalResults: int(c),
+		TotalPages:   pages,
+		PerPage:      perPage,
+		Page:         page,
+	}
+
+	for cursor.Next(context.Background()) {
+		err = each(cursor)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *mongoDb) collection(c Collection) *mongo.Collection {
+	if m.collections[c] == nil {
+		m.collections[c] = m.db.Collection(string(c))
+	}
+	return m.collections[c]
+}
+
+func (m *mongoDb) UpdateProvided(collName Collection, provider string, updates map[string]interface{}) error {
+	c := m.collection(collName)
+
+	ids := make([]string, len(updates))
+	filterMap := make(map[string]interface{})
+	for id, _ := range updates {
+		filterMap[id] = bson.M{
+			"provider": provider,
+			"id":       id,
+		}
+	}
+
+	err := m.UpdateMany(collName, filterMap, updates)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.DeleteMany(m.ctx, bson.M{
+		"provider": provider,
 		"id": bson.M{
 			"$nin": ids,
 		},
@@ -168,63 +236,4 @@ func (m *mongoDb) updateCollection(c *mongo.Collection, providerId string, items
 	}
 
 	return nil
-}
-
-func (m *mongoDb) addProvider(providerId, providerType string) error {
-	_, err := m.providers.UpdateOne(context.Background(), bson.M{
-		"id": providerId,
-	}, bson.M{
-		"$set": bson.M{
-			"id":   providerId,
-			"type": providerType,
-		},
-	}, options.Update().SetUpsert(true))
-
-	return err
-}
-
-func (m *mongoDb) deleteProvider(providerId string, dependents ...*mongo.Collection) error {
-	_, err := m.providers.DeleteOne(context.Background(), bson.M{
-		"id": bson.M{
-			"$eq": providerId,
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, dependent := range dependents {
-		_, err = dependent.DeleteMany(context.Background(), bson.M{
-			"provider": bson.M{
-				"$eq": providerId,
-			},
-		})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (m *mongoDb) listPaginated(coll *mongo.Collection, perPage, page int) (sdk.Pagination, *mongo.Cursor, error) {
-	c, err := coll.CountDocuments(context.Background(), bson.M{})
-	if err != nil {
-		return sdk.Pagination{}, nil, err
-	}
-	pages := int(math.Ceil(float64(c) / float64(perPage)))
-
-	res, err := coll.Find(context.Background(), bson.M{}, options.Find().
-		SetSkip(int64(page*perPage)).
-		SetLimit(int64(perPage)),
-	)
-	if err != nil {
-		return sdk.Pagination{}, nil, err
-	}
-
-	return sdk.Pagination{
-		TotalResults: int(c),
-		TotalPages:   pages,
-		PerPage:      perPage,
-		Page:         page,
-	}, res, nil
 }

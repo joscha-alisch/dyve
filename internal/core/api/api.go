@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joscha-alisch/dyve/internal/core/config"
 	"github.com/joscha-alisch/dyve/internal/core/database"
+	"github.com/joscha-alisch/dyve/internal/core/service"
 	"github.com/joscha-alisch/dyve/pkg/pipeviz"
 	"github.com/rs/zerolog/log"
 	"net/http"
@@ -23,10 +24,10 @@ type Opts struct {
 	Auth    config.AuthConfig
 }
 
-func New(db database.Database, pipeGen pipeviz.PipeViz, opts Opts) http.Handler {
+func New(core service.Core, pipeGen pipeviz.PipeViz, opts Opts) http.Handler {
 	a := &api{
 		Router:  mux.NewRouter(),
-		db:      db,
+		core:    core,
 		pipeGen: pipeGen,
 	}
 
@@ -115,6 +116,11 @@ func New(db database.Database, pipeGen pipeviz.PipeViz, opts Opts) http.Handler 
 	api.Path("/pipelines/{id:[0-9a-z-]+}/runs").HandlerFunc(a.listPipelineRuns)
 	api.Path("/pipelines/{id:[0-9a-z-]+}").HandlerFunc(a.getPipeline)
 
+	api.Path("/teams").Queries("perPage", "").HandlerFunc(a.listTeamsPaginated)
+	api.Path("/teams/{id:[0-9a-z-]+}").Methods("GET").HandlerFunc(a.getTeam)
+	api.Path("/teams/{id:[0-9a-z-]+}").Methods("DELETE").HandlerFunc(a.deleteTeam)
+	api.Path("/teams/{id:[0-9a-z-]+}").Methods("PUT").HandlerFunc(a.upsertTeam)
+
 	return a
 }
 
@@ -122,6 +128,7 @@ type api struct {
 	*mux.Router
 	db      database.Database
 	pipeGen pipeviz.PipeViz
+	core    service.Core
 }
 
 func userIsInOrg(user *token.User, org string) bool {

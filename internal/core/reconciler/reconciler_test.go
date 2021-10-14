@@ -78,10 +78,7 @@ func TestName(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			db := &fakeDb{job: test.job, content: test.before}
-			r := NewReconciler(db, &fakeManager{
-				test.providerId,
-				&test.provider,
-			}, 1*time.Minute)
+			r := NewReconciler(db, 1*time.Minute)
 			worked, err := r.Run()
 			if !errors.Is(err, test.expectedErr) {
 				tt.Errorf("\nwanted err %v\n   got err %v", test.expectedErr, err)

@@ -18,7 +18,7 @@ func (a *api) listAppsPaginated(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apps, err := a.db.ListAppsPaginated(perPage, page)
+	apps, err := a.core.Apps.ListAppsPaginated(perPage, page)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, err)
 		return
@@ -30,7 +30,7 @@ func (a *api) listAppsPaginated(w http.ResponseWriter, r *http.Request) {
 func (a *api) getApp(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	app, err := a.db.GetApp(id)
+	app, err := a.core.Apps.GetApp(id)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return
