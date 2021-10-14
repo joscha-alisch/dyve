@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,22 +19,23 @@ type MongoLogin struct {
 }
 
 func NewMongoDB(l MongoLogin) (Database, error) {
+	ctx := context.Background()
 	c, err := mongo.Connect(
-		context.Background(),
+		ctx,
 		options.Client().ApplyURI(l.Uri),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.Ping(context.Background(), nil)
+	err = c.Ping(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	db := c.Database(l.DB)
 
 	m := &mongoDb{
-		ctx:         context.Background(),
+		ctx:         ctx,
 		cli:         c,
 		db:          db,
 		collections: make(map[Collection]*mongo.Collection),
@@ -82,7 +84,7 @@ func (m *mongoDb) FindManyWithOptions(coll Collection, filter bson.M, each func(
 func (m *mongoDb) FindOneSorted(coll Collection, filter bson.M, sort bson.M, res interface{}) error {
 	c := m.collection(coll)
 	findResult := c.FindOne(m.ctx, filter, options.FindOne().SetSort(sort))
-	return findResult.Decode(&res)
+	return findResult.Decode(res)
 }
 
 func (m *mongoDb) FindMany(coll Collection, filter bson.M, each func(c *mongo.Cursor) error) error {
@@ -109,13 +111,12 @@ func (m *mongoDb) UpdateMany(coll Collection, filters map[string]interface{}, up
 	for k, v := range updates {
 		filter := filters[k]
 		model := mongo.NewUpdateOneModel()
-		model.SetUpsert(true).SetFilter(filter).SetUpdate(SetOrdered(filter, v))
+		model.SetUpsert(true).SetFilter(filter).SetUpdate(SetOrdered(v))
 		models[i] = model
 		i++
 	}
-	ctx := context.Background()
 
-	_, err := c.BulkWrite(ctx, models)
+	_, err := c.BulkWrite(m.ctx, models)
 	if err != nil {
 		return err
 	}
@@ -123,44 +124,71 @@ func (m *mongoDb) UpdateMany(coll Collection, filters map[string]interface{}, up
 	return nil
 }
 
-func (m *mongoDb) EnsureCreated(coll Collection, data bson.M, res interface{}) error {
-	return m.UpdateOne(coll, data, true, Set(data), res)
-}
-
-func (m *mongoDb) UpdateOne(coll Collection, filter bson.M, createIfMissing bool, update bson.M, res interface{}) error {
+func (m *mongoDb) UpdateOne(coll Collection, filter bson.M, createIfMissing bool, update interface{}, res interface{}) error {
 	c := m.collection(coll)
 
 	if res == nil {
 		o := options.UpdateOptions{}
 		o.SetUpsert(createIfMissing)
-		_, err := c.UpdateOne(m.ctx, filter, update, &o)
-		return err
+		_, err := c.UpdateOne(m.ctx, filter, Set(update), &o)
+		return handleMongoErr(err)
 	}
 
 	o := options.FindOneAndUpdateOptions{}
 	o.SetUpsert(createIfMissing)
-	findResult := c.FindOneAndUpdate(m.ctx, filter, update, &o)
-	return findResult.Decode(&res)
+	o.SetReturnDocument(options.After)
+	findResult := c.FindOneAndUpdate(m.ctx, filter, Set(update), &o)
+	err := handleMongoResult(findResult)
+	if err != nil {
+		return err
+	}
+
+	return findResult.Decode(res)
 }
 
-func (m *mongoDb) UpdateOneById(coll Collection, id string, createIfMissing bool, update bson.M, res interface{}) error {
+func (m *mongoDb) UpdateOneById(coll Collection, id string, createIfMissing bool, update interface{}, res interface{}) error {
 	return m.UpdateOne(coll, bson.M{"id": id}, createIfMissing, update, res)
 }
 
 func (m *mongoDb) DeleteOne(coll Collection, filter bson.M) error {
 	c := m.collection(coll)
-	_, err := c.DeleteOne(context.Background(), filter)
-	return err
+	res, err := c.DeleteOne(m.ctx, filter)
+	if err != nil {
+		return handleMongoErr(err)
+	}
+
+	if res.DeletedCount == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
 func (m *mongoDb) DeleteOneById(coll Collection, id string) error {
 	return m.DeleteOne(coll, bson.M{"id": id})
 }
 
+func handleMongoErr(err error) error {
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return ErrNotFound
+	} else if err != nil {
+		return mongoFailed(err)
+	}
+	return nil
+}
+
+func handleMongoResult(res *mongo.SingleResult) error {
+	return handleMongoErr(res.Err())
+}
+
 func (m *mongoDb) FindOne(coll Collection, filter bson.M, res interface{}) error {
 	c := m.collection(coll)
-	findResult := c.FindOne(context.Background(), filter)
-	return findResult.Decode(&res)
+	findResult := c.FindOne(m.ctx, filter)
+	if err := handleMongoResult(findResult); err != nil {
+		return err
+	}
+
+	return findResult.Decode(res)
 }
 
 func (m *mongoDb) FindOneById(coll Collection, id string, res interface{}) error {
@@ -170,13 +198,13 @@ func (m *mongoDb) FindOneById(coll Collection, id string, res interface{}) error
 func (m *mongoDb) ListPaginated(collName Collection, perPage int, page int, p *sdk.Pagination, each func(c *mongo.Cursor) error) error {
 	coll := m.collection(collName)
 
-	c, err := coll.CountDocuments(context.Background(), bson.M{})
+	c, err := coll.CountDocuments(m.ctx, bson.M{})
 	if err != nil {
 		return err
 	}
 	pages := int(math.Ceil(float64(c) / float64(perPage)))
 
-	cursor, err := coll.Find(context.Background(), bson.M{}, options.Find().
+	cursor, err := coll.Find(m.ctx, bson.M{}, options.Find().
 		SetSkip(int64(page*perPage)).
 		SetLimit(int64(perPage)),
 	)
@@ -191,7 +219,7 @@ func (m *mongoDb) ListPaginated(collName Collection, perPage int, page int, p *s
 		Page:         page,
 	}
 
-	for cursor.Next(context.Background()) {
+	for cursor.Next(m.ctx) {
 		err = each(cursor)
 		if err != nil {
 			return err
@@ -218,6 +246,7 @@ func (m *mongoDb) UpdateProvided(collName Collection, provider string, updates m
 			"provider": provider,
 			"id":       id,
 		}
+		ids = append(ids, id)
 	}
 
 	err := m.UpdateMany(collName, filterMap, updates)

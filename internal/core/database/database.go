@@ -17,9 +17,8 @@ type Database interface {
 
 	UpdateProvided(coll Collection, provider string, updates map[string]interface{}) error
 	UpdateMany(coll Collection, filters map[string]interface{}, updates map[string]interface{}) error
-	UpdateOne(coll Collection, filter bson.M, createIfMissing bool, update bson.M, res interface{}) error
-	UpdateOneById(coll Collection, id string, createIfMissing bool, update bson.M, res interface{}) error
-	EnsureCreated(coll Collection, data bson.M, res interface{}) error
+	UpdateOne(coll Collection, filter bson.M, createIfMissing bool, update interface{}, res interface{}) error
+	UpdateOneById(coll Collection, id string, createIfMissing bool, update interface{}, res interface{}) error
 
 	DeleteOne(coll Collection, filter bson.M) error
 	DeleteOneById(coll Collection, id string) error

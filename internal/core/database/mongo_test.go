@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/benweissmann/memongo"
 	"github.com/google/go-cmp/cmp"
-	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,42 +23,67 @@ import (
 
 var someTime, _ = time.Parse(time.RFC3339, "2006-01-01T15:00:00Z")
 
-var baseAppState = map[string]interface{}{
-	"providers": []bson.M{
-		{"id": "provider-a", "type": "apps", "lastUpdated": "2006-01-01T14:58:00Z"},
-		{"id": "provider-b", "type": "apps", "lastUpdated": "2006-01-01T14:58:30Z"},
-	},
-	"apps": []bson.M{
-		{"provider": "provider-a", "name": "app-a", "id": "app-a"},
-		{"provider": "provider-a", "name": "app-b", "id": "app-b"},
-		{"provider": "provider-b", "name": "app-c", "id": "app-c"},
-		{"provider": "provider-b", "name": "app-d", "id": "app-d"},
-	},
+const (
+	Subjects Collection = "subjects"
+	Empty    Collection = "empty"
+	Unsorted Collection = "unsorted"
+	Provided Collection = "provided"
+)
+
+type testSubject struct {
+	Id       string `bson:"id"`
+	Property string `bson:"property"`
+	Provider string `bson:"provider"`
 }
 
-var basePipelinesState = map[string]interface{}{
-	"providers": []bson.M{
-		{"id": "provider-a", "type": "pipelines", "lastUpdated": "2006-01-01T14:58:00Z"},
-		{"id": "provider-b", "type": "pipelines", "lastUpdated": "2006-01-01T14:58:30Z"},
-	},
-	"pipelines": []bson.M{
-		{"provider": "provider-a", "name": "pipeline-a", "id": "pipeline-a"},
-		{"provider": "provider-a", "name": "pipeline-b", "id": "pipeline-b"},
-		{"provider": "provider-b", "name": "pipeline-c", "id": "pipeline-c"},
-		{"provider": "provider-b", "name": "pipeline-d", "id": "pipeline-d"},
-	},
-	"pipeline_runs": []bson.M{
-		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime},
-		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime.Add(-1 * time.Minute)},
-		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime.Add(-1 * time.Second)},
-		{"provider": "provider-a", "pipelineId": "pipeline-a", "started": someTime.Add(-2 * time.Minute)},
-	},
-	"pipeline_versions": []bson.M{
-		{"provider": "provider-a", "pipelineId": "pipeline-a", "created": someTime},
-		{"provider": "provider-a", "pipelineId": "pipeline-a", "created": someTime.Add(-1 * time.Minute)},
-		{"provider": "provider-a", "pipelineId": "pipeline-a", "created": someTime.Add(-1 * time.Second)},
-		{"provider": "provider-a", "pipelineId": "pipeline-a", "created": someTime.Add(-2 * time.Minute)},
-	},
+var (
+	subjectA = testSubject{
+		Id:       "subject-a",
+		Property: "a",
+	}
+	subjectB = testSubject{
+		Id:       "subject-b",
+		Property: "b",
+	}
+	subjectC = testSubject{
+		Id:       "subject-c",
+		Property: "c",
+	}
+	subjectNew = testSubject{
+		Id:       "newItem",
+		Property: "new",
+	}
+	providedA = testSubject{
+		Id:       "provided-a",
+		Provider: "provider-1",
+	}
+	providedB = testSubject{
+		Id:       "provided-b",
+		Provider: "provider-1",
+	}
+	providedC = testSubject{
+		Id:       "provided-c",
+		Provider: "provider-2",
+	}
+)
+
+var baseState = map[string]interface{}{
+	string(Subjects): toCollection(
+		subjectA,
+		subjectB,
+		subjectC,
+	),
+	string(Empty): toCollection(),
+	string(Unsorted): toCollection(
+		subjectC,
+		subjectB,
+		subjectA,
+	),
+	string(Provided): toCollection(
+		providedA,
+		providedB,
+		providedC,
+	),
 }
 
 func TestMongoIntegration(t *testing.T) {
@@ -68,339 +92,126 @@ func TestMongoIntegration(t *testing.T) {
 	}
 
 	tests := []struct {
-		desc  string
-		f     func(db Database, tt *testing.T) error
-		err   error
-		state bson.M
+		desc            string
+		f               func(db Database, res *testSubject, resList *[]testSubject, tt *testing.T) error
+		expectedErr     error
+		expectsOne      *testSubject
+		expectsMultiple *[]testSubject
 	}{
-		/**
-		Providers
+		/*
+			Queries
 		*/
-		{desc: "adds app provider", state: baseAppState, f: func(db Database, tt *testing.T) error {
-			return db.AddAppProvider("provider-c")
-		}},
-		{desc: "adds pipeline provider", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.AddPipelineProvider("provider-c")
-		}},
-		{desc: "deletes provider and apps", state: baseAppState, f: func(db Database, tt *testing.T) error {
-			return db.DeleteAppProvider("provider-a")
-		}},
-		{desc: "deletes provider and pipelines", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.DeletePipelineProvider("provider-a")
-		}},
-		/**
-		Apps
-		*/
-		{desc: "updates existing apps", state: baseAppState, f: func(db Database, tt *testing.T) error {
-			return db.UpdateApps("provider-a", []sdk.App{
-				{Id: "app-a", Name: "new-app-a"},
-				{Id: "app-b", Name: "new-app-b"},
-			})
-		}},
-		{desc: "gets app", state: baseAppState, f: func(db Database, tt *testing.T) error {
-			app, err := db.GetApp("app-a")
-			expected := sdk.App{
-				Id:   "app-a",
-				Name: "app-a",
-			}
-			if !cmp.Equal(expected, app) {
-				tt.Errorf("wrong app returned:\n%s\n", cmp.Diff(expected, app))
-			}
-
+		{desc: "finds a", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.FindOne(Subjects, bson.M{"id": subjectA.Id}, a)
+		}, expectsOne: &subjectA},
+		{desc: "returns not found", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.FindOne(Subjects, bson.M{"id": "not-existent"}, a)
+		}, expectedErr: ErrNotFound},
+		{desc: "finds a by id", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.FindOneById(Subjects, subjectA.Id, a)
+		}, expectsOne: &subjectA},
+		{desc: "returns not found by id", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.FindOneById(Subjects, "non-existent", a)
+		}, expectedErr: ErrNotFound},
+		{desc: "finds first match", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.FindOne(Unsorted, bson.M{}, a)
+		}, expectsOne: &subjectC},
+		{desc: "finds a when sorting", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.FindOneSorted(Unsorted, bson.M{}, bson.M{"id": 1}, a)
+		}, expectsOne: &subjectA},
+		{desc: "finds many", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.FindMany(Subjects, bson.M{}, decodeEach(resList))
+		}, expectsMultiple: &[]testSubject{subjectA, subjectB, subjectC}},
+		{desc: "finds many with limits and sort", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.FindManyWithOptions(Subjects, bson.M{}, decodeEach(resList), bson.M{"id": -1}, 2)
+		}, expectsMultiple: &[]testSubject{subjectC, subjectB}},
+		{desc: "lists paginated", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			page := sdk.Pagination{}
+			err := db.ListPaginated(Subjects, 1, 1, &page, decodeEach(resList))
+			requireEqual(page, sdk.Pagination{
+				TotalResults: 3,
+				TotalPages:   3,
+				PerPage:      1,
+				Page:         1,
+			}, tt)
 			return err
-		}},
-		{desc: "adds new apps", state: baseAppState, f: func(db Database, tt *testing.T) error {
-			return db.UpdateApps("provider-a", []sdk.App{
-				{Id: "app-a", Name: "app-a"},
-				{Id: "app-b", Name: "app-b"},
-				{Id: "app-c", Name: "app-c"},
-			})
-		}},
-		{desc: "removes old apps", state: baseAppState, f: func(db Database, tt *testing.T) error {
-			return db.UpdateApps("provider-a", []sdk.App{
-				{Id: "app-a", Name: "app-a"},
-			})
-		}},
-		{desc: "lists apps paginated", state: baseAppState, f: func(db Database, tt *testing.T) error {
-			apps, err := db.ListAppsPaginated(2, 1)
-			if err != nil {
-				return err
-			}
-			expected := sdk.AppPage{
-				Pagination: sdk.Pagination{
-					TotalResults: 4,
-					TotalPages:   2,
-					PerPage:      2,
-					Page:         1,
-				},
-				Apps: []sdk.App{
-					{Id: "app-c", Name: "app-c"},
-					{Id: "app-d", Name: "app-d"},
-				},
-			}
-
-			if !cmp.Equal(expected, apps) {
-				tt.Errorf("wrong apps returned:\n%s\n", cmp.Diff(expected, apps))
-			}
-			return nil
-		}},
+		}, expectsMultiple: &[]testSubject{subjectB}},
 		/**
-		Pipelines
+		Updates
 		*/
-		{desc: "updates existing pipelines", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.UpdatePipelines("provider-a", []sdk.Pipeline{
-				{Id: "pipeline-a", Name: "new-pipeline-a"},
-				{Id: "pipeline-b", Name: "new-pipeline-b"},
-			})
-		}},
-		{desc: "gets pipeline", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			app, err := db.GetPipeline("pipeline-a")
-			expected := sdk.Pipeline{
-				Id:   "pipeline-a",
-				Name: "pipeline-a",
-			}
-			if !cmp.Equal(expected, app) {
-				tt.Errorf("wrong pipeline returned:\n%s\n", cmp.Diff(expected, app))
-			}
-
-			return err
-		}},
-		{desc: "adds new pipelines", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.UpdatePipelines("provider-a", []sdk.Pipeline{
-				{Id: "pipeline-a", Name: "pipeline-a"},
-				{Id: "pipeline-b", Name: "pipeline-b"},
-				{Id: "pipeline-c", Name: "pipeline-c"},
-			})
-		}},
-		{desc: "removes old pipelines", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.UpdatePipelines("provider-a", []sdk.Pipeline{
-				{Id: "pipeline-a", Name: "pipeline-a"},
-			})
-		}},
-		{desc: "lists pipelines paginated", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			apps, err := db.ListPipelinesPaginated(2, 1)
-			if err != nil {
-				return err
-			}
-			expected := sdk.PipelinePage{
-				Pagination: sdk.Pagination{
-					TotalResults: 4,
-					TotalPages:   2,
-					PerPage:      2,
-					Page:         1,
-				},
-				Pipelines: []sdk.Pipeline{
-					{Id: "pipeline-c", Name: "pipeline-c"},
-					{Id: "pipeline-d", Name: "pipeline-d"},
+		{desc: "adds new item", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			newProvided := map[string]interface{}{
+				providedA.Id: providedA,
+				providedB.Id: providedB,
+				"newItem": testSubject{
+					Id:       "newItem",
+					Property: "some new value",
+					Provider: providedA.Provider,
 				},
 			}
-
-			if !cmp.Equal(expected, apps) {
-				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, apps))
-			}
-			return nil
+			return db.UpdateProvided(Provided, providedA.Provider, newProvided)
 		}},
-		{desc: "lists pipeline runs", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			runs, err := db.ListPipelineRuns("pipeline-a", someTime.Add(-1*time.Minute), someTime)
-			if err != nil {
-				return err
+		{desc: "removes existing item", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			newProvided := map[string]interface{}{
+				providedA.Id: providedA,
 			}
-			expected := sdk.PipelineStatusList{
-				{
-					PipelineId: "pipeline-a",
-					Started:    someTime.Add(-1 * time.Minute),
-					Steps:      nil,
-				},
-				{
-					PipelineId: "pipeline-a",
-					Started:    someTime.Add(-1 * time.Second),
-					Steps:      nil,
-				},
-			}
-
-			if !cmp.Equal(expected, runs) {
-				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, runs))
-			}
-			return nil
+			return db.UpdateProvided(Provided, providedA.Provider, newProvided)
 		}},
-		{desc: "lists pipeline runs with limit", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			runs, err := db.ListPipelineRunsLimit("pipeline-a", someTime, 1)
-			if err != nil {
-				return err
-			}
-			expected := sdk.PipelineStatusList{
-				{
-					PipelineId: "pipeline-a",
-					Started:    someTime.Add(-1 * time.Second),
-					Steps:      nil,
+		{desc: "updates existing item", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			newProvided := map[string]interface{}{
+				providedA.Id: providedA,
+				providedB.Id: testSubject{
+					Id:       providedB.Id,
+					Property: "changed-property",
+					Provider: providedB.Provider,
 				},
 			}
-
-			if !cmp.Equal(expected, runs) {
-				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, runs))
-			}
-			return nil
+			return db.UpdateProvided(Provided, providedA.Provider, newProvided)
 		}},
-		{desc: "lists pipeline versions", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			runs, err := db.ListPipelineVersions("pipeline-a", someTime.Add(-time.Minute), someTime)
-			if err != nil {
-				return err
+		{desc: "updates multiple properties", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			filters := map[string]interface{}{
+				subjectA.Id: bson.M{"id": subjectA.Id},
+				subjectC.Id: bson.M{"id": subjectC.Id},
 			}
-			expected := sdk.PipelineVersionList{
-				{
-					PipelineId: "pipeline-a",
-					Created:    someTime.Add(-1 * time.Minute),
-				},
-				{
-					PipelineId: "pipeline-a",
-					Created:    someTime.Add(-1 * time.Second),
-				},
+			updates := map[string]interface{}{
+				subjectA.Id: bson.M{"property": "changed-a"},
+				subjectC.Id: bson.M{"property": "changed-c"},
 			}
-
-			if !cmp.Equal(expected, runs) {
-				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, runs))
-			}
-			return nil
+			return db.UpdateMany(Subjects, filters, updates)
 		}},
-		{desc: "includes last pipeline version before", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			runs, err := db.ListPipelineVersions("pipeline-a", someTime.Add(-59*time.Second), someTime.Add(-58*time.Second))
-			if err != nil {
-				return err
-			}
-			expected := sdk.PipelineVersionList{
-				{
-					PipelineId: "pipeline-a",
-					Created:    someTime.Add(-1 * time.Minute),
-				},
-			}
-
-			if !cmp.Equal(expected, runs) {
-				tt.Errorf("wrong pipelines returned:\n%s\n", cmp.Diff(expected, runs))
-			}
-			return nil
-		}},
-		{desc: "adds pipeline runs", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.AddPipelineRuns("provider-a", sdk.PipelineStatusList{
-				{
-					PipelineId: "pipeline-b",
-					Started:    someTime.Add(1 * time.Minute),
-					Steps:      nil,
-				},
-			})
-		}},
-		{desc: "updates pipeline runs", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.AddPipelineRuns("provider-a", sdk.PipelineStatusList{
-				{
-					PipelineId: "pipeline-a",
-					Started:    someTime,
-					Steps: []sdk.StepRun{
-						{
-							StepId:  1,
-							Status:  "succeeded",
-							Started: someTime,
-							Ended:   someTime.Add(1 * time.Minute),
-						},
-					},
-				},
-			})
-		}},
-		{desc: "adds pipeline versions", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.AddPipelineVersions("provider-a", sdk.PipelineVersionList{
-				{
-					PipelineId: "pipeline-b",
-					Created:    someTime.Add(1 * time.Minute),
-				},
-			})
-		}},
-		{desc: "updates pipeline version", state: basePipelinesState, f: func(db Database, tt *testing.T) error {
-			return db.AddPipelineVersions("provider-a", sdk.PipelineVersionList{
-				{
-					PipelineId: "pipeline-a",
-					Created:    someTime,
-					Definition: sdk.PipelineDefinition{
-						Steps: []sdk.PipelineStep{
-							{
-								Name: "step",
-								Id:   0,
-							},
-						},
-					},
-				},
-			})
-		}},
+		{desc: "updates single item", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.UpdateOne(Subjects, bson.M{"id": subjectA.Id}, false, bson.M{"property": "changed-a"}, a)
+		}, expectsOne: subjectA.withProperty("changed-a")},
+		{desc: "updates single item by id", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.UpdateOneById(Subjects, subjectA.Id, false, bson.M{"property": "changed-a"}, a)
+		}, expectsOne: subjectA.withProperty("changed-a")},
+		{desc: "creates item via update", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.UpdateOne(Subjects, bson.M{"id": subjectNew.Id}, true, subjectNew, a)
+		}, expectsOne: &subjectNew},
+		{desc: "creates item via update by id", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.UpdateOneById(Subjects, subjectNew.Id, true, subjectNew, a)
+		}, expectsOne: &subjectNew},
+		{desc: "update returns not found without createIfMissing", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.UpdateOne(Subjects, bson.M{"id": subjectNew.Id}, false, subjectNew, a)
+		}, expectedErr: ErrNotFound},
 
 		/**
-		Fetch Jobs
+		Delete
+		DeleteOne(coll Collection, filter bson.M) error
+		DeleteOneById(coll Collection, id string) error
 		*/
-		{desc: "fetch app provider job", state: bson.M{
-			"providers": []bson.M{
-				{"id": "provider-a", "type": "apps", "lastUpdated": someTime.Add(-30 * time.Second)},
-				{"id": "provider-b", "type": "apps", "lastUpdated": someTime.Add(-90 * time.Second)},
-				{"id": "provider-c", "type": "apps", "lastUpdated": someTime.Add(-60 * time.Second)},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcileAppProvider, Guid: "provider-b", LastUpdated: someTime.Add(-90 * time.Second)}
-			j, ok := db.AcceptReconcileJob(1 * time.Minute)
-			if !ok || !cmp.Equal(expected, j) {
-				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
-			}
-			return nil
+		{desc: "deletes a", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.DeleteOne(Subjects, bson.M{"id": subjectA.Id})
 		}},
-		{desc: "fetch pipeline provider job", state: bson.M{
-			"providers": []bson.M{
-				{"id": "provider-a", "type": "pipelines", "lastUpdated": someTime.Add(-30 * time.Second)},
-				{"id": "provider-b", "type": "pipelines", "lastUpdated": someTime.Add(-90 * time.Second)},
-				{"id": "provider-c", "type": "apps", "lastUpdated": someTime.Add(-60 * time.Second)},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcilePipelineProvider, Guid: "provider-b", LastUpdated: someTime.Add(-90 * time.Second)}
-			j, ok := db.AcceptReconcileJob(1 * time.Minute)
-			if !ok || !cmp.Equal(expected, j) {
-				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
-			}
-			return nil
+		{desc: "deletes a by id", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.DeleteOneById(Subjects, subjectA.Id)
 		}},
-		{desc: "fetch no job", state: bson.M{
-			"providers": []bson.M{
-				{"id": "provider-a", "type": "apps", "lastUpdated": someTime.Add(-20 * time.Second)},
-				{"id": "provider-b", "type": "apps", "lastUpdated": someTime.Add(-30 * time.Second)},
-				{"id": "provider-c", "type": "apps", "lastUpdated": someTime.Add(-40 * time.Second)},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: "", Guid: ""}
-			j, ok := db.AcceptReconcileJob(1 * time.Minute)
-			if ok {
-				tt.Errorf("expected no work to be done")
-			}
-			if !cmp.Equal(expected, j) {
-				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
-			}
-			return nil
-		}},
-		{desc: "fetch app job never updated", state: bson.M{
-			"providers": []bson.M{
-				{"id": "provider-a", "type": "apps"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcileAppProvider, Guid: "provider-a"}
-			j, ok := db.AcceptReconcileJob(1 * time.Minute)
-			if !ok || !cmp.Equal(expected, j) {
-				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
-			}
-			return nil
-		}},
-		{desc: "fetch pipeline job never updated", state: bson.M{
-			"providers": []bson.M{
-				{"id": "provider-a", "type": "pipelines"},
-			},
-		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcilePipelineProvider, Guid: "provider-a"}
-			j, ok := db.AcceptReconcileJob(1 * time.Minute)
-			if !ok || !cmp.Equal(expected, j) {
-				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
-			}
-			return nil
-		}},
+		{desc: "delete returns not found", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.DeleteOne(Subjects, bson.M{"id": "not-existent"})
+		}, expectedErr: ErrNotFound},
+		{desc: "delete by id returns not found", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.DeleteOneById(Subjects, "not-existent")
+		}, expectedErr: ErrNotFound},
 	}
 
 	mongo, err := memongo.Start("3.6.23")
@@ -412,15 +223,53 @@ func TestMongoIntegration(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			fileName := strings.ReplaceAll(test.desc, " ", "_")
-			acceptanceTesting(fileName, test.state, test.f, mongo, tt)
+			acceptanceTesting(fileName, baseState, test.f, test.expectsOne, test.expectsMultiple, test.expectedErr, mongo, tt)
 		})
+	}
+}
+
+func toCollection(s ...testSubject) []bson.M {
+	var res []bson.M
+	for _, subject := range s {
+		res = append(res, toBson(subject))
+	}
+	return res
+}
+
+func toBson(s testSubject) bson.M {
+	return bson.M{"id": s.Id, "property": s.Property, "provider": s.Provider}
+}
+
+func (s testSubject) withProperty(change string) *testSubject {
+	s.Property = change
+	return &s
+}
+
+func decodeEach(list *[]testSubject) func(c *mongo.Cursor) error {
+	return func(c *mongo.Cursor) error {
+		res := testSubject{}
+		err := c.Decode(&res)
+		if err != nil {
+			return err
+		}
+		*list = append(*list, res)
+		return nil
+	}
+}
+
+func requireEqual(a, b interface{}, tt *testing.T) {
+	if !cmp.Equal(a, b) {
+		tt.Errorf("expected the two objects to be equal: %s", cmp.Diff(a, b))
 	}
 }
 
 func acceptanceTesting(
 	name string,
 	state map[string]interface{},
-	f func(db Database, tt *testing.T) error,
+	f func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error,
+	expected *testSubject,
+	expectedList *[]testSubject,
+	expectedErr error,
 	s *memongo.Server,
 	tt *testing.T,
 ) {
@@ -454,9 +303,33 @@ func acceptanceTesting(
 		}
 	})
 
-	err = f(db, tt)
-	if err != nil {
-		tt.Fatal(err)
+	var res *testSubject
+	if expected != nil {
+		res = &testSubject{}
+	}
+
+	var resList *[]testSubject
+	if expectedList != nil {
+		resList = &[]testSubject{}
+	}
+
+	err = f(db, res, resList, tt)
+	if err == nil && expectedErr != nil {
+		tt.Errorf("expected an error but did not get one")
+	}
+	if err != nil && expectedErr == nil {
+		tt.Errorf("expected no error but got one: %v", err)
+	}
+	if expectedErr != nil && err != nil && !errors.Is(err, expectedErr) {
+		tt.Errorf("expected a different error: %v", cmp.Diff(expectedErr.Error(), err.Error()))
+	}
+
+	if expected != nil && !cmp.Equal(res, expected) {
+		tt.Errorf("returned testSubject not correct. Diff:\n%+v", cmp.Diff(expected, res))
+	}
+
+	if expectedList != nil && !cmp.Equal(resList, expectedList) {
+		tt.Errorf("returned list of test subjects not correct. Diff:\n%+v", cmp.Diff(expectedList, resList))
 	}
 
 	contents, err := dumpContents(s, dbName)

@@ -1,0 +1,58 @@
+{
+    "provided": [
+        {
+            "id": "provided-a",
+            "property": "",
+            "provider": "provider-1"
+        },
+        {
+            "id": "provided-b",
+            "property": "",
+            "provider": "provider-1"
+        },
+        {
+            "id": "provided-c",
+            "property": "",
+            "provider": "provider-2"
+        }
+    ],
+    "subjects": [
+        {
+            "id": "subject-a",
+            "property": "a",
+            "provider": ""
+        },
+        {
+            "id": "subject-b",
+            "property": "b",
+            "provider": ""
+        },
+        {
+            "id": "subject-c",
+            "property": "c",
+            "provider": ""
+        },
+        {
+            "id": "newItem",
+            "property": "new",
+            "provider": ""
+        }
+    ],
+    "unsorted": [
+        {
+            "id": "subject-c",
+            "property": "c",
+            "provider": ""
+        },
+        {
+            "id": "subject-b",
+            "property": "b",
+            "provider": ""
+        },
+        {
+            "id": "subject-a",
+            "property": "a",
+            "provider": ""
+        }
+    ]
+}

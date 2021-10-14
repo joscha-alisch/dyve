@@ -104,7 +104,10 @@ func (s *service) add(id string, providerType Type, p interface{}) error {
 	if s.providers[providerType][id] != nil {
 		return ErrExists
 	}
-	err := s.db.EnsureCreated(Collection, bson.M{"id": id, "type": string(providerType)}, nil)
+
+	providerData := bson.M{"id": id, "type": string(providerType)}
+
+	err := s.db.UpdateOne(Collection, providerData, true, providerData, nil)
 	if err != nil {
 		return err
 	}
@@ -140,7 +143,7 @@ func (s *service) delete(id string, providerType Type) error {
 }
 
 type provider struct {
-	Id           string
+	Id           string    `bson:"id"`
 	ProviderType string    `bson:"type"`
 	LastUpdated  time.Time `bson:"lastUpdated"`
 }
@@ -169,7 +172,6 @@ func (s *service) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) 
 		},
 	}
 	err := s.db.UpdateOne(Collection, filter, false, update, &p)
-
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return recon.Job{}, false
 	}
