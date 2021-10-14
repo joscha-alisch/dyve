@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/joscha-alisch/dyve/internal/provider/cloudfoundry"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
@@ -8,8 +9,15 @@ import (
 	"time"
 )
 
+var configPath string
+
+func init() {
+	flag.StringVar(&configPath, "config", "./config.yaml", "path to config file")
+}
+
 func main() {
-	c, err := LoadFrom("./config.yaml")
+	flag.Parse()
+	c, err := LoadFrom(configPath)
 	if err != nil {
 		panic(err)
 	}

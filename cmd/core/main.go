@@ -29,6 +29,8 @@ func init() {
 }
 
 func main() {
+	flag.Parse()
+
 	c, err := config.LoadFrom(configPath)
 	if err != nil {
 		panic(err)
