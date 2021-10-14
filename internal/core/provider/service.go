@@ -5,8 +5,8 @@ import (
 	"github.com/joscha-alisch/dyve/internal/core/database"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
@@ -167,16 +167,15 @@ func (s *service) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) 
 		},
 	}
 	update := bson.M{
-		"$set": bson.M{
-			"lastUpdated": t,
-		},
+		"lastUpdated": t,
 	}
 	err := s.db.UpdateOne(Collection, filter, false, update, &p)
-	if errors.Is(err, mongo.ErrNoDocuments) {
+	if errors.Is(err, database.ErrNotFound) {
 		return recon.Job{}, false
 	}
 	if err != nil {
-		panic(err)
+		log.Error().Err(err).Msg("error when fetching job")
+		return recon.Job{}, false
 	}
 
 	return recon.Job{
