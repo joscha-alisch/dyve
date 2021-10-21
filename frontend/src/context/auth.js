@@ -1,13 +1,13 @@
 import * as React from 'react'
 import {useState,useEffect} from "react";
-import {LoginPage} from "../pages/LoginPage";
+import {LoginView} from "../views/LoginView";
 import jwt_decode from "jwt-decode";
 import {useCookies} from "react-cookie";
 import useLocalStorage from "../hooks/useLocalStorage";
 import axios from "axios";
 
 const AuthContext = React.createContext()
-const UserContext = React.createContext()
+export const UserContext = React.createContext()
 
 export const AuthProvider = ({children}) => {
     const [user, setUser] = useLocalStorage("user", null)
@@ -36,7 +36,7 @@ export const AuthProvider = ({children}) => {
     }, [])
 
     if (!user) {
-        return <LoginPage />
+        return <LoginView />
     }
 
     return <AuthContext.Provider value={{logout, invalidateAuth}}>

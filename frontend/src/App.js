@@ -1,9 +1,9 @@
-import {DashboardPage} from "./pages/DashboardPage";
+import {MainView} from "./views/MainView";
 import styles from "./App.module.sass";
 
 function App() {
   return <div className={styles.App + " nodebug"}>
-    <DashboardPage />
+    <MainView />
   </div>
 }
 

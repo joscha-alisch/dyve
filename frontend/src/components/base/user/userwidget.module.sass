@@ -1,0 +1,121 @@
+@import "src/styles/shared"
+
+$smallAvatarSize: 34px
+$smallAvatarPadding: 10px
+$bigAvatarSize: 50px
+$smallHoverColor: $themeDark
+$smallHoverColorBorder: $themeDarkBorder
+
+$smallSize: ($smallAvatarSize + ($smallAvatarPadding * 2))
+
+a
+  color: unset
+  text-decoration: none
+
+  &:hover .Box
+      background-color: rgba(0, 95, 107, 0.5)
+
+
+@mixin BoxBackground
+  background-color: rgba(0, 95, 107, 0.15)
+  border-radius: 10px
+  padding-left: 20px
+  box-sizing: border-box
+
+
+.Default .Avatar
+  width: $bigAvatarSize
+  height: $bigAvatarSize
+
+.Small .Avatar
+  width: $smallAvatarSize
+  height: $smallAvatarSize
+
+.Box
+  @include flexRowCentered
+  @include BoxBackground
+  height: 80px
+  width: 100%
+
+.Avatar
+  border-radius: 50%
+  border: 2px solid $themeDarkBorder
+  overflow: hidden
+  flex: 0 0 auto
+  box-sizing: border-box
+
+  img
+    max-height: 100%
+    max-width: 100%
+
+.UserName
+  margin-left: 20px
+  color: #fff
+  flex: 1 0 auto
+
+.Default .Buttons
+  @include flexColumnCentered
+
+.Small .Buttons
+  @include flexRowCentered
+  margin-top: 10px
+  margin-bottom: 10px
+  justify-content: space-around
+  width: 100%
+
+.Buttons
+  height: 100%
+  width: 50px
+  color: $paletteAccent1
+
+  svg
+    transition: transform .1s ease-in-out
+
+  a:hover
+    color: $paletteAccent2
+
+    svg
+      transform: scale(1.2)
+
+.Small
+  position: relative
+  width: $smallSize
+  height: $smallSize
+  padding: $smallAvatarPadding
+  box-sizing: border-box
+  z-index: 1
+
+.HoverContent
+  background-color: $smallHoverColor
+  display: none
+  position: absolute
+  top: $smallSize + 2px
+  right: 0
+  padding-top: 10px
+  width: 150px
+  border-radius: 0 0 10px 10px
+  padding-left: 20px
+  box-sizing: border-box
+  border-left: 1px solid $smallHoverColorBorder
+  border-right: 1px solid $smallHoverColorBorder
+  border-bottom: 1px solid $smallHoverColorBorder
+  z-index: 0
+
+  &::before
+    display: block
+    content: ""
+    top: -($smallSize + 5px)
+    width: $smallSize + 10px
+    height: $smallSize + 10px
+    right: -5px
+    position: absolute
+
+  &:hover
+    display: block
+
+.Small:hover
+  .HoverContent
+    display: block
+
+
+

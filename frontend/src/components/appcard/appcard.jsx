@@ -1,6 +1,6 @@
-import {Chip, Paper} from "@material-ui/core";
+import {Chip, Paper} from "@mui/material";
 import styles from "./appcard.module.sass"
-import {Skeleton} from "@material-ui/lab";
+import {Skeleton} from "@mui/lab";
 import {Link} from "react-router-dom";
 
 const AppCard = ({className, app, loading}) => {
@@ -11,7 +11,7 @@ const AppCard = ({className, app, loading}) => {
         </Paper>
     }
 
-    return <Paper className={styles.App + " " + className} elevation={0}>
+    return <div className={styles.App + " " + className}>
         <h1 className={styles.Name}>
             <span className={styles.Status}/>
             <Link to={"/apps/" + app.id}>{app.name}</Link>
@@ -21,7 +21,7 @@ const AppCard = ({className, app, loading}) => {
             size="small"
             label={k+": "+app.meta[k]}
         />)}
-    </Paper>
+    </div>
 }
 
 export default AppCard

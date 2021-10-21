@@ -1,6 +1,6 @@
-import {Paper} from "@material-ui/core";
+import {Paper} from "@mui/material";
 import styles from "./pipelineCard.module.sass"
-import {Skeleton} from "@material-ui/lab";
+import {Skeleton} from "@mui/lab";
 import {Link} from "react-router-dom";
 import SVG from 'react-inlinesvg';
 

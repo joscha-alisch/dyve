@@ -1,0 +1,43 @@
+@import "src/styles/shared"
+
+.Main
+  width: 100%
+  list-style: none
+  color: #fff
+  margin: 0
+  padding: 0
+
+  &.Soon
+    color: #606060
+
+    a:hover:not(.Active)
+      color: #8a8a8a
+
+
+  a
+    @include flexRowCentered
+    justify-content: stretch
+    flex-wrap: nowrap
+
+    &.Active, &:hover
+      color: $paletteAccent2
+      font-weight: bold
+
+.Icon
+  flex: 0 0 50px
+  text-align: center
+  margin: 0
+  padding: 0
+
+.Label
+  flex: 1 0 auto
+  margin-left: 0
+
+.Tag
+  background-color: $paletteAccent2
+  color: #fff
+  border-radius: 10px
+  padding: 2px 8px 2px 8px
+  box-sizing: border-box
+  font-size: 12px
+  flex: 0 0 auto

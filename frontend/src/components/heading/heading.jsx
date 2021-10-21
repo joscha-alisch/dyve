@@ -1,7 +1,7 @@
 import styles from "./heading.module.sass";
 import {Link} from "react-router-dom";
 import {Fragment} from "react";
-import {Skeleton} from "@material-ui/lab";
+import {Skeleton} from "@mui/lab";
 
 const Heading = ({title, backlinkTitle, backlink}) => {
     return <Fragment>

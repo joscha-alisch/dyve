@@ -1,4 +1,4 @@
-import styles from "./LoginPage.module.sass"
+import styles from "./LoginView.module.sass"
 import {useEffect, useState} from "react";
 import {Spinner} from "../components/progress/Spinner";
 import axios from "axios";
@@ -9,7 +9,7 @@ import {isDev} from "../helpers/isdev";
 import process from "process";
 
 
-export const LoginPage = () => {
+export const LoginView = () => {
     let [providers, setProviders] = useState([])
 
     useEffect(() => {

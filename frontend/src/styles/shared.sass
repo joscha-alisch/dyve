@@ -19,3 +19,33 @@ $colorMenuItemActive: #4c4c4c
 $colorMenuItemInactive: #b5b5b5
 
 $brandGitHubGrey: #333
+
+$skeletonLoading: #333f4f
+
+$themeDarkMainBg: #171C24
+$themeDark: #222b36
+$themeDarkBorder: rgba(145, 158, 171, 0.24)
+
+
+@mixin box
+  background-color: $themeDark
+  box-sizing: border-box
+  padding: 10px
+
+@mixin borderBottom
+  border-bottom: 1px solid $themeDarkBorder
+
+@mixin borderRight
+  border-right: 1px solid $themeDarkBorder
+
+@mixin flexRowCentered
+  display: flex
+  flex-direction: row
+  align-items: center
+
+@mixin flexColumnCentered
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: space-evenly
+
