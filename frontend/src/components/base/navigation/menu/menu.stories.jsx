@@ -7,7 +7,7 @@ export default {
     component: Menu,
 }
 
-export const StoryMenu= (args) => <Menu {...args}/>
+export const StoryMenu = (args) => <Menu {...args}/>
 
 StoryMenu.storyName = "Menu"
 StoryMenu.args = {

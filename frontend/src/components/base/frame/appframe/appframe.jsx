@@ -4,8 +4,8 @@ import SideBar from "../sidebar/sidebar";
 import PropTypes from "prop-types";
 
 const AppFrame = ({menuCategories, children}) => <div className={styles.Main}>
-    <TopBar className={styles.TopBar} />
-    <SideBar className={styles.SideBar} menuCategories={menuCategories} />
+    <TopBar className={styles.TopBar}/>
+    <SideBar className={styles.SideBar} menuCategories={menuCategories}/>
     {children}
 </div>
 

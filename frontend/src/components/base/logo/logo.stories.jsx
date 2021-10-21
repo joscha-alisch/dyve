@@ -9,5 +9,4 @@ export default {
 export const StoryLogo = (args) => <Logo {...args}/>;
 
 StoryLogo.storyName = "Logo"
-StoryLogo.args = {
-}
+StoryLogo.args = {}

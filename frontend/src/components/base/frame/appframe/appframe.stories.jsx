@@ -1,7 +1,7 @@
 import React from "react"
 import AppFrame from "./appframe";
 import {UserContext} from "../../../../context/auth";
-import { userData} from "../../../../../.storybook/data";
+import {userData} from "../../../../../.storybook/data";
 import {menuData} from "../../../../views/MainView";
 import Page from "../../pages/page/page";
 

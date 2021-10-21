@@ -1,32 +1,31 @@
-import styles from "./MainView.module.sass";
-import SideBar from "../components/sidebar/sidebar";
 import React from "react";
-import {
-    faBook,
-    faHouseUser,
-    faLaptopCode,
-    faRocket,
-    faServer,
-    faUserFriends,
-    faUsers
-} from "@fortawesome/free-solid-svg-icons";
-import {Route, Switch, useParams} from "react-router-dom";
-import AppDetail from "../components/appdetail/appdetail";
+import {faBook, faHouseUser, faLaptopCode, faRocket, faServer, faUsers} from "@fortawesome/free-solid-svg-icons";
+import {Route, Switch} from "react-router-dom";
 import AppFrame from "../components/base/frame/appframe/appframe";
-import AppList from "../pages/apps/list/applist";
+import Pages from "../pages";
 
-export const MainView = () => {
-    return <AppFrame menuCategories={menuData}>
-            <Switch>
-                <Route exact path="/apps/">
-                    <AppList />
-                </Route>
-                <Route path="/apps/:id">
-                    <AppDetail/>
-                </Route>
-            </Switch>
-    </AppFrame>
-}
+export const MainView = () => <AppFrame menuCategories={menuData}>
+    <Switch>
+        <Route exact path="/user/logout">
+            <Pages.User.Logout/>
+        </Route>
+
+        <Route exact path="/apps/">
+            <Pages.Apps.List/>
+        </Route>
+        <Route path="/apps/:id">
+            <Pages.Apps.Detail/>
+        </Route>
+
+        <Route exact path="/pipelines/">
+            <Pages.Pipelines.List/>
+        </Route>
+
+        <Route exact path="/teams/">
+            <Pages.Teams.List/>
+        </Route>
+    </Switch>
+</AppFrame>
 
 export const menuData = [
     {

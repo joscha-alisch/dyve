@@ -8,14 +8,29 @@ export default {
     component: UserWidget,
 }
 
-export const StoryUserWidget= (args) => <UserContext.Provider value={{name: args.userName, picture: args.avatarUrl}}><div style={{display: "flex", flexDirection: "column", height: 500, justifyContent: "space-evenly", alignItems: "stretch"}}>
-    <div style={{flex: "0 0 100px"}}>
-        <UserWidget {...args} variant={"default"}/>;
+export const StoryUserWidget = (args) => <UserContext.Provider value={{name: args.userName, picture: args.avatarUrl}}>
+    <div style={{
+        display: "flex",
+        flexDirection: "column",
+        height: 500,
+        justifyContent: "space-evenly",
+        alignItems: "stretch"
+    }}>
+        <div style={{flex: "0 0 100px"}}>
+            <UserWidget {...args} variant={"default"}/>;
+        </div>
+        <div style={{
+            flex: "0 0 100px",
+            display: "flex",
+            flexDirection: "row",
+            height: 500,
+            justifyContent: "center",
+            alignItems: "center"
+        }}>
+            <UserWidget  {...args} variant={"small"}/>;
+        </div>
     </div>
-    <div style={{flex: "0 0 100px", display: "flex", flexDirection: "row", height: 500, justifyContent: "center", alignItems: "center"}}>
-        <UserWidget  {...args} variant={"small"}/>;
-    </div>
-</div></UserContext.Provider>
+</UserContext.Provider>
 
 StoryUserWidget.storyName = "User Widget"
 StoryUserWidget.args = {

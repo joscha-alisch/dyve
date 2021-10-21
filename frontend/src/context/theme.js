@@ -1,10 +1,10 @@
 import * as React from 'react'
+import {useEffect} from 'react'
 import useLocalStorage from "../hooks/useLocalStorage";
-import {ThemeProvider as MUIThemeProvider} from "@mui/material"
-import {useEffect, useState} from "react";
-import {CssBaseline} from "@mui/material";
+import {CssBaseline, ThemeProvider as MUIThemeProvider} from "@mui/material"
 
-const ThemeContext = React.createContext([{}, () => {}])
+const ThemeContext = React.createContext([{}, () => {
+}])
 
 export const ThemeProvider = ({children, themes, defaultTheme}) => {
     const [themeName, setTheme] = useLocalStorage("theme", defaultTheme)
@@ -22,7 +22,7 @@ export const ThemeProvider = ({children, themes, defaultTheme}) => {
 
     return <ThemeContext.Provider value={[{name: themeName, theme: theme}, setTheme]}>
         <MUIThemeProvider theme={mui}>
-            <CssBaseline />
+            <CssBaseline/>
             <div id="themeProvider" className={theme.className}>
                 {children}
             </div>

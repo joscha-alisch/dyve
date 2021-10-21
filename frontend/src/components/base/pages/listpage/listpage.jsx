@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react"
 import styles from "./listpage.module.sass"
 import PropTypes, {string} from "prop-types"
 import {NumberParam, useQueryParam, withDefault} from "use-query-params";
-import {Skeleton} from "@mui/lab";
+import {Skeleton} from "@mui/material";
 import Box from "../../box/box";
 import PaginationControl from "../../inputs/paginationcontrol/paginationControl";
 import Page from "../page/page";
@@ -13,8 +13,8 @@ const ListPage = ({className, title, parent, fetchItems, itemRender, skeletonRen
     }
 
     let [items, setItems] = useState([])
-    let [page] = useQueryParam("page", withDefault(NumberParam, 0))
-    let [perPage, setPerPage] = useQueryParam("perPage", withDefault(NumberParam, 20))
+    let [page, setPage] = useQueryParam("page", withDefault(NumberParam, 0))
+    let [perPage, setPerPage] = useQueryParam("perPage", withDefault(NumberParam, 25))
     let [totalResults, setTotalResults] = useState(0)
     let [loading, setLoading] = useState(true)
 
@@ -34,13 +34,13 @@ const ListPage = ({className, title, parent, fetchItems, itemRender, skeletonRen
         content = listPageLoading(skeletonRender, perPage)
     } else {
         content = items.map((item) => <li className={styles.ListItem}>
-            {itemRender(item)}
+            {itemRender({value: item})}
         </li>)
     }
 
     return <Page className={styles.Main + " " + className} title={title} parent={parent}>
         <PaginationControl totalResults={totalResults} page={page} perPage={perPage}
-                     setPerPage={setPerPage}/>
+                           setPerPage={setPerPage} setPage={setPage}/>
         <ul className={styles.List}>
             {content}
         </ul>
@@ -58,7 +58,7 @@ const listPageLoading = (skeletonRender, perPage) => {
 const defaultSkeleton = () => <li className={styles.ListItem}>
     <Box>
         <Skeleton className={styles.Skeleton} animation={"wave"} variant={"text"} width="30%" height={30}/>
-        <Skeleton className={styles.Skeleton}  animation={"wave"} variant={"text"} width="15%"/>
+        <Skeleton className={styles.Skeleton} animation={"wave"} variant={"text"} width="15%"/>
     </Box>
 </li>
 

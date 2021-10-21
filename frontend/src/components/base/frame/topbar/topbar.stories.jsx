@@ -1,6 +1,5 @@
 import React from "react"
 import TopBar from "./topbar";
-import AppFrame from "../appframe/appframe";
 import {userData} from "../../../../../.storybook/data";
 import {UserContext} from "../../../../context/auth";
 

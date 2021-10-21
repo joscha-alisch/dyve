@@ -1,41 +1,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
 
 body {
-  margin: 0;
-  font-family: 'Roboto', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 #themeProvider {
-  min-width: 100vw;
-  min-height: 100vh;
+    min-width: 100vw;
+    min-height: 100vh;
 }
 
 .themeDark {
-  background-color: #171C24;
+    background-color: #171C24;
 }
 
 .themeLight {
-  background-color: #fff;
+    background-color: #fff;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 
 .debug > * {
-  border: 1px solid #ea6eff;
+    border: 1px solid #ea6eff;
 }
+
 .debug > * > * {
-  border: 1px solid #ff7080;
+    border: 1px solid #ff7080;
 }
+
 .debug > * > * * {
-  border: 1px dashed #f8a7ff;
+    border: 1px dashed #f8a7ff;
 }

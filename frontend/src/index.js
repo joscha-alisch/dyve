@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import {AppProviders} from "./context/providers";
-import {invalidateAuth} from "./context/auth";
 import axios from "axios";
 
 function getCookies() {
@@ -22,11 +21,11 @@ axios.interceptors.request.use(function (config) {
 });
 
 ReactDOM.render(
-  <React.StrictMode>
-      <AppProviders>
-          <App />
-      </AppProviders>
-  </React.StrictMode>,
-  document.getElementById('root')
+    <React.StrictMode>
+        <AppProviders>
+            <App/>
+        </AppProviders>
+    </React.StrictMode>,
+    document.getElementById('root')
 );
 

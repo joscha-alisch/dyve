@@ -7,7 +7,7 @@ export default {
     component: Category,
 }
 
-export const StoryCategory= (args) => <Category {...args}/>
+export const StoryCategory = (args) => <Category {...args}/>
 
 StoryCategory.storyName = "Category"
 StoryCategory.args = {

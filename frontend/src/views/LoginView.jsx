@@ -6,7 +6,6 @@ import {faKey, faLaptopCode} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faGithub} from "@fortawesome/free-brands-svg-icons";
 import {isDev} from "../helpers/isdev";
-import process from "process";
 
 
 export const LoginView = () => {
@@ -18,15 +17,15 @@ export const LoginView = () => {
     }, [])
 
     return <div className={styles.Wrapper}>
-        <img className={styles.Logo} alt="dyve logo" src="/img/logo.png" />
+        <img className={styles.Logo} alt="dyve logo" src="/img/logo.png"/>
         <div className={styles.Box}>
             <h1>Login</h1>
             <ul className={styles.LoginProviders}>
-                { providers.length === 0 ? <Spinner /> : ""}
-                { providers.map((provider) => <li key={provider.name}>
+                {providers.length === 0 ? <Spinner/> : ""}
+                {providers.map((provider) => <li key={provider.name}>
                     <FontAwesomeIcon {...provider.icon} />
                     <a className={provider.className} href={provider.url}> {provider.name}</a>
-                </li>) }
+                </li>)}
             </ul>
         </div>
     </div>
@@ -43,21 +42,21 @@ const providerMap = (providerName) => {
             return {
                 name: "Development",
                 className: styles.ProviderGeneric,
-                icon: { icon: faLaptopCode, transform: "grow-8" },
+                icon: {icon: faLaptopCode, transform: "grow-8"},
                 url: providerUrl(providerName)
             }
         case "github":
             return {
                 name: "GitHub",
                 className: styles.ProviderGitHub,
-                icon: { icon: faGithub, transform: "grow-10" },
+                icon: {icon: faGithub, transform: "grow-10"},
                 url: providerUrl(providerName)
             }
         default:
             return {
                 name: providerName,
                 className: styles.ProviderGeneric,
-                icon: { icon: faKey, transform: "grow-6"},
+                icon: {icon: faKey, transform: "grow-6"},
                 url: providerUrl(providerName)
             }
     }

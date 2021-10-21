@@ -1,7 +1,6 @@
-import React, {useEffect} from "react"
+import React from "react"
 import ListPage from "./listpage";
-import {withQuery} from "@storybook/addon-queryparams";
-import {NumberParam, QueryParamProvider, useQueryParam, withDefault} from "use-query-params";
+import {QueryParamProvider} from "use-query-params";
 import Box from "../../box/box";
 import {Route} from "react-router-dom";
 
@@ -10,17 +9,17 @@ export default {
     component: ListPage,
 }
 
-export const StoryListPage= (args) => <QueryParamProvider ReactRouterRoute={Route}>
+export const StoryListPage = (args) => <QueryParamProvider ReactRouterRoute={Route}>
     {args.loading ? <ListPage {...args} fetchItems={dontReturn}/> : <ListPage {...args} />}
 </QueryParamProvider>
 
-const ItemRender = (item) => <Box title="List Item">{item}</Box>
+const ItemRender = (item) => <Box title="PipelineList Item">{item.value}</Box>
 
 const returnItems = (perPage, page, setResults) => {
     let results = []
     let max = 1234
     let start = (perPage * page) + 1
-    for (let i = start; i < start + perPage ; i++) {
+    for (let i = start; i < start + perPage; i++) {
         results.push("Item " + i)
         if (i === max) {
             break
@@ -29,7 +28,8 @@ const returnItems = (perPage, page, setResults) => {
 
     setResults(results, max)
 }
-const dontReturn = (perPage, page, setResults) => {}
+const dontReturn = (perPage, page, setResults) => {
+}
 
 StoryListPage.storyName = "ListPage"
 StoryListPage.args = {

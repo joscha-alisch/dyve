@@ -1,8 +1,6 @@
 import * as React from 'react'
-import {useState,useEffect} from "react";
+import {useEffect} from 'react'
 import {LoginView} from "../views/LoginView";
-import jwt_decode from "jwt-decode";
-import {useCookies} from "react-cookie";
 import useLocalStorage from "../hooks/useLocalStorage";
 import axios from "axios";
 
@@ -36,11 +34,11 @@ export const AuthProvider = ({children}) => {
     }, [])
 
     if (!user) {
-        return <LoginView />
+        return <LoginView/>
     }
 
     return <AuthContext.Provider value={{logout, invalidateAuth}}>
-            <UserContext.Provider value={user}>{children}</UserContext.Provider>
+        <UserContext.Provider value={user}>{children}</UserContext.Provider>
     </AuthContext.Provider>
 }
 

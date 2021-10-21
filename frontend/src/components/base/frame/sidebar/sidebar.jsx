@@ -5,8 +5,8 @@ import Menu from "../../navigation/menu/menu";
 import PropTypes from "prop-types"
 
 const SideBar = ({menuCategories, className}) => <div className={styles.Main + " " + className}>
-    <UserWidget className={styles.User} variant={"default"} />
-    <Menu categories={menuCategories} />
+    <UserWidget className={styles.User} variant={"default"}  logoutUrl={"/user/logout"} profileUrl={"/user"}/>
+    <Menu categories={menuCategories}/>
 </div>
 
 SideBar.propTypes = {
