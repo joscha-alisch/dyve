@@ -17,9 +17,9 @@ MenuItem.propTypes = {
     to: PropTypes.string,
     label: PropTypes.string,
     soon: PropTypes.bool,
-    icon: PropTypes.element,
+    icon: PropTypes.object,
     className: PropTypes.string,
-    exact: PropTypes.bool
+    exact: PropTypes.bool,
 }
 
 export default MenuItem

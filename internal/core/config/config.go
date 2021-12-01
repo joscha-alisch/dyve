@@ -7,7 +7,7 @@ import (
 
 type Config struct {
 	LogLevel       string           `yaml:"logLevel"`
-	DevMode        bool             `yaml:"devMode"`
+	DevConfig      DevConfig        `yaml:"devConfig"`
 	Providers      []ProviderConfig `yaml:"providers"`
 	Database       DatabaseConfig
 	Port           int         `yaml:"port"`
@@ -16,7 +16,15 @@ type Config struct {
 	ExternalUrl    string      `yaml:"externalUrl"`
 }
 
+type DevConfig struct {
+	UseFakeOauth2      bool     `yaml:"useFakeOauth2"`
+	DisableAuth        bool     `yaml:"disableAuth"`
+	UserGroups         []string `yaml:"userGroups"`
+	DisableOriginCheck bool     `yaml:"disableOriginCheck"`
+}
+
 type ProviderConfig struct {
+	Id       string          `yaml:"id"`
 	Name     string          `yaml:"name"`
 	Host     string          `yaml:"host"`
 	Features []provider.Type `yaml:"features"`

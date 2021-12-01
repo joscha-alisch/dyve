@@ -49,23 +49,43 @@ type App struct {
 	AppInfo `bson:",inline"`
 }
 
+type Routes []Route
+type Route struct {
+	Host string `bson:"host"`
+	Path string `bson:"path"`
+	Port int    `bson:"port"`
+}
+
+type Instances []Instance
+type Instance struct {
+	State string
+	Since time.Time
+}
+
 func (a App) toSdkApp() sdk.App {
 	app := sdk.App{
-		Id:   a.Guid,
-		Name: a.Name,
-		Meta: map[string]interface{}{},
+		Id:       a.Guid,
+		Name:     a.Name,
+		Labels:   sdk.AppLabels{},
+		Position: sdk.AppPosition{},
 	}
 
 	if a.Space.Org.Name != "" {
-		app.Meta["org"] = a.Space.Org.Name
+		app.Labels["org"] = a.Space.Org.Name
+		app.Position = append(app.Position, a.Space.Org.Name)
 	}
 
 	if a.Space.Name != "" {
-		app.Meta["space"] = a.Space.Name
+		app.Labels["space"] = a.Space.Name
+		app.Position = append(app.Position, a.Space.Name)
 	}
 
-	if len(app.Meta) == 0 {
-		app.Meta = nil
+	if len(app.Labels) == 0 {
+		app.Labels = nil
+	}
+
+	if len(app.Position) == 0 {
+		app.Position = nil
 	}
 
 	return app

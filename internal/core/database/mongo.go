@@ -51,6 +51,26 @@ type mongoDb struct {
 	collections map[Collection]*mongo.Collection
 }
 
+func (m *mongoDb) InsertOne(coll Collection, existsFilter interface{}, data interface{}) error {
+	c := m.collection(coll)
+
+	n, err := c.CountDocuments(m.ctx, existsFilter, options.Count().SetLimit(1))
+	if err != nil {
+		return handleMongoErr(err)
+	}
+
+	if n > 0 {
+		return ErrExists
+	}
+
+	_, err = c.InsertOne(m.ctx, data, options.InsertOne())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *mongoDb) EnsureIndex(coll Collection, model mongo.IndexModel) error {
 	c := m.collection(coll)
 	_, err := c.Indexes().CreateOne(m.ctx, model)
@@ -181,7 +201,7 @@ func handleMongoResult(res *mongo.SingleResult) error {
 	return handleMongoErr(res.Err())
 }
 
-func (m *mongoDb) FindOne(coll Collection, filter bson.M, res interface{}) error {
+func (m *mongoDb) FindOne(coll Collection, filter interface{}, res interface{}) error {
 	c := m.collection(coll)
 	findResult := c.FindOne(m.ctx, filter)
 	if err := handleMongoResult(findResult); err != nil {

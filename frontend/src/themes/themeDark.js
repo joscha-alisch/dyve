@@ -23,6 +23,15 @@ mui = createTheme(mui, {
                 active: "#fff",
                 hover: mui.palette.primary.dark
             }
+        },
+        components: {
+            MuiPaper: {
+                styleOverrides: {
+                    root: {
+                        backgroundColor: "#222b36",
+                    }
+                }
+            }
         }
     }
 )

@@ -6,6 +6,7 @@ import (
 )
 
 var ErrNotFound = errors.New("element not found in collection")
+var ErrExists = errors.New("element already exists")
 
 type ErrMongoQueryFailed struct {
 	Err error

@@ -1,50 +1,33 @@
 package teams
 
 import (
-	"github.com/joscha-alisch/dyve/internal/core/provider"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 )
 
+type Team struct {
+	Id           string `json:"id" bson:"id"`
+	TeamSettings `bson:",inline"`
+}
+
+type TeamSettings struct {
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Access      AccessGroups `json:"access"`
+}
+
+type AccessGroups struct {
+	Admin  []string `json:"admin"`
+	Member []string `json:"member"`
+	Viewer []string `json:"viewer"`
+}
+
 type TeamPage struct {
 	sdk.Pagination
-	Teams []Team
+	Teams []Team `json:"teams"`
 }
 
-type Team struct {
-	Name    string
-	Id      string
-	Access  AccessConfig
-	Members []sdk.Member
+type ByAccess struct {
+	Admin  []Team
+	Member []Team
+	Viewer []Team
 }
-
-type AccessConfig struct {
-	AllowGroups []AllowGroupConfig
-}
-
-type AllowGroupProvider struct {
-	Provider            string
-	ProviderDisplayName string
-	Groups              []AllowGroupConfig
-}
-
-type AllowGroupConfig struct {
-	AccessType AccessType
-	Group      sdk.Group
-}
-
-type ResourceAccessConfig struct {
-	Provider            string
-	ProviderDisplayName string
-	Type                provider.Type
-	AllowWith           []AllowResourceConfig
-}
-
-type AllowResourceConfig map[string]string
-
-type AccessType string
-
-const (
-	AccessTypeAdmin  AccessType = "admin"
-	AccessTypeMember AccessType = "member"
-	AccessTypeViewer AccessType = "viewer"
-)

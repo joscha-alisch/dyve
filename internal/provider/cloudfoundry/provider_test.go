@@ -24,7 +24,7 @@ func TestListApps(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
-			p := NewAppProvider(test.db)
+			p := NewProvider(test.db)
 			apps, _ := p.ListApps()
 
 			if !cmp.Equal(test.expected, apps) {
@@ -50,7 +50,7 @@ func TestGetApp(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
-			p := NewAppProvider(test.db)
+			p := NewProvider(test.db)
 			app, err := p.GetApp(test.id)
 			if !errors.Is(test.expectedErr, err) {
 				tt.Errorf("\nwanted error: \n%s, got %s\n", test.expectedErr.Error(), err.Error())

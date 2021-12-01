@@ -13,6 +13,8 @@ type ProviderConfig struct {
 	Apps      AppProvider
 	Pipelines PipelineProvider
 	Groups    GroupProvider
+	Routing   RoutingProvider
+	Instances InstancesProvider
 }
 
 func ListenAndServe(addr string, p ProviderConfig) error {
@@ -28,6 +30,14 @@ func ListenAndServe(addr string, p ProviderConfig) error {
 
 	if p.Groups != nil {
 		h.PathPrefix("/groups").Handler(NewGroupProviderHandler(p.Groups))
+	}
+
+	if p.Routing != nil {
+		h.PathPrefix("/routing").Handler(NewAppRoutingProviderHandler(p.Routing))
+	}
+
+	if p.Instances != nil {
+		h.PathPrefix("/instances").Handler(NewAppInstancesProviderHandler(p.Instances))
 	}
 
 	return http.ListenAndServe(addr, h)

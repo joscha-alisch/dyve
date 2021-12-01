@@ -2,10 +2,10 @@ package reconciler
 
 import (
 	"errors"
-	"github.com/joscha-alisch/dyve/internal/core/database"
 	"github.com/joscha-alisch/dyve/internal/core/provider"
 	"github.com/joscha-alisch/dyve/internal/core/service"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
+	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"time"
 )
 
@@ -18,9 +18,13 @@ func NewReconciler(core service.Core, olderThan time.Duration) recon.Reconciler 
 		Reconciler: recon.NewReconciler(core.Providers, olderThan),
 		core:       core,
 	}
-	r.Handler(database.ReconcileAppProvider, r.reconcileAppProvider)
-	r.Handler(database.ReconcilePipelineProvider, r.reconcilePipelineProvider)
-	r.Handler(database.ReconcileGroupProvider, r.reconcileGroupProvider)
+
+	r.Handler(provider.ReconcileAppProvider, r.reconcileAppProvider)
+	r.Handler(provider.ReconcileRoutingProviders, r.reconcileAppRouting)
+	r.Handler(provider.ReconcileInstancesProviders, r.reconcileAppInstances)
+
+	r.Handler(provider.ReconcilePipelineProvider, r.reconcilePipelineProvider)
+	r.Handler(provider.ReconcileGroupProvider, r.reconcileGroupProvider)
 
 	return r
 }
@@ -45,6 +49,52 @@ func (r *reconciler) reconcileAppProvider(j recon.Job) error {
 	}
 
 	return r.core.Apps.UpdateApps(j.Guid, apps)
+}
+
+func (r *reconciler) reconcileAppRouting(j recon.Job) error {
+	p, err := r.core.Providers.GetRoutingProviders()
+	if err != nil {
+		return err
+	}
+
+	routing := sdk.AppRouting{}
+	for _, routingProvider := range p {
+		result, err := routingProvider.GetAppRouting(j.Guid)
+		if err != nil {
+			return err
+		}
+		routing.Routes = append(routing.Routes, result.Routes...)
+	}
+
+	err = r.core.Routing.UpdateRoutes(j.Guid, routing)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *reconciler) reconcileAppInstances(j recon.Job) error {
+	p, err := r.core.Providers.GetInstancesProviders()
+	if err != nil {
+		return err
+	}
+
+	instances := sdk.AppInstances{}
+	for _, routingProvider := range p {
+		result, err := routingProvider.GetAppInstances(j.Guid)
+		if err != nil {
+			return err
+		}
+		instances = append(instances, result...)
+	}
+
+	err = r.core.Instances.UpdateInstances(j.Guid, instances)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *reconciler) reconcileGroupProvider(j recon.Job) error {

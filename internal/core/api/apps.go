@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/joscha-alisch/dyve/internal/core/ws"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"net/http"
 )
@@ -37,4 +38,22 @@ func (a *api) getApp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondOk(w, app)
+}
+
+func (a *api) startWebsocketApp(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	c, err := ws.New(w, r, a.disableOriginCheck)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		return
+	}
+
+	stopped := a.appViewer.AddWs(id, c)
+
+	err = <-stopped
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		return
+	}
 }

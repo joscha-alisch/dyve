@@ -1,12 +1,15 @@
 import {AppList, PipelineList, TeamList} from "./List";
-import {AppDetail} from "./Detail";
+import {AppDetail, TeamDetail} from "./Detail";
 import {Logout} from "./Logout"
+import {TeamCreate} from "./Forms";
 
-export {TeamList, AppList, PipelineList, AppDetail, Logout}
+export {TeamList, AppList, PipelineList, AppDetail, Logout, TeamCreate}
 
-export default {
+const pages = {
     Teams: {
-        List: TeamList
+        List: TeamList,
+        New: TeamCreate,
+        Detail: TeamDetail,
     },
     Apps: {
         List: AppList,
@@ -19,3 +22,5 @@ export default {
         Logout
     }
 }
+
+export default pages

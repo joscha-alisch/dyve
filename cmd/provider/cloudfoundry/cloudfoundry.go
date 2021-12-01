@@ -36,14 +36,18 @@ func main() {
 
 	r := cloudfoundry.NewReconciler(db, cf, time.Duration(c.Reconciliation.CacheSeconds)*time.Second)
 	s := recon.NewScheduler(r)
-	p := cloudfoundry.NewAppProvider(db)
+	p := cloudfoundry.NewProvider(db, cf)
 
 	err = s.Run(8, 10*time.Second)
 	if err != nil {
 		panic(err)
 	}
 
-	err = sdk.ListenAndServeAppProvider(fmt.Sprintf(":%d", c.Port), p)
+	err = sdk.ListenAndServe(fmt.Sprintf(":%d", c.Port), sdk.ProviderConfig{
+		Apps:      p,
+		Routing:   p,
+		Instances: p,
+	})
 	if err != nil {
 		panic(err)
 	}

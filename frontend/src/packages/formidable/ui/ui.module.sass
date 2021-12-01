@@ -1,0 +1,28 @@
+@import "src/styles/shared"
+
+.Main
+
+.FormField
+  margin: 10px
+  display: flex
+  align-items: stretch
+
+
+.FormLayoutRow
+  display: flex
+  flex-direction: row
+  justify-content: space-between
+  gap: 20px
+
+  & > *
+    flex: 1 0 auto
+
+.FormLayoutColumn
+  display: flex
+  flex-direction: column
+  align-items: stretch
+  justify-content: flex-start
+  gap: 20px
+
+  & > *
+    flex: 0 0 auto

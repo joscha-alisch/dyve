@@ -12,12 +12,10 @@ const (
 	ReconcileApps          recon.Type = "apps"
 )
 
-/**
-The reconciler fetches new reconciliation work from the database and updates the corresponding
-item via the CloudFoundry API.
-
-It returns true, if there was work to be done and false, if there was no open reconciliation work.
-*/
+// NewReconciler fetches new reconciliation work from the database and updates the corresponding
+// item via the CloudFoundry API.
+//
+//It returns true, if there was work to be done and false, if there was no open reconciliation work.
 func NewReconciler(db Database, cf API, olderThan time.Duration) recon.Reconciler {
 	if olderThan == 0 {
 		olderThan = time.Minute

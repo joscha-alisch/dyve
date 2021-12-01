@@ -1,6 +1,7 @@
 package github
 
 import (
+	"fmt"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 )
 
@@ -45,7 +46,7 @@ func (t Team) toSdkGroup() sdk.Group {
 		})
 	}
 	return sdk.Group{
-		Id:      t.Guid,
+		Id:      fmt.Sprintf("%s:%s", t.Org.Guid, t.Guid),
 		Name:    t.Name,
 		Members: members,
 	}

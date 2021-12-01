@@ -1,4 +1,4 @@
-import React, {useEffect} from "react"
+import React from "react"
 import PaginationControl from "./paginationControl";
 import {NumberParam, QueryParamProvider, useQueryParam, withDefault} from "use-query-params";
 import {Route} from 'react-router-dom';
@@ -17,7 +17,8 @@ const Comp = (args) => {
     let [page, setPage] = useQueryParam("page", withDefault(NumberParam, args.page))
     let [perPage, setPerPage] = useQueryParam("perPage", withDefault(NumberParam, args.perPage))
 
-    return <PaginationControl totalResults={args.totalResults} page={page} perPage={perPage} setPerPage={setPerPage} setPage={setPage}/>
+    return <PaginationControl totalResults={args.totalResults} page={page} perPage={perPage} setPerPage={setPerPage}
+                              setPage={setPage}/>
 }
 
 StoryPaginationControl.storyName = "Pagination Control"

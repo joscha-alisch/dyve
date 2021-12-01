@@ -3,12 +3,14 @@ import {useEffect} from 'react'
 import {LoginView} from "../views/LoginView";
 import useLocalStorage from "../hooks/useLocalStorage";
 import axios from "axios";
+import {useNotifications} from "./notifications";
 
 const AuthContext = React.createContext()
 export const UserContext = React.createContext()
 
 export const AuthProvider = ({children}) => {
     const [user, setUser] = useLocalStorage("user", null)
+    const {notify} = useNotifications()
 
     const logout = async () => {
         axios.get("/auth/logout").then(invalidateAuth)
@@ -23,6 +25,7 @@ export const AuthProvider = ({children}) => {
     }, error => {
         if (error.response.status === 401) {
             invalidateAuth()
+            notify("Logged out", "error")
         }
         return Promise.reject(error);
     });

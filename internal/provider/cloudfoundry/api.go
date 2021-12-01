@@ -12,22 +12,25 @@ type CFLogin struct {
 	Pass string
 }
 
-/**
-A cloudfoundry.API is a wrapper around the official client.
-*/
+// API is an abstraction around the CloudFoundry functionality.
 type API interface {
 	ListOrgs() ([]Org, error)
 	ListSpaces(orgGuid string) ([]Space, error)
 	ListApps(spaceGuid string) ([]App, error)
 	GetApp(guid string) (App, error)
+	GetRoutes(appId string) (Routes, error)
+	GetInstances(appId string) (Instances, error)
 }
 
+// CfCli is a wrapper interface for the official cloudfoundry client extracting the needed functions.
 type CfCli interface {
 	ListOrgs() ([]cf.Org, error)
 	GetOrgByGuid(guid string) (cf.Org, error)
 	GetSpaceByGuid(guid string) (cf.Space, error)
 	ListSpacesByOrgGuid(orgGuid string) ([]cf.Space, error)
 	ListAppsBySpaceGuid(spaceGuid string) ([]cf.App, error)
+	GetAppRoutes(appGuid string) ([]cf.Route, error)
+	GetAppInstances(guid string) (map[string]cf.AppInstance, error)
 }
 
 func NewDefaultApi(l CFLogin) (API, error) {
@@ -51,6 +54,49 @@ func NewApi(cli CfCli) API {
 
 type api struct {
 	cli CfCli
+}
+
+func (a *api) GetInstances(appId string) (Instances, error) {
+	instances, err := a.cli.GetAppInstances(appId)
+	if err != nil {
+		return nil, err
+	}
+
+	var res Instances
+	for _, instance := range instances {
+		res = append(res, Instance{
+			State: instance.State,
+			Since: instance.Since.Time,
+		})
+	}
+	return res, nil
+}
+
+func (a *api) GetRoutes(appId string) (Routes, error) {
+	routes, err := a.cli.GetAppRoutes(appId)
+	if err != nil {
+		return nil, err
+	}
+
+	domains := map[string]string{}
+
+	var res Routes
+	for _, route := range routes {
+		if domains[route.DomainGuid] == "" {
+			domain, err := route.Domain()
+			if err != nil {
+				return nil, err
+			}
+			domains[route.DomainGuid] = domain.Name
+		}
+
+		res = append(res, Route{
+			Host: route.Host + "." + domains[route.DomainGuid],
+			Path: route.Path,
+			Port: route.Port,
+		})
+	}
+	return res, nil
 }
 
 func (a *api) ListOrgs() ([]Org, error) {

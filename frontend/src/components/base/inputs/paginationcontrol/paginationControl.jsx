@@ -1,8 +1,4 @@
-import {
-    FormControl,
-    TablePagination
-} from "@mui/material";
-import styles from "./paginationControl.module.sass"
+import {TablePagination} from "@mui/material";
 import PropTypes from "prop-types"
 
 const PaginationControl = ({page, totalResults, perPage, setPerPage, setPage}) => {

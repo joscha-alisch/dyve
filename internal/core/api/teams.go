@@ -1,7 +1,9 @@
 package api
 
 import (
+	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/joscha-alisch/dyve/internal/core/teams"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"net/http"
 )
@@ -18,13 +20,13 @@ func (a *api) listTeamsPaginated(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teams, err := a.core.Teams.ListTeamsPaginated(perPage, page)
+	teamPage, err := a.core.Teams.ListTeamsPaginated(perPage, page)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	respondOk(w, teams)
+	respondOk(w, teamPage)
 }
 
 func (a *api) getTeam(w http.ResponseWriter, r *http.Request) {
@@ -39,10 +41,36 @@ func (a *api) getTeam(w http.ResponseWriter, r *http.Request) {
 	respondOk(w, team)
 }
 
-func (a *api) upsertTeam(w http.ResponseWriter, r *http.Request) {
+func (a *api) createTeam(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
-	err := a.core.Teams.UpdateTeam(id)
+	update := teams.TeamSettings{}
+	err := json.NewDecoder(r.Body).Decode(&update)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		return
+	}
+
+	err = a.core.Teams.CreateTeam(id, update)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		return
+	}
+
+	respondOk(w, nil)
+}
+
+func (a *api) updateTeam(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	update := teams.TeamSettings{}
+	err := json.NewDecoder(r.Body).Decode(&update)
+	if err != nil {
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		return
+	}
+
+	err = a.core.Teams.UpdateTeam(id, update)
 	if err != nil {
 		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return

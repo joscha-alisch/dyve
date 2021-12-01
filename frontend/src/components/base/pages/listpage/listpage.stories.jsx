@@ -36,6 +36,8 @@ StoryListPage.args = {
     loading: false,
     title: "List Page",
     parent: "Parent Page",
+    newItemRoute: "/new",
+    newItemLabel: "Create A Thing",
     fetchItems: returnItems,
     itemRender: ItemRender
 }

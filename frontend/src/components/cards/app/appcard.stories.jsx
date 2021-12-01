@@ -6,7 +6,7 @@ export default {
     component: AppCard,
 }
 
-export const StoryAppCard= (args) => <AppCard {...args}/>
+export const StoryAppCard = (args) => <AppCard {...args}/>
 
 StoryAppCard.storyName = "App"
 StoryAppCard.args = {

@@ -24,6 +24,12 @@ export const MainView = () => <AppFrame menuCategories={menuData}>
         <Route exact path="/teams/">
             <Pages.Teams.List/>
         </Route>
+        <Route exact path="/teams/new">
+            <Pages.Teams.New/>
+        </Route>
+        <Route path="/teams/:id">
+            <Pages.Teams.Detail/>
+        </Route>
     </Switch>
 </AppFrame>
 

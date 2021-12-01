@@ -11,10 +11,14 @@ type AppPage struct {
 }
 
 type App struct {
-	Id   string                 `json:"id"`
-	Name string                 `json:"name"`
-	Meta map[string]interface{} `json:"meta,omitempty" bson:"meta,omitempty"`
+	Id       string      `json:"id"`
+	Name     string      `json:"name"`
+	Labels   AppLabels   `json:"labels"`
+	Position AppPosition `json:"position"`
 }
+
+type AppPosition []string
+type AppLabels map[string]string
 
 type AppSearchResult struct {
 	App   App     `json:"app"`

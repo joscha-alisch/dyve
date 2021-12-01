@@ -1,5 +1,8 @@
 import React from "react"
 import Page from "./page";
+import {Button} from "@mui/material";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
+import {faPlusCircle} from "@fortawesome/free-solid-svg-icons";
 
 export default {
     title: 'App/Pages/Page',
@@ -12,6 +15,8 @@ StoryPage.storyName = "Page"
 StoryPage.args = {
     title: "Current Page",
     parent: "Parent Page",
+    buttonsRender: () => <Button variant={"contained"} startIcon={<FontAwesomeIcon icon={faPlusCircle}/>}>New
+        Item</Button>,
     children: <React.Fragment>
         <p>
             Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aperiam doloribus, fugiat maxime officiis qui quis

@@ -5,7 +5,7 @@ import MenuItem from "../item/menuitem";
 
 const Category = ({title, items, className}) => <ul className={styles.Main + " " + className}>
     <span className={styles.Title}>{title}</span>
-    {items.map((item) => <MenuItem className={styles.Item} {...item}/>)}
+    {items.map((item, index) => <MenuItem key={index} className={styles.Item} {...item}/>)}
 </ul>
 
 Category.propTypes = {

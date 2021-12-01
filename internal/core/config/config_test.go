@@ -17,8 +17,8 @@ func TestLoadFile(t *testing.T) {
 	}{
 		{"basic", "basic.yml", Config{
 			Providers: []ProviderConfig{
-				{Name: "provider-a", Host: "https://provider-a.com"},
-				{Name: "provider-b", Host: "https://provider-b.com"},
+				{Id: "provider-a", Host: "https://provider-a.com"},
+				{Id: "provider-b", Host: "https://provider-b.com"},
 			},
 		}, nil},
 	}

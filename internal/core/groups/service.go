@@ -2,26 +2,67 @@ package groups
 
 import (
 	"github.com/joscha-alisch/dyve/internal/core/database"
+	"github.com/joscha-alisch/dyve/internal/core/provider"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const Collection = "groups"
 
 type Service interface {
+	ListGroupsByProvider() (GroupByProviderMap, error)
 	ListGroupsPaginated(perPage int, page int) (sdk.GroupPage, error)
 	GetGroup(id string) (sdk.Group, error)
 	UpdateGroups(guid string, groups []sdk.Group) error
 }
 
-func NewService(db database.Database) Service {
+func NewService(db database.Database, providers provider.Service) Service {
 	return &service{
-		db: db,
+		db:        db,
+		providers: providers,
 	}
 }
 
 type service struct {
-	db database.Database
+	db        database.Database
+	providers provider.Service
+}
+
+func (s *service) ListGroupsByProvider() (GroupByProviderMap, error) {
+	m := make(GroupByProviderMap)
+
+	groupProviders, err := s.providers.ListGroupProviders()
+	if err != nil {
+		return nil, err
+	}
+	for _, groupProvider := range groupProviders {
+		m[groupProvider.Id] = ProviderWithGroups{
+			Provider: groupProvider.Id,
+			Name:     groupProvider.Name,
+		}
+	}
+
+	each := func(c *mongo.Cursor) error {
+		group := GroupWithProvider{}
+		err := c.Decode(&group)
+		if err != nil {
+			return err
+		}
+
+		prov := m[group.Provider]
+		prov.Groups = append(prov.Groups, group.Group)
+		m[group.Provider] = prov
+
+		return nil
+	}
+
+	err = s.db.FindMany(Collection, bson.M{}, each)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }
 
 func (s *service) ListGroupsPaginated(perPage int, page int) (sdk.GroupPage, error) {

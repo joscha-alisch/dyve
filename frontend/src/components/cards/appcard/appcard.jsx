@@ -1,6 +1,5 @@
-import {Chip, Paper} from "@mui/material";
+import {Chip, Paper, Skeleton} from "@mui/material";
 import styles from "./appcard.module.sass"
-import {Skeleton} from "@mui/material";
 import {Link} from "react-router-dom";
 
 const AppCard = ({className, value, loading}) => {

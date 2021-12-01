@@ -38,7 +38,7 @@ func (s *scheduler) worker(d time.Duration) {
 		default:
 			worked, _ := s.r.Run()
 			if !worked {
-				log.Debug().Msg("nothing to reconcile, sleeping...")
+				log.Trace().Msg("nothing to reconcile, sleeping...")
 				t.Reset(d)
 				select {
 				case <-s.cancel:

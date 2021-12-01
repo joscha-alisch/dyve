@@ -2,12 +2,24 @@ import React, {useEffect, useState} from "react"
 import styles from "./listpage.module.sass"
 import PropTypes, {string} from "prop-types"
 import {NumberParam, useQueryParam, withDefault} from "use-query-params";
-import {Skeleton} from "@mui/material";
+import {Button, Skeleton} from "@mui/material";
 import Box from "../../box/box";
 import PaginationControl from "../../inputs/paginationcontrol/paginationControl";
 import Page from "../page/page";
+import {Link} from "react-router-dom";
+import {faPlusCircle} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
-const ListPage = ({className, title, parent, fetchItems, itemRender, skeletonRender}) => {
+const ListPage = ({
+                      className,
+                      newItemRoute,
+                      newItemLabel = "New",
+                      title,
+                      parent,
+                      fetchItems,
+                      itemRender,
+                      skeletonRender
+                  }) => {
     if (!skeletonRender) {
         skeletonRender = defaultSkeleton
     }
@@ -32,13 +44,21 @@ const ListPage = ({className, title, parent, fetchItems, itemRender, skeletonRen
     let content
     if (loading) {
         content = listPageLoading(skeletonRender, perPage)
+    } else if (!items) {
+        content = listPageEmpty()
     } else {
         content = items.map((item) => <li className={styles.ListItem}>
             {itemRender({value: item})}
         </li>)
     }
 
-    return <Page className={styles.Main + " " + className} title={title} parent={parent}>
+    let buttonsRender = () => <>
+        {newItemRoute &&
+        <Button startIcon={<FontAwesomeIcon icon={faPlusCircle}/>} variant={"contained"} component={Link}
+                to={newItemRoute}>{newItemLabel}</Button>}
+    </>
+
+    return <Page className={styles.Main + " " + className} buttonsRender={buttonsRender} title={title} parent={parent}>
         <PaginationControl totalResults={totalResults} page={page} perPage={perPage}
                            setPerPage={setPerPage} setPage={setPage}/>
         <ul className={styles.List}>
@@ -46,6 +66,9 @@ const ListPage = ({className, title, parent, fetchItems, itemRender, skeletonRen
         </ul>
     </Page>
 }
+
+const listPageEmpty = () => <li className={styles.Empty}>There are no items in this list or you don't have enough
+    permissions.</li>
 
 const listPageLoading = (skeletonRender, perPage) => {
     let content = []
@@ -69,6 +92,5 @@ ListPage.propTypes = {
     fetchItems: PropTypes.func,
     itemRender: PropTypes.func
 }
-
 
 export default ListPage

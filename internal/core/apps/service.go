@@ -10,8 +10,9 @@ const Collection database.Collection = "apps"
 
 type Service interface {
 	ListAppsPaginated(perPage int, page int) (sdk.AppPage, error)
-	GetApp(id string) (sdk.App, error)
+	GetApp(id string) (App, error)
 	UpdateApps(providerId string, apps []sdk.App) error
+	UpdateApp(app sdk.App) error
 }
 
 func NewService(db database.Database) Service {
@@ -24,8 +25,8 @@ type service struct {
 	db database.Database
 }
 
-func (m *service) GetApp(id string) (sdk.App, error) {
-	a := sdk.App{}
+func (m *service) GetApp(id string) (App, error) {
+	a := App{}
 	return a, m.db.FindOneById(Collection, id, &a)
 }
 
@@ -49,4 +50,8 @@ func (m *service) UpdateApps(providerId string, apps []sdk.App) error {
 		appMap[app.Id] = app
 	}
 	return m.db.UpdateProvided(Collection, providerId, appMap)
+}
+
+func (m *service) UpdateApp(app sdk.App) error {
+	return m.db.UpdateOneById(Collection, app.Id, false, app, nil)
 }

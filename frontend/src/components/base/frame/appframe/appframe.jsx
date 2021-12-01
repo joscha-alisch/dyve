@@ -10,7 +10,7 @@ const AppFrame = ({menuCategories, children}) => <div className={styles.Main}>
 </div>
 
 AppFrame.propTypes = {
-    menuCategories: PropTypes.arrayOf(PropTypes.element),
+    menuCategories: PropTypes.arrayOf(PropTypes.object),
     className: PropTypes.string
 }
 

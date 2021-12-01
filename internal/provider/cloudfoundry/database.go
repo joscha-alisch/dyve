@@ -18,4 +18,6 @@ type Database interface {
 
 	ListApps() ([]App, error)
 	GetApp(id string) (App, error)
+
+	Cached(id string, duration time.Duration, f func() (interface{}, error)) (interface{}, error)
 }

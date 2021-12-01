@@ -1,0 +1,43 @@
+@import "src/styles/shared"
+
+.Main
+
+.Routes
+  list-style: none
+  padding: 0
+  margin: 20px 0 0
+
+.Route
+  display: flex
+  justify-content: flex-start
+  align-items: center
+  border: 1px solid $paletteAccent1
+  margin-bottom: 20px
+  border-radius: 4px
+  height: 40px
+  &:hover
+    background-color: $paletteAccent2
+    cursor: pointer
+
+  .Icon
+    border-right: 1px solid $paletteAccent1
+    background-color: $paletteAccent1
+    height: 100%
+    padding: 8px
+    flex: 0 0 auto
+
+  .Url
+    margin-left: 20px
+    flex: 1 1 auto
+  .Host
+    font-weight: bold
+
+  .Path
+
+  .Port
+    margin-left: 20px
+    font-size: 12px
+    background-color: $paletteAccent1
+    border-radius: 4px
+    padding: 2px
+    flex: 0 0 auto

@@ -3,10 +3,13 @@ package provider
 import (
 	"errors"
 	"github.com/joscha-alisch/dyve/internal/core/database"
+	"github.com/joscha-alisch/dyve/internal/queue"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"strings"
 	"time"
 )
 
@@ -15,41 +18,119 @@ const Collection = "providers"
 type Type string
 
 const (
+	ReconcileAppProvider        recon.Type = "apps"
+	ReconcileRoutingProviders   recon.Type = "routing"
+	ReconcilePipelineProvider   recon.Type = "pipelines"
+	ReconcileGroupProvider      recon.Type = "groups"
+	ReconcileInstancesProviders recon.Type = "instances"
+)
+
+const (
 	TypeApps      Type = "apps"
 	TypeGroups    Type = "groups"
 	TypePipelines Type = "pipelines"
+	TypeRouting   Type = "routing"
+	TypeInstances Type = "instances"
 )
 
 type Service interface {
 	recon.JobProvider
 
-	AddAppProvider(id string, p sdk.AppProvider) error
+	AddAppProvider(id string, name string, p sdk.AppProvider) error
 	GetAppProvider(id string) (sdk.AppProvider, error)
 	DeleteAppProvider(id string) error
+	RequestAppUpdate(id string) error
 
-	AddPipelineProvider(id string, p sdk.PipelineProvider) error
+	AddRoutingProvider(id string, name string, p sdk.RoutingProvider) error
+	GetRoutingProviders() ([]sdk.RoutingProvider, error)
+	DeleteRoutingProvider(id string) error
+
+	AddInstancesProvider(id string, name string, p sdk.InstancesProvider) error
+	GetInstancesProviders() ([]sdk.InstancesProvider, error)
+	DeleteInstancesProvider(id string) error
+
+	AddPipelineProvider(id string, name string, p sdk.PipelineProvider) error
 	GetPipelineProvider(id string) (sdk.PipelineProvider, error)
 	DeletePipelineProvider(id string) error
 
-	AddGroupProvider(id string, p sdk.GroupProvider) error
+	ListGroupProviders() ([]Data, error)
+	AddGroupProvider(id string, name string, p sdk.GroupProvider) error
 	GetGroupProvider(id string) (sdk.GroupProvider, error)
 	DeleteGroupProvider(id string) error
 }
 
 func NewService(db database.Database) Service {
 	return &service{
-		db:        db,
-		providers: make(map[Type]map[string]interface{}),
+		db:                db,
+		providers:         make(map[Type]map[string]interface{}),
+		appUpdateRequests: queue.NewStringQueue(1000),
 	}
 }
 
 type service struct {
-	db        database.Database
-	providers map[Type]map[string]interface{}
+	db                database.Database
+	providers         map[Type]map[string]interface{}
+	appUpdateRequests *queue.StringQueue
 }
 
-func (s *service) AddAppProvider(id string, p sdk.AppProvider) error {
-	return s.add(id, TypeApps, p)
+func (s *service) AddInstancesProvider(id string, name string, p sdk.InstancesProvider) error {
+	return s.add(id, name, TypeInstances, p)
+}
+
+func (s *service) GetInstancesProviders() ([]sdk.InstancesProvider, error) {
+	providers, err := s.getAll(TypeInstances)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []sdk.InstancesProvider
+	for _, provider := range providers.([]interface{}) {
+		res = append(res, provider.(sdk.InstancesProvider))
+	}
+
+	return res, nil
+}
+
+func (s *service) DeleteInstancesProvider(id string) error {
+	return s.delete(id, TypeInstances)
+}
+
+func (s *service) AddRoutingProvider(id string, name string, p sdk.RoutingProvider) error {
+	return s.add(id, name, TypeRouting, p)
+}
+
+func (s *service) GetRoutingProviders() ([]sdk.RoutingProvider, error) {
+	providers, err := s.getAll(TypeRouting)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []sdk.RoutingProvider
+	for _, provider := range providers.([]interface{}) {
+		res = append(res, provider.(sdk.RoutingProvider))
+	}
+
+	return res, nil
+}
+
+func (s *service) DeleteRoutingProvider(id string) error {
+	return s.delete(id, TypeRouting)
+}
+
+func (s *service) RequestAppUpdate(id string) error {
+	err := s.appUpdateRequests.Push(string(TypeRouting) + "/" + id)
+	if err != nil {
+		return err
+	}
+	err = s.appUpdateRequests.Push(string(TypeInstances) + "/" + id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *service) AddAppProvider(id string, name string, p sdk.AppProvider) error {
+	return s.add(id, name, TypeApps, p)
 }
 
 func (s *service) GetAppProvider(id string) (sdk.AppProvider, error) {
@@ -64,8 +145,8 @@ func (s *service) DeleteAppProvider(id string) error {
 	return s.delete(id, TypeApps)
 }
 
-func (s *service) AddPipelineProvider(id string, p sdk.PipelineProvider) error {
-	return s.add(id, TypePipelines, p)
+func (s *service) AddPipelineProvider(id string, name string, p sdk.PipelineProvider) error {
+	return s.add(id, name, TypePipelines, p)
 }
 
 func (s *service) GetPipelineProvider(id string) (sdk.PipelineProvider, error) {
@@ -80,8 +161,12 @@ func (s *service) DeletePipelineProvider(id string) error {
 	return s.delete(id, TypePipelines)
 }
 
-func (s *service) AddGroupProvider(id string, p sdk.GroupProvider) error {
-	return s.add(id, TypeGroups, p)
+func (s *service) ListGroupProviders() ([]Data, error) {
+	return s.list(TypeGroups)
+}
+
+func (s *service) AddGroupProvider(id string, name string, p sdk.GroupProvider) error {
+	return s.add(id, name, TypeGroups, p)
 }
 
 func (s *service) GetGroupProvider(id string) (sdk.GroupProvider, error) {
@@ -96,7 +181,7 @@ func (s *service) DeleteGroupProvider(id string) error {
 	return s.delete(id, TypeGroups)
 }
 
-func (s *service) add(id string, providerType Type, p interface{}) error {
+func (s *service) add(id string, name string, providerType Type, p interface{}) error {
 	if s.providers[providerType] == nil {
 		s.providers[providerType] = make(map[string]interface{})
 	}
@@ -105,7 +190,7 @@ func (s *service) add(id string, providerType Type, p interface{}) error {
 		return ErrExists
 	}
 
-	providerData := bson.M{"id": id, "type": string(providerType)}
+	providerData := bson.M{"id": id, "name": name, "type": string(providerType)}
 
 	err := s.db.UpdateOne(Collection, providerData, true, providerData, nil)
 	if err != nil {
@@ -114,6 +199,21 @@ func (s *service) add(id string, providerType Type, p interface{}) error {
 
 	s.providers[providerType][id] = p
 	return nil
+}
+
+func (s *service) list(providerType Type) ([]Data, error) {
+	var res []Data
+	err := s.db.FindMany(Collection, bson.M{"type": providerType}, func(c *mongo.Cursor) error {
+		data := Data{}
+		err := c.Decode(&data)
+		if err != nil {
+			return err
+		}
+
+		res = append(res, data)
+		return nil
+	})
+	return res, err
 }
 
 func (s *service) get(id string, providerType Type) (interface{}, error) {
@@ -126,6 +226,18 @@ func (s *service) get(id string, providerType Type) (interface{}, error) {
 	}
 
 	return s.providers[providerType][id], nil
+}
+
+func (s *service) getAll(providerType Type) (interface{}, error) {
+	if s.providers[providerType] == nil {
+		return nil, ErrNotFound
+	}
+
+	var res []interface{}
+	for _, provider := range s.providers[providerType] {
+		res = append(res, provider)
+	}
+	return res, nil
 }
 
 func (s *service) delete(id string, providerType Type) error {
@@ -142,17 +254,33 @@ func (s *service) delete(id string, providerType Type) error {
 	return nil
 }
 
-type provider struct {
-	Id           string    `bson:"id"`
-	ProviderType string    `bson:"type"`
-	LastUpdated  time.Time `bson:"lastUpdated"`
-}
-
 var currentTime = time.Now
 
 func (s *service) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
 	t := currentTime()
-	p := provider{}
+	p := Provider{}
+
+	if request, ok := s.appUpdateRequests.Pop(); ok {
+		parts := strings.Split(request, "/")
+		t := Type(parts[0])
+		appId := parts[1]
+
+		switch t {
+		case TypeRouting:
+			return recon.Job{
+				Type:        ReconcileRoutingProviders,
+				Guid:        appId,
+				LastUpdated: time.Time{},
+			}, true
+		case TypeInstances:
+			return recon.Job{
+				Type:        ReconcileInstancesProviders,
+				Guid:        appId,
+				LastUpdated: time.Time{},
+			}, true
+		}
+
+	}
 
 	filter := bson.M{
 		"$or": bson.A{
