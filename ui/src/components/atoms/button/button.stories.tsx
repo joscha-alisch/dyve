@@ -11,4 +11,5 @@ export const StoryButton : ComponentStory<typeof Button> = (args) => <Button {..
 
 StoryButton.storyName = "Button"
 StoryButton.args = {
+    title: "Click Me"
 }
