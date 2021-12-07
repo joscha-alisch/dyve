@@ -1,9 +1,8 @@
 import React from 'react';
-import c from "./helper/classes";
 
 function App() {
   return (
-    <div className="">
+    <div className="bg-red-600 w-12 h-3">
 
     </div>
   );
