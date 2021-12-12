@@ -8,8 +8,9 @@ module.exports = {
   "addons": [
     "@storybook/addon-links",
     "@storybook/addon-essentials",
-    "@storybook/preset-create-react-app"
+    "@storybook/preset-create-react-app",
   ],
+  "framework": "react",
   webpackFinal: async (config) => {
     config.module.rules.push({
       test: /\.css$/,

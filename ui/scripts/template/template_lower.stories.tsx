@@ -1,5 +1,5 @@
-import * as React from "react"
-import template_upper from "./template_lower";
+import React from "react"
+import template_upper from ".";
 import { ComponentMeta, ComponentStory} from "@storybook/react";
 
 export default {
