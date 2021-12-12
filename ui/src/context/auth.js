@@ -36,7 +36,7 @@ export const AuthProvider = ({children}) => {
     }, [])
 
     if (!user) {
-        return <span>not logged in</span>
+        return <span className="w-56 bg-red-200">not logged in</span>
     }
 
     return <AuthContext.Provider value={{logout, invalidateAuth}}>

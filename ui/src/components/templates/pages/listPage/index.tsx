@@ -1,7 +1,6 @@
-import React, { useState } from "react"
+import React, { FunctionComponent, useState } from "react"
 import { PaginationValue } from "../../../molecules/input/pagination"
-import { FilterEditor } from "../../../organisms"
-import ListHeader from "../../../organisms/headers/listHeader"
+import ListHeader, { FilterData } from "../../../organisms/headers/listHeader"
 
 type ListPageProps = {
     className?: string,
@@ -9,12 +8,12 @@ type ListPageProps = {
     category?: string,
 }
 
-const ListPage = ({
+const ListPage : FunctionComponent<ListPageProps> = ({
     className = "",
     title,
     category,
-}: ListPageProps) => {
-    let [filters, setFilters] = useState([])
+}) => {
+    let [filters, setFilters] = useState<FilterData[]>([])
     let [pagination, setPagination] = useState<PaginationValue>({
         page: 0,
         perPage: 10,
@@ -22,7 +21,7 @@ const ListPage = ({
     })
 
     return <div className={["", className].join(" ")}>
-        <ListHeader filters={filters} onFilterChange={setFilters} pagination={pagination} onPaginationChange={setPagination} title={title} category={category}/>
+        <ListHeader filters={filters} onFilterChange={setFilters} pagination={pagination} onPaginationChange={setPagination} title={title} category={category} />
     </div>
 }
 

@@ -1,9 +1,7 @@
-import React, { MouseEventHandler, useRef, useState } from "react"
-import {Chip, Icon} from "../../../atoms"
-import ToolTip from "../../../atoms/display/toolTip/toolTip"
+import React, { FunctionComponent, MouseEventHandler, useRef, useState } from "react"
 import { useClickAway } from "use-click-away";
 import useHotkeys from "@reecelucas/react-use-hotkeys"
-import TextField from "../../../atoms/input/textField/textField"
+import {TextField, ToolTip, Chip, Icon} from "../../../atoms"
 
 type FilterProps = {
     className?: string,
@@ -16,7 +14,7 @@ type FilterProps = {
     open: boolean
 }
 
-const Filter = ({
+const Filter : FunctionComponent<FilterProps> = ({
     className = "",
     filterKey,
     filterValue,
@@ -25,7 +23,7 @@ const Filter = ({
     onOpen,
     onClose,
     open,
-} : FilterProps)  => {
+})  => {
     const clickRef = useRef(null);
     useClickAway(clickRef, onClose);
     useHotkeys("Escape", onClose);

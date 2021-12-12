@@ -1,4 +1,4 @@
-import React from "react"
+import React, { FunctionComponent } from "react"
 
 export type HorizontalSelectOption = {
     label: string,
@@ -13,13 +13,13 @@ type HorizontalSelectProps = {
     onSelect: (option: string | number) => void
 }
 
-const HorizontalSelect = ({
+const HorizontalSelect: FunctionComponent<HorizontalSelectProps> = ({
     className = "",
     label,
     options,
     selected,
     onSelect,
-}: HorizontalSelectProps) => <div className={["text-xs flex flex-row text-gray-700", className].join(" ")}>
+}) => <div className={["text-xs flex flex-row text-gray-700", className].join(" ")}>
         <label className="mr-2 text-gray-500">
             {label}:
         </label>

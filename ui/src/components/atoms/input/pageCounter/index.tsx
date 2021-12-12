@@ -1,5 +1,5 @@
-import React from "react"
-import { Icon } from "../.."
+import React, { FunctionComponent } from "react"
+import { Icon } from "../../../atoms"
 
 type PageCounterProps = {
     className?: string,
@@ -9,13 +9,13 @@ type PageCounterProps = {
     onPageChange: (page: number) => void
 }
 
-const PageCounter = ({
+const PageCounter: FunctionComponent<PageCounterProps> = ({
     className = "",
     page,
     perPage,
     totalItems,
     onPageChange,
-}: PageCounterProps) => {
+}) => {
 
     let start = (page * perPage) + 1
     let end = Math.min((page * perPage) + perPage, totalItems)

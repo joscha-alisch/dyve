@@ -1,12 +1,11 @@
-import React from "react"
+import React, { FunctionComponent } from "react"
 
 type ButtonProps = {
     className: string,
     title: string,
 }
 
-const Button = (props : ButtonProps)  => <div className={["w-12 bg-red-500 h-12", props.className].join(" ")}>
-    
+const Button: FunctionComponent<ButtonProps> = (props)  => <div className={["w-12 bg-red-500 h-12", props.className].join(" ")}>
     {props.title}
 </div>
 

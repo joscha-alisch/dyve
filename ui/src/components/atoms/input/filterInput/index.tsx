@@ -1,5 +1,5 @@
-import React, { ChangeEventHandler } from "react"
-import Icon from "../../display/icon"
+import React, { ChangeEventHandler, FunctionComponent } from "react"
+import {Icon} from "../../../atoms"
 
 type FilterInputProps = {
     className?: string,
@@ -8,7 +8,7 @@ type FilterInputProps = {
     onChange: (value: string) => void
 }
 
-const FilterInput = ({
+const FilterInput: FunctionComponent<FilterInputProps> = ({
     className = "",
     autoFocus = false,
     value,

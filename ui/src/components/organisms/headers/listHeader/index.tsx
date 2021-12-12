@@ -1,10 +1,10 @@
-import React, { useState } from "react"
+import React, { FunctionComponent, useState } from "react"
 import Filter from "../../../molecules/input/filter/filter"
 import ActionDropdown from "../../../molecules/input/actionDropdown"
 import { PageHeading, Pagination } from "../../../molecules"
 import { PaginationValue } from "../../../molecules/input/pagination"
 
-type FilterData = {
+export type FilterData = {
     key: string,
     value: string
 }
@@ -19,7 +19,7 @@ type FilterEditorProps = {
     onPaginationChange: (pagination: PaginationValue) => void
 }
 
-const ListHeader = ({
+const ListHeader: FunctionComponent<FilterEditorProps> = ({
     title,
     category,
     className = "",

@@ -1,6 +1,5 @@
-import React from "react"
-import { PageCounter } from "../../../atoms"
-import HorizontalSelect from "../../../atoms/input/horizontalSelect"
+import React, { FunctionComponent } from "react"
+import { PageCounter, HorizontalSelect } from "../../../atoms"
 
 export type PaginationValue = {
     totalItems: number,
@@ -14,11 +13,11 @@ type PaginationProps = {
     onChange: (value: PaginationValue) => void
 }
 
-const Pagination = ({
+const Pagination: FunctionComponent<PaginationProps> = ({
     className = "",
     value,
     onChange,
-}: PaginationProps) => {
+}) => {
     const onPageChange = (page: number) => {
         onChange({
             ...value,

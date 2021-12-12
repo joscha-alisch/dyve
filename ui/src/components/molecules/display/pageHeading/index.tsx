@@ -1,4 +1,4 @@
-import React from "react"
+import React, { FunctionComponent } from "react"
 
 type HeaderProps = {
     className?: string,
@@ -6,11 +6,11 @@ type HeaderProps = {
     category?: string
 }
 
-const PageHeading = ({
+const PageHeading: FunctionComponent<HeaderProps> = ({
     className = "",
     category = "",
     title,
-} : HeaderProps)  => <div className={["", className].join(" ")}>
+})  => <div className={["", className].join(" ")}>
     <span className="font-bold tracking-wide uppercase text-gray-400 text-xs">{category}</span>
     <h1 className="font-bold text-3xl">{title}</h1>
 </div>

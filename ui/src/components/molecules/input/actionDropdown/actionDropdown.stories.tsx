@@ -1,7 +1,7 @@
 import React from "react"
 import ActionDropdown from ".";
 import { ComponentMeta, ComponentStory } from "@storybook/react";
-import Icon from "../../../atoms/display/icon";
+import {Icon} from "../../../atoms";
 
 export default {
     title: 'Components/Molecules/Input/Action Dropdown',

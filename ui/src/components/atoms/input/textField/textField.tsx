@@ -1,4 +1,4 @@
-import React from "react"
+import React, { FunctionComponent } from "react"
 
 type TextFieldProps = {
     className?: string,
@@ -12,13 +12,13 @@ type TextFieldProps = {
     onChange?: (value : string) => void
 }
 
-const TextField = ({
+const TextField : FunctionComponent<TextFieldProps> = ({
     className,
     multiLine = false,
     autoFocus = false,
     value = "",
     onChange,
-} : TextFieldProps)  => {
+})  => {
     if (multiLine) {
         return <textarea />
     } else {
