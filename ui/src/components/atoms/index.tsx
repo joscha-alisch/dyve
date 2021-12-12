@@ -11,7 +11,8 @@ import Button from "./input/button/button"
 import TextField from "./input/textField/textField"
 import PageCounter from "./input/pageCounter"
 import HorizontalSelect from "./input/horizontalSelect"
+import IconItem from "./display/iconItem"
 
 export {
-    PageCounter,HorizontalSelect, ListGroup, List, Chip, Icon, ToolTip, Action, ActionItem, Button, TextField
+    IconItem, PageCounter,HorizontalSelect, ListGroup, List, Chip, Icon, ToolTip, Action, ActionItem, Button, TextField
 }

@@ -1,6 +1,6 @@
-import  React, { Component, FunctionComponent, MouseEventHandler } from "react"
+import React, { Component, FunctionComponent, MouseEventHandler } from "react"
 import * as HeroIcons from '@heroicons/react/solid'
-import {Icons} from "./icons"
+import { Icons } from "./icons"
 
 export interface IconProps {
     className?: string,
@@ -8,12 +8,12 @@ export interface IconProps {
     onClick?: MouseEventHandler
 }
 
-const Icon : FunctionComponent<IconProps> = ({
+const Icon: FunctionComponent<IconProps> = ({
     className = "",
     icon,
-    onClick = () => {}
+    onClick = () => { }
 }) => {
-    const iconProps : React.ComponentProps<"svg"> = {
+    const iconProps: React.ComponentProps<"svg"> = {
         onClick: onClick,
         className: className
     }
@@ -33,7 +33,15 @@ const Icon : FunctionComponent<IconProps> = ({
             return <HeroIcons.ChevronLeftIcon {...iconProps} />
         case "point-right":
             return <HeroIcons.ChevronRightIcon {...iconProps} />
-        case "": 
+        case "clipboard":
+            return <HeroIcons.ClipboardListIcon {...iconProps} />
+        case "chip":
+            return <HeroIcons.ChipIcon {...iconProps} />
+        case "code":
+            return <HeroIcons.CodeIcon {...iconProps} />
+        case "server":
+            return <HeroIcons.ServerIcon {...iconProps} />
+        case "":
             return null
     }
 }

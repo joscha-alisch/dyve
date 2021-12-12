@@ -53,7 +53,7 @@ const ActionDropdown = ({
 
 
     return <div className={["", className].join(" ")}>
-        <Action icon={icon} label={label} onClick={() => setIsOpen(!isOpen)} />
+        <Action className="text-xs" icon={icon} label={label} onClick={() => setIsOpen(!isOpen)} />
         { isOpen && <ToolTip ref={clickRef} className="z-50 bg-gray-50 w-56 absolute max-w-xs rounded flex flex-col mt-2" >
                 <FilterInput autoFocus className="mt-2 px-3" value={filterValue} onChange={setFilterValue} />
                 <List className="mt-4 max-h-48 overflow-scroll">

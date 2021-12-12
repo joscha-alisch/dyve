@@ -6,6 +6,10 @@ export type Icons =
     "close" |
     "point-left" |
     "point-right" |
+    "clipboard" |
+    "code" |
+    "chip" |
+    "server" |
     ""
 
     

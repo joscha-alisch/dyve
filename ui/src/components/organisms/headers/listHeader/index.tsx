@@ -58,7 +58,7 @@ const ListHeader = ({
 
     return <div className={["bg-white p-6", className].join(" ")}>
         <PageHeading title={title} category={category} className="mb-4"/>
-        <div className="flex flex-row flex-wrap gap-2">
+        <div className="flex flex-row flex-wrap gap-2 mb-4">
             { filters.map((filter, index) => 
                 <Filter open={toolTipIndex === index} onClose={() => closeToolTip(index)} onOpen={() => setToolTipIndex(index)} filterKey={filter.key} filterValue={filter.value} onRemove={() => onRemoveAtIndex(index)} onChange={(key, value) => onChangeAtIndex(index, {key, value})} />
             )}
@@ -70,8 +70,8 @@ const ListHeader = ({
                 {label: "By Org", group: "Location", onClick: () => add({key: "org", value: ""})},
                 {label: "key: value", group: "", onClick: () => add({key: "key", value: "value"}) }
             ]}/>
-            <Pagination value={pagination} onChange={onPaginationChange} />
         </div>
+        <Pagination value={pagination} onChange={onPaginationChange} />
     </div>
 }
 

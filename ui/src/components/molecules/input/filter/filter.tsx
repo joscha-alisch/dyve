@@ -31,7 +31,7 @@ const Filter = ({
     useHotkeys("Escape", onClose);
 
     return <div className={["relative", className].join(" ")}>
-            <Chip className="relative group" onClick={onOpen} label={filterKey} value={filterValue}>
+            <Chip className="relative group text-sm" onClick={onOpen} label={filterKey} value={filterValue}>
                 <div className="absolute hidden group-hover:flex inset-y-0 items-center justify-end w-full">
                     <Icon icon="close" onClick={onRemove} className="w-4 h-4 mr-4 bg-gray-400 hover:bg-gray-100 rounded-full" />
                 </div>
