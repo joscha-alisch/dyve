@@ -18,23 +18,23 @@ To evaluate whether Dyve is a fit for your company, you can run docker-compose
 
 ## Supported Tools and Platforms
 
-The following products are supported in Dyve. Checked items are fully implemented and useable.
-If you want to help out, refer to the corresponding issues in GitHub or create a new one if you find something missing here.
+The following products are supported in Dyve. Checked items are fully implemented and usable while the others are currently in development.
+If you want to help out, refer to the [corresponding issues in GitHub]() or [create a new one]() if you find something missing here.
 
 ### Platforms
 
-[x] CloudFoundry
-[ ] Kubernetes
+* [x] CloudFoundry
+* [ ] Kubernetes
 
 ### CI
 
-[x] Concourse
-[ ] GitHub Actions
+* [x] Concourse
+* [ ] GitHub Actions
 
 
 ### Monitoring
-[ ] Sentry
-[ ] Prometheus
-[ ] ElasticSearch / Kibana
-[ ] Google Cloud Monitoring
+* [ ] Sentry
+* [ ] Prometheus
+* [ ] ElasticSearch / Kibana
+* [ ] Google Cloud Monitoring
 
