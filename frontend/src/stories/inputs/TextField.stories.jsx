@@ -2,7 +2,7 @@ import {TextField} from "@mui/material";
 import React from "react"
 
 export default {
-    title: 'Components/inputs/Text Field',
+    title: 'Components/input/Text Field',
     component: TextField,
 }
 

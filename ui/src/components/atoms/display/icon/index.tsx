@@ -1,5 +1,7 @@
 import React, { Component, FunctionComponent, MouseEventHandler } from "react"
-import * as HeroIcons from '@heroicons/react/solid'
+import * as HeroSolid from '@heroicons/react/solid'
+import * as HeroOutline from '@heroicons/react/outline'
+
 import { Icons } from "./icons"
 
 export interface IconProps {
@@ -20,27 +22,27 @@ const Icon: FunctionComponent<IconProps> = ({
 
     switch (icon) {
         case "minus":
-            return <HeroIcons.MinusIcon {...iconProps} />
+            return <HeroSolid.MinusIcon {...iconProps} />
         case "plus":
-            return <HeroIcons.PlusIcon {...iconProps} />
+            return <HeroSolid.PlusIcon {...iconProps} />
         case "mail":
-            return <HeroIcons.PaperAirplaneIcon {...iconProps} />
+            return <HeroSolid.PaperAirplaneIcon {...iconProps} />
         case "search":
-            return <HeroIcons.SearchIcon {...iconProps} />
+            return <HeroSolid.SearchIcon {...iconProps} />
         case "close":
-            return <HeroIcons.XIcon {...iconProps} />
+            return <HeroSolid.XIcon {...iconProps} />
         case "point-left":
-            return <HeroIcons.ChevronLeftIcon {...iconProps} />
+            return <HeroSolid.ChevronLeftIcon {...iconProps} />
         case "point-right":
-            return <HeroIcons.ChevronRightIcon {...iconProps} />
+            return <HeroSolid.ChevronRightIcon {...iconProps} />
         case "clipboard":
-            return <HeroIcons.ClipboardListIcon {...iconProps} />
+            return <HeroOutline.ClipboardListIcon {...iconProps} />
         case "chip":
-            return <HeroIcons.ChipIcon {...iconProps} />
+            return <HeroOutline.ChipIcon {...iconProps} />
         case "code":
-            return <HeroIcons.CodeIcon {...iconProps} />
+            return <HeroOutline.CodeIcon {...iconProps} />
         case "server":
-            return <HeroIcons.ServerIcon {...iconProps} />
+            return <HeroOutline.ServerIcon {...iconProps} />
         case "":
             return null
     }

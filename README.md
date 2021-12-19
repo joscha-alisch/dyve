@@ -25,12 +25,12 @@ If you want to help out, refer to the [corresponding issues in GitHub]() or [cre
 
 * [x] CloudFoundry
 * [ ] Kubernetes
+* [ ] Google Cloud - Compute Engine
 
-### CI
+### Continuous Integration & Deployment 
 
 * [x] Concourse
 * [ ] GitHub Actions
-
 
 ### Monitoring
 * [ ] Sentry
