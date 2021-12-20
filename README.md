@@ -47,5 +47,7 @@ If you want to help out, refer to the [corresponding issues in GitHub]() or [cre
 
 ## Contributing
 
+Yes please! We would love to have you :)
+
 You can find all information you need in [our contributors-wiki](https://github.com/joscha-alisch/dyve/wiki).
 
