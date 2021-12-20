@@ -45,3 +45,7 @@ If you want to help out, refer to the [corresponding issues in GitHub]() or [cre
 * [ ] ElasticSearch / Kibana
 * [ ] Google Cloud Monitoring
 
+## Contributing
+
+You can find all information you need in [our contributors-wiki](https://github.com/joscha-alisch/dyve/wiki).
+
