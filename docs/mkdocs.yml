@@ -1,2 +1,4 @@
+site_name: Dyve Docs
+
 theme:
   name: 'material'
