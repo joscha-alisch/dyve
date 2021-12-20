@@ -2,6 +2,13 @@
   <img style="max-width: 960px" src="/docs/img/header.png?raw=true">
 </p>
 
+[![Go Version](https://img.shields.io/github/go-mod/go-version/joscha-alisch/dyve.svg)](https://github.com/joscha-alisch/dyve)
+[![GoDoc reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/joscha-alisch/dyve)
+[![GoReportCard](https://goreportcard.com/badge/github.com/joscha-alisch/dyve)](https://goreportcard.com/report/github.com/joscha-alisch/dyve)
+[![Maintainability](https://api.codeclimate.com/v1/badges/75d5757fe6a001f6ea1b/maintainability)](https://codeclimate.com/github/joscha-alisch/dyve/maintainability)
+[![Test Coverage](https://codecov.io/gh/joscha-alisch/go-cgen/branch/main/graph/badge.svg?token=898J1INMMX)](https://codecov.io/gh/joscha-alisch/dyve)
+[![Sourcegraph](https://sourcegraph.com/github.com/joscha-alisch/go-cgen/-/badge.svg)](https://sourcegraph.com/joscha-alisch/dyve?badge)
+
 # Dyve
 
 Dyve is a vendor-agnostic unified interface for all your platforms, CI and monitoring tools.

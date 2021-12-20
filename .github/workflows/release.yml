@@ -16,6 +16,20 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v2
+          with:
+            fetch-depth: 2
+        - uses: actions/setup-go@v2
+          with:
+            go-version: '1.16'
+        - name: Run coverage
+          run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+        - uses: codecov/codecov-action@v2
+          with:
+            files: ./coverage.txt
   core:
     runs-on: ubuntu-latest
     steps:
@@ -60,6 +74,8 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-current /tmp/.buildx-cache
   provider-cloudfoundry:
+    needs:
+      - test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
