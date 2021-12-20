@@ -219,7 +219,7 @@ func acceptanceTesting(
 	}
 	walk(before, func(m map[string]interface{}, k string) {
 		if t, ok := m[k].(primitive.DateTime); ok {
-			m[k] = time.Unix(int64(t)/1000, 0).Format(time.RFC3339)
+			m[k] = time.Unix(int64(t)/1000, 0).UTC().Format(time.RFC3339)
 		}
 
 		if t, ok := m[k].(primitive.A); ok {
@@ -239,7 +239,7 @@ func acceptanceTesting(
 
 	walk(contents, func(m map[string]interface{}, k string) {
 		if t, ok := m[k].(primitive.DateTime); ok {
-			m[k] = time.Unix(int64(t)/1000, 0).Format(time.RFC3339)
+			m[k] = time.Unix(int64(t)/1000, 0).UTC().Format(time.RFC3339)
 		}
 
 		if t, ok := m[k].(primitive.A); ok {

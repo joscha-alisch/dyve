@@ -7,12 +7,12 @@
     "spaces": [
         {
             "guid": "def",
-            "lastUpdated": "2006-01-01T15:59:00+01:00",
+            "lastUpdated": "2006-01-01T14:59:00Z",
             "name": "b"
         },
         {
             "guid": "abc",
-            "lastUpdated": "2006-01-01T16:00:00+01:00",
+            "lastUpdated": "2006-01-01T15:00:00Z",
             "name": "a"
         }
     ]
