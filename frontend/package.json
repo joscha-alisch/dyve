@@ -78,7 +78,7 @@
     "@storybook/addon-links": "^6.3.12",
     "@storybook/addon-queryparams": "^6.2.9",
     "@storybook/node-logger": "^6.3.12",
-    "@storybook/preset-create-react-app": "^3.2.0",
+    "@storybook/preset-create-react-app": "^4.0.0",
     "@storybook/react": "^6.3.12",
     "prop-types": "^15.7.2",
     "storybook-addon-themes": "^6.1.0",
