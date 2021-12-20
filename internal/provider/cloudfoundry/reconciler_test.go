@@ -123,6 +123,16 @@ type fakeCf struct {
 	b backend
 }
 
+func (f *fakeCf) GetRoutes(appId string) (Routes, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *fakeCf) GetInstances(appId string) (Instances, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (f *fakeCf) ListOrgs() ([]Org, error) {
 	var res []Org
 	for _, org := range f.b.Orgs {
@@ -170,6 +180,10 @@ func (f *fakeCf) GetApp(guid string) (App, error) {
 type fakeDb struct {
 	job *recon.Job
 	b   backend
+}
+
+func (f *fakeDb) Cached(id string, duration time.Duration, fun func() (interface{}, error)) (interface{}, error) {
+	panic("implement me")
 }
 
 func (f *fakeDb) GetApp(id string) (App, error) {

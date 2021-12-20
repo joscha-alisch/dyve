@@ -25,14 +25,16 @@ type Provider struct {
 func (d *Provider) GenerateApps() {
 	var apps []sdk.App
 	for i := 0; i < 1000; i++ {
+		namespace := namespace()
 		apps = append(apps, sdk.App{
 			Id:   id(),
 			Name: appName(),
-			Meta: map[string]interface{}{
-				"namespace": namespace(),
+			Labels: sdk.AppLabels{
+				"namespace": namespace,
 				"version":   version(),
 				"team":      team(),
 			},
+			Position: sdk.AppPosition{namespace},
 		})
 	}
 	d.apps = apps

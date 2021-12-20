@@ -6,8 +6,6 @@ type Service interface {
 	PermissionsFor(groups []string) (Permissions, error)
 }
 
-
-
 func NewService(teams teams.Service) Service {
 	return &service{
 		teams: teams,
@@ -19,15 +17,10 @@ type service struct {
 }
 
 func (s *service) PermissionsFor(groups []string) (Permissions, error) {
-	byAccess, err := s.teams.TeamsForGroups(groups)
+	_, err := s.teams.TeamsForGroups(groups)
 	if err != nil {
 		return Permissions{}, err
 	}
 
-	for _, team := range byAccess.Admin {
-		team.
-	}
-
+	return Permissions{}, nil
 }
-
-

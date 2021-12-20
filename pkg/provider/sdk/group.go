@@ -11,9 +11,9 @@ type GroupPage struct {
 }
 
 type Group struct {
-	Id      string `json:"id" bson:"id"`
-	Name    string `json:"name" bson:"name"`
-	Members []Member
+	Id      string   `json:"id" bson:"id"`
+	Name    string   `json:"name" bson:"name"`
+	Members []Member `json:"members,omitempty"`
 }
 
 type Member struct {

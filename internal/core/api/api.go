@@ -35,7 +35,7 @@ func New(core service.Core, pipeGen pipeviz.PipeViz, opts Opts) http.Handler {
 		disableOriginCheck: opts.DevConfig.DisableOriginCheck,
 	}
 
-	if opts.Auth.Secret == "" {
+	if opts.Auth.Secret == "" && opts.DevConfig.DisableAuth == false {
 		panic("Need to provide an auth secret")
 	}
 

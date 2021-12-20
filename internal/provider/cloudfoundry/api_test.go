@@ -91,6 +91,16 @@ type fakeCfClient struct {
 	b cfBackend
 }
 
+func (f *fakeCfClient) GetAppRoutes(appGuid string) ([]cf.Route, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *fakeCfClient) GetAppInstances(guid string) (map[string]cf.AppInstance, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 type cfBackend struct {
 	orgs   map[string]*cf.Org
 	spaces map[string]*cf.Space

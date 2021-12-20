@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"github.com/google/go-cmp/cmp"
+	"github.com/joscha-alisch/dyve/internal/core/provider"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -17,8 +18,12 @@ func TestLoadFile(t *testing.T) {
 	}{
 		{"basic", "basic.yml", Config{
 			Providers: []ProviderConfig{
-				{Id: "provider-a", Host: "https://provider-a.com"},
-				{Id: "provider-b", Host: "https://provider-b.com"},
+				{Id: "provider-a", Host: "https://provider-a.com", Name: "Provider A", Features: []provider.Type{
+					provider.TypeApps, provider.TypePipelines,
+				}},
+				{Id: "provider-b", Host: "https://provider-b.com", Name: "Provider B", Features: []provider.Type{
+					provider.TypeGroups,
+				}},
 			},
 		}, nil},
 	}

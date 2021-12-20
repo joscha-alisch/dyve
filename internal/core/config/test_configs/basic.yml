@@ -1,5 +1,12 @@
-appProviders:
-  - name: provider-a
+providers:
+  - id: provider-a
+    name: Provider A
     host: https://provider-a.com
-  - name: provider-b
+    features:
+      - apps
+      - pipelines
+  - id: provider-b
+    name: Provider B
     host: https://provider-b.com
+    features:
+      - groups

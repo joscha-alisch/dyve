@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/benweissmann/memongo"
 	"github.com/google/go-cmp/cmp"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"github.com/rs/zerolog/log"
+	"github.com/tryvium-travels/memongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -214,16 +214,25 @@ func TestMongoIntegration(t *testing.T) {
 		}, expectedErr: ErrNotFound},
 	}
 
-	mongo, err := memongo.Start("3.6.23")
+	opts := &memongo.Options{
+		MongoVersion: "5.0.5",
+	}
+	if runtime.GOARCH == "arm64" {
+		if runtime.GOOS == "darwin" {
+			opts.DownloadURL = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-5.0.5.tgz"
+		}
+	}
+
+	mongodb, err := memongo.StartWithOptions(opts)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mongo.Stop()
+	defer mongodb.Stop()
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			fileName := strings.ReplaceAll(test.desc, " ", "_")
-			acceptanceTesting(fileName, baseState, test.f, test.expectsOne, test.expectsMultiple, test.expectedErr, mongo, tt)
+			acceptanceTesting(fileName, baseState, test.f, test.expectsOne, test.expectsMultiple, test.expectedErr, mongodb, tt)
 		})
 	}
 }

@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/benweissmann/memongo"
 	"github.com/google/go-cmp/cmp"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
 	"github.com/rs/zerolog/log"
+	"github.com/tryvium-travels/memongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -121,7 +121,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"name": "a", "guid": "abc", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcileSpaces, Guid: "abc"}
+			expected := recon.Job{Type: ReconcileSpaces, Guid: "abc", LastUpdated: someTime.Add(-3 * time.Minute)}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -134,7 +134,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"name": "a", "guid": "abc", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcileApps, Guid: "abc"}
+			expected := recon.Job{Type: ReconcileApps, Guid: "abc", LastUpdated: someTime.Add(-3 * time.Minute)}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -146,7 +146,7 @@ func TestMongoIntegration(t *testing.T) {
 				{"guid": "main", "lastUpdated": someTime.Add(-3 * time.Minute)},
 			},
 		}, f: func(db Database, tt *testing.T) error {
-			expected := recon.Job{Type: ReconcileOrganizations, Guid: "main"}
+			expected := recon.Job{Type: ReconcileOrganizations, Guid: "main", LastUpdated: someTime.Add(-3 * time.Minute)}
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
@@ -167,16 +167,25 @@ func TestMongoIntegration(t *testing.T) {
 		}},
 	}
 
-	mongo, err := memongo.Start("3.6.23")
+	opts := &memongo.Options{
+		MongoVersion: "5.0.5",
+	}
+	if runtime.GOARCH == "arm64" {
+		if runtime.GOOS == "darwin" {
+			opts.DownloadURL = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-5.0.5.tgz"
+		}
+	}
+
+	mongodb, err := memongo.StartWithOptions(opts)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mongo.Stop()
+	defer mongodb.Stop()
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			fileName := strings.ReplaceAll(test.desc, " ", "_")
-			acceptanceTesting(fileName, test.state, test.f, mongo, tt)
+			acceptanceTesting(fileName, test.state, test.f, mongodb, tt)
 		})
 	}
 }

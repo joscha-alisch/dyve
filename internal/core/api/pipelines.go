@@ -143,5 +143,9 @@ func (a *api) toSvg(version sdk.PipelineVersion, status sdk.PipelineStatus) []by
 		i++
 	}
 
+	sort.Slice(g.Nodes, func(i, j int) bool {
+		return g.Nodes[i].Id < g.Nodes[j].Id
+	})
+
 	return a.pipeGen.Generate(g)
 }

@@ -4,7 +4,14 @@ Connection: close
 {
     "result": {
         "id": "guid-a",
-        "name": "name-a"
+        "labels": {
+            "key": "value"
+        },
+        "name": "name-a",
+        "position": [
+            "position"
+        ],
+        "providerId": "provider"
     },
     "status": 200
 }

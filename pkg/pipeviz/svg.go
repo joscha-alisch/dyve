@@ -5,6 +5,7 @@ import (
 	svg "github.com/ajstarks/svgo/float"
 	"io"
 	"math"
+	"sort"
 )
 
 func generateSvg(ir layouted, w io.Writer) {
@@ -19,6 +20,10 @@ func generateSvg(ir layouted, w io.Writer) {
 	perRowHeight := (totalHeight - float64(ir.Rows)*ySpacing) / float64(ir.Rows)
 
 	s.Start(totalWidth, totalHeight)
+
+	sort.Slice(ir.Boxes, func(i, j int) bool {
+		return ir.Boxes[i].Node.Id < ir.Boxes[j].Node.Id
+	})
 
 	for _, b := range ir.Boxes {
 		x := float64(b.StartCol) * (perColWidth + xSpacing)

@@ -13,8 +13,8 @@ type AppPage struct {
 type App struct {
 	Id       string      `json:"id"`
 	Name     string      `json:"name"`
-	Labels   AppLabels   `json:"labels"`
-	Position AppPosition `json:"position"`
+	Labels   AppLabels   `json:"labels,omitempty"`
+	Position AppPosition `json:"position,omitempty"`
 }
 
 type AppPosition []string
