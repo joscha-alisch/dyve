@@ -5,28 +5,36 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/release-charts.yml
+      - .github/workflows/pages.yml
       - infra/helm/**
+      - docs
 
 jobs:
-  release:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: pip install mkdocs-material
+      - run: cd docs && mkdocs gh-deploy --force
+  helm-chart:
+    needs: docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
       - name: Install Helm
         uses: azure/setup-helm@v1
         with:
           version: v3.4.0
-
       - name: Add Helm dependencies
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -34,7 +42,6 @@ jobs:
               echo "$d"
               helm dependency update $d
           done
-
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.2.1
         with:
