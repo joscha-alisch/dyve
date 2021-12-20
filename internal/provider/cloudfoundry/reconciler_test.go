@@ -4,6 +4,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
+	"sort"
 	"testing"
 	"time"
 )
@@ -199,6 +200,10 @@ func (f *fakeDb) ListApps() ([]App, error) {
 	for _, app := range f.b.Apps {
 		res = append(res, *app)
 	}
+
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].Guid < res[j].Guid
+	})
 	return res, nil
 }
 
