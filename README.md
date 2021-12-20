@@ -8,6 +8,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/cda6afc7b37386975063/maintainability)](https://codeclimate.com/github/joscha-alisch/dyve/maintainability)
 [![Test Coverage](https://codecov.io/gh/joscha-alisch/dyve/branch/main/graph/badge.svg?token=898J1INMMX)](https://codecov.io/gh/joscha-alisch/dyve)
 [![Sourcegraph](https://sourcegraph.com/github.com/joscha-alisch/dyve/-/badge.svg)](https://sourcegraph.com/joscha-alisch/dyve?badge)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 
 # Dyve
 
