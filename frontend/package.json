@@ -20,7 +20,7 @@
     "axios": "^0.21.1",
     "cytoscape": "^3.19.0",
     "formik": "^2.2.9",
-    "history": "^5.1.0",
+    "history": "^5.2.0",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
     "query-string": "^7.0.1",
