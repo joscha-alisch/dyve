@@ -6,7 +6,7 @@
 [![GoDoc reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/joscha-alisch/dyve)
 [![GoReportCard](https://goreportcard.com/badge/github.com/joscha-alisch/dyve)](https://goreportcard.com/report/github.com/joscha-alisch/dyve)
 [![Maintainability](https://api.codeclimate.com/v1/badges/cda6afc7b37386975063/maintainability)](https://codeclimate.com/github/joscha-alisch/dyve/maintainability)
-[![Test Coverage](https://codecov.io/gh/joscha-alisch/go-cgen/branch/main/graph/badge.svg?token=898J1INMMX)](https://codecov.io/gh/joscha-alisch/dyve)
+[![Test Coverage](https://codecov.io/gh/joscha-alisch/dyve/branch/main/graph/badge.svg?token=898J1INMMX)](https://codecov.io/gh/joscha-alisch/dyve)
 [![Sourcegraph](https://sourcegraph.com/github.com/joscha-alisch/dyve/-/badge.svg)](https://sourcegraph.com/joscha-alisch/dyve?badge)
 
 # Dyve
