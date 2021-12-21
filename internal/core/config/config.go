@@ -1,8 +1,11 @@
 package config
 
 import (
+	"bytes"
 	"github.com/joscha-alisch/dyve/internal/core/provider"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
+	"strings"
 )
 
 type Config struct {
@@ -50,21 +53,57 @@ type AuthProviderConfig struct {
 	Org     string
 }
 
+func defaults() Config {
+	return Config{
+		LogLevel: "info",
+		DevConfig: DevConfig{
+			UseFakeOauth2:      false,
+			DisableAuth:        false,
+			UserGroups:         nil,
+			DisableOriginCheck: false,
+		},
+		Providers: nil,
+		Database: DatabaseConfig{
+			URI:  "mongodb://localhost:27017",
+			Name: "dyve_core",
+		},
+		Port: 9000,
+		Reconciliation: ReconConfig{
+			CacheSeconds: 20,
+		},
+		Auth: AuthConfig{
+			Secret: "",
+			GitHub: AuthProviderConfig{
+				Enabled: false,
+			},
+		},
+		ExternalUrl: "http://localhost:9000",
+	}
+}
+
 func LoadFrom(path string) (Config, error) {
-	viper.SetConfigFile(path)
-	viper.SetEnvPrefix("dyve")
-
-	err := viper.ReadInConfig()
+	v := viper.New()
+	b, err := yaml.Marshal(defaults())
 	if err != nil {
 		return Config{}, err
 	}
-
-	viper.AutomaticEnv()
-
-	c := Config{}
-	err = viper.Unmarshal(&c)
-	if err != nil {
+	defaultConfig := bytes.NewReader(b)
+	v.SetConfigType("yaml")
+	if err := v.MergeConfig(defaultConfig); err != nil {
 		return Config{}, err
 	}
-	return c, err
+
+	v.SetConfigFile(path)
+	if err := v.MergeInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigParseError); ok {
+			return Config{}, err
+		}
+	}
+	v.AutomaticEnv()
+	v.SetEnvPrefix("dyve")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	config := &Config{}
+	err = v.Unmarshal(&config)
+	return *config, err
 }
