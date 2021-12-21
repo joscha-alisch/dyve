@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - .github/files/**
       - .github/workflows/pages.yml
       - infra/helm/**
       - docs/**
