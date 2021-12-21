@@ -79,8 +79,6 @@ main() {
         update_index
     else
         echo "Nothing to do. No chart changes detected."
-        echo "Downloading index.yaml from gh-pages"
-        wget "https://raw.githubusercontent.com/joscha-alisch/dyve/gh-pages/index.yaml" > .cr-index/index.yaml
     fi
 
     popd > /dev/null
