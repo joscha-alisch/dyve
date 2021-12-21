@@ -51,6 +51,9 @@ COPY --from=build-provider-github /build/out/cmd /app/provider-github
 ENTRYPOINT ["/app/provider-github"]
 
 FROM nginx:alpine AS frontend
+WORKDIR /app
+COPY infra/docker/entrypoints/frontend.sh /app/start.sh
 WORKDIR /usr/share/nginx/html
 COPY ./frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build-frontend /build/build /usr/share/nginx/html
+ENTRYPOINT ["/bin/bash", "/app/start.sh"]
