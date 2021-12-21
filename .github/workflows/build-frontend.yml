@@ -27,6 +27,8 @@ jobs:
         uses: docker/metadata-action@master
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-frontend
+          tags: |
+            type=raw,value=next
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
