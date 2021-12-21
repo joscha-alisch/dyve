@@ -50,7 +50,7 @@ jobs:
           file: infra/docker/Dockerfile
           target: frontend
           push: true
-          tags: next
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
