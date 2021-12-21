@@ -53,6 +53,7 @@ type AuthProviderConfig struct {
 func LoadFrom(path string) (Config, error) {
 	viper.SetConfigFile(path)
 	viper.SetEnvPrefix("dyve")
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		return Config{}, err
