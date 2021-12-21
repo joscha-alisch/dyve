@@ -42,6 +42,6 @@ jobs:
         shell: bash
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      - run: mv index.yaml docs/docs/index.yaml
+      - run: mv .cr-index/index.yaml docs/docs/index.yaml
       - run: pip install mkdocs-material
       - run: cd docs && mkdocs gh-deploy --force
