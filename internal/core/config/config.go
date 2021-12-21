@@ -2,7 +2,10 @@ package config
 
 import (
 	"bytes"
+	"github.com/fatih/structs"
+	"github.com/jeremywohl/flatten"
 	"github.com/joscha-alisch/dyve/internal/core/provider"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -12,11 +15,11 @@ type Config struct {
 	LogLevel       string           `yaml:"logLevel"`
 	DevConfig      DevConfig        `yaml:"devConfig"`
 	Providers      []ProviderConfig `yaml:"providers"`
-	Database       DatabaseConfig
-	Port           int         `yaml:"port"`
-	Reconciliation ReconConfig `yaml:"reconciliation"`
-	Auth           AuthConfig  `yaml:"auth"`
-	ExternalUrl    string      `yaml:"externalUrl"`
+	Database       DatabaseConfig   `yaml:"database"`
+	Port           int              `yaml:"port"`
+	Reconciliation ReconConfig      `yaml:"reconciliation"`
+	Auth           AuthConfig       `yaml:"auth"`
+	ExternalUrl    string           `yaml:"externalUrl"`
 }
 
 type DevConfig struct {
@@ -99,9 +102,25 @@ func LoadFrom(path string) (Config, error) {
 			return Config{}, err
 		}
 	}
+
 	v.AutomaticEnv()
 	v.SetEnvPrefix("dyve")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	confMap := structs.Map(Config{})
+
+	// Flatten nested conf map
+	flat, err := flatten.Flatten(confMap, "", flatten.DotStyle)
+	if err != nil {
+		return Config{}, errors.Wrap(err, "Unable to flatten config")
+	}
+
+	// Bind each conf fields to environment vars
+	for key, _ := range flat {
+		err := v.BindEnv(key)
+		if err != nil {
+			return Config{}, errors.Wrapf(err, "Unable to bind env var: %s", key)
+		}
+	}
 
 	config := &Config{}
 	err = v.Unmarshal(&config)

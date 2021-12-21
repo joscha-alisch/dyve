@@ -9,6 +9,7 @@ require (
 	github.com/approvals/go-approval-tests v0.0.0-20210628084631-e4f9005a9e2e
 	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/cloudfoundry-community/go-cfclient v0.0.0-20210621174645-7773f7e22665
+	github.com/fatih/structs v1.1.0
 	github.com/go-pkgz/auth v1.18.0
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-github/v39 v39.1.0
@@ -16,11 +17,13 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
+	github.com/jeremywohl/flatten v1.0.1
 	github.com/klauspost/compress v1.13.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/onsi/gomega v1.14.0 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.25.0
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
