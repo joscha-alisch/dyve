@@ -166,7 +166,7 @@ jobs:
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-current /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-current /tmp/.buildx-cache
   provider-github:
     needs:
       - test
@@ -211,4 +211,4 @@ jobs:
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-current /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-current /tmp/.buildx-cache
