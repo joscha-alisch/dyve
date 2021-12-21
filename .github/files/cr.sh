@@ -261,6 +261,7 @@ update_index() {
 
     echo 'Updating charts repo index...'
     cr index "${args[@]}"
+    ls -lash
 }
 
 main "$@"
