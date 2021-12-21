@@ -48,7 +48,7 @@ jobs:
       - run: |
           if [ ! -f .cr-index/index.yaml ]; then
               mkdir -p .cr-index
-              wget "https://raw.githubusercontent.com/joscha-alisch/dyve/gh-pages/index.yaml" > .cr-index/index.yaml
+              wget "https://raw.githubusercontent.com/joscha-alisch/dyve/gh-pages/index.yaml" -O .cr-index/index.yaml
           fi
           mv .cr-index/index.yaml docs/docs/index.yaml
       - run: pip install mkdocs-material
