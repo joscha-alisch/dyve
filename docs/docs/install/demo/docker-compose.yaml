@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    networks:
+      - shared
+  ui:
+    image: ghcr.io/joscha-alisch/dyve-frontend:next
+    restart: always
+    environment:
+      DYVE_API_BACKEND: "core:9000"
+    ports:
+      - "8080:80"
+    networks:
+      - shared
+  core:
+    image: ghcr.io/joscha-alisch/dyve-core:next
+    restart: always
+    environment:
+      DYVE_DEVCONFIG_USEFAKEOAUTH2: true
+      DYVE_AUTH_SECRET: secret
+      DYVE_DATABASE_URI: mongodb://mongo:27017
+      DYVE_EXTERNALURL: http://localhost:8080
+    ports:
+      - "8000:8000"
+    networks:
+      - shared
+    volumes:
+      - ./core.yaml:/app/config.yaml
+  demo:
+    image: ghcr.io/joscha-alisch/dyve-provider-demo:next
+    restart: always
+    networks:
+      - shared
+networks:
+  shared:
+    driver: bridge

@@ -1,0 +1,14 @@
+providers:
+  - id: demo
+    name: Demo
+    host: http://demo:9003
+    features:
+      - apps
+      - pipelines
+auth:
+  secret: secret
+database:
+  uri: mongodb://mongo:27017
+externalUrl: http://localhost:9001/
+devConfig:
+  useFakeOauth2: false

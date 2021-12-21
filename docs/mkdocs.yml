@@ -10,11 +10,18 @@ theme:
     - navigation.indexes
     - navigation.top
 
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
 nav:
   - Overview: index.md
   - Install:
       - install/index.md
-      - Demo: install/demo.md
+      - Demo: install/demo/index.md
       - Helm: install/helm.md
       - Docker: install/docker.md
       - Binaries: install/binaries.md
