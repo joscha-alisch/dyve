@@ -31,7 +31,7 @@ RUN yarn build
 ### Final Images
 FROM alpine AS core
 WORKDIR /app
-COPY defaults/core.yaml /app/config.yaml
+COPY infra/docker/defaults/core.yaml /app/config.yaml
 COPY --from=build-core /build/out/cmd /app/core
 ENTRYPOINT ["/app/core"]
 
