@@ -79,6 +79,8 @@ main() {
         update_index
     else
         echo "Nothing to do. No chart changes detected."
+        echo "Still generating index.yaml"
+        update_index
     fi
 
     popd > /dev/null
