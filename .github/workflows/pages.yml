@@ -17,6 +17,39 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.4.0
+      - name: Add Helm dependencies
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          for d in infra/helm/*/ ; do
+              echo "$d"
+              helm dependency update $d
+          done
+      - run: |
+          owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+          repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+          args=(--owner "$owner" --repo "$repo")
+          args+=(--charts-dir "${{ inputs.charts_dir }}")
+          if [[ -n "${{ inputs.version }}" ]]; then
+              args+=(--version "${{ inputs.version }}")
+          fi
+          if [[ -n "${{ inputs.config }}" ]]; then
+              args+=(--config "${{ inputs.config }}")
+          fi
+          if [[ -n "${{ inputs.charts_repo_url }}" ]]; then
+              args+=(--charts-repo-url "${{ inputs.charts_repo_url }}")
+          fi
+          ".github/files/cr.sh" "${args[@]}"
+        shell: bash
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - run: pip install mkdocs-material
       - run: cd docs && mkdocs gh-deploy --force
   helm-chart:
@@ -47,5 +80,3 @@ jobs:
         with:
           charts_dir: infra/helm
           config: .github/files/cr.yaml
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
