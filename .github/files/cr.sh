@@ -58,15 +58,16 @@ main() {
     local changed_charts=()
     readarray -t changed_charts <<< "$(lookup_changed_charts "$latest_tag")"
 
+    install_chart_releaser
+    rm -rf .cr-release-packages
+    mkdir -p .cr-release-packages
+
+    rm -rf .cr-index
+    mkdir -p .cr-index
+
+    update_index
+
     if [[ -n "${changed_charts[*]}" ]]; then
-        install_chart_releaser
-
-        rm -rf .cr-release-packages
-        mkdir -p .cr-release-packages
-
-        rm -rf .cr-index
-        mkdir -p .cr-index
-
         for chart in "${changed_charts[@]}"; do
             if [[ -d "$chart" ]]; then
                 package_chart "$chart"
@@ -76,11 +77,8 @@ main() {
         done
 
         release_charts
-        update_index
     else
         echo "Nothing to do. No chart changes detected."
-        echo "Still generating index.yaml"
-        update_index
     fi
 
     popd > /dev/null
