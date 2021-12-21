@@ -58,16 +58,15 @@ main() {
     local changed_charts=()
     readarray -t changed_charts <<< "$(lookup_changed_charts "$latest_tag")"
 
-    install_chart_releaser
-    rm -rf .cr-release-packages
-    mkdir -p .cr-release-packages
-
-    rm -rf .cr-index
-    mkdir -p .cr-index
-
-    update_index
-
     if [[ -n "${changed_charts[*]}" ]]; then
+        install_chart_releaser
+
+        rm -rf .cr-release-packages
+        mkdir -p .cr-release-packages
+
+        rm -rf .cr-index
+        mkdir -p .cr-index
+
         for chart in "${changed_charts[@]}"; do
             if [[ -d "$chart" ]]; then
                 package_chart "$chart"
@@ -77,8 +76,11 @@ main() {
         done
 
         release_charts
+        update_index
     else
         echo "Nothing to do. No chart changes detected."
+        echo "Downloading index.yaml from gh-pages"
+        wget "https://raw.githubusercontent.com/joscha-alisch/dyve/gh-pages/index.yaml" > .cr-index/index.yaml
     fi
 
     popd > /dev/null
@@ -261,9 +263,6 @@ update_index() {
 
     echo 'Updating charts repo index...'
     cr index "${args[@]}"
-    ls -lash
-    ls -lash .cr-index
-    cat .cr-index/index.yaml
 }
 
 main "$@"
