@@ -17,6 +17,17 @@ func TestLoadFile(t *testing.T) {
 		expectedErr error
 	}{
 		{"basic", "basic.yml", Config{
+			LogLevel: "info",
+			DevConfig: DevConfig{
+				UserGroups: []string{},
+			},
+			Database: DatabaseConfig{
+				URI:  "mongodb://localhost:27017",
+				Name: "dyve_core",
+			},
+			Port:           9000,
+			Reconciliation: ReconConfig{CacheSeconds: 20},
+			ExternalUrl:    "http://localhost:9000",
 			Providers: []ProviderConfig{
 				{Id: "provider-a", Host: "https://provider-a.com", Name: "Provider A", Features: []provider.Type{
 					provider.TypeApps, provider.TypePipelines,
