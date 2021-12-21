@@ -12,7 +12,6 @@ core:
       uri: mongodb://dyve-mongodb:27017
       name: core
 
-
 frontend:
   image:
     repository: ghcr.io/joscha-alisch/dyve-frontend
