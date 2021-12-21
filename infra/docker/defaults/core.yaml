@@ -1,0 +1,21 @@
+port: 9000
+externalUrl: http://localhost:9000/
+logLevel: debug
+
+devConfig:
+  disableAuth: false
+  useFakeOauth2: false
+  disableOriginCheck: true
+
+reconciliation:
+  cacheSeconds: 20
+
+providers: []
+
+auth:
+  github:
+    enabled: false
+
+database:
+  uri: mongodb://localhost:27017
+  name: dyve_core
