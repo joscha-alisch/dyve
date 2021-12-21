@@ -1,10 +1,10 @@
-name: Release Latest
+name: Build Next
 on:
   push:
     branches:
       - main
     paths:
-      - .github/workflows/release.yml
+      - .github/workflows/build.yml
       - infra/docker/**
       - cmd/**
       - pkg/**
@@ -67,7 +67,7 @@ jobs:
           file: infra/docker/Dockerfile
           target: core
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: next
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
@@ -113,7 +113,7 @@ jobs:
           file: infra/docker/Dockerfile
           target: provider-cloudfoundry
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: next
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
@@ -159,7 +159,7 @@ jobs:
           file: infra/docker/Dockerfile
           target: provider-demo
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: next
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
@@ -204,7 +204,7 @@ jobs:
           file: infra/docker/Dockerfile
           target: provider-github
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: next
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current

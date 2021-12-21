@@ -1,10 +1,10 @@
-name: Release Frontend
+name: Build Frontend Next
 on:
   push:
     branches:
       - main
     paths:
-      - .github/workflows/release-frontend.yml
+      - .github/workflows/build-frontend.yml
       - infra/docker/**
       - frontend/**
 
@@ -48,7 +48,7 @@ jobs:
           file: infra/docker/Dockerfile
           target: frontend
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: next
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
