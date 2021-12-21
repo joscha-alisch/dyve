@@ -36,17 +36,13 @@ jobs:
           owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
           repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
           args=(--owner "$owner" --repo "$repo")
-          args+=(--charts-dir "${{ inputs.charts_dir }}")
-          if [[ -n "${{ inputs.config }}" ]]; then
-              args+=(--config "${{ inputs.config }}")
+          args+=(--charts-dir "infra/helm")
+          args+=(--config ".github/files/cr.yaml")
           fi
           ".github/files/cr.sh" "${args[@]}"
         shell: bash
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-        with:
-          charts_dir: infra/helm
-          config: .github/files/cr.yaml
       - run: pip install mkdocs-material
       - run: cd docs && mkdocs gh-deploy --force
   helm-chart:
