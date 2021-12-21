@@ -1,4 +1,35 @@
 site_name: Dyve Docs
+repo_url: https://github.com/joscha-alisch/dyve/
 
 theme:
   name: 'material'
+  features:
+    - navigation.tracking
+    - navigation.instant
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+
+nav:
+  - Overview: index.md
+  - Install:
+      - install/index.md
+      - Demo: install/demo.md
+      - Helm: install/helm.md
+      - Docker: install/docker.md
+      - Binaries: install/binaries.md
+  - Configure:
+      - configure/index.md
+  - Providers:
+      - providers/index.md
+      - Platforms:
+          - CloudFoundry: providers/platform/cloudfoundry.md
+      - CI:
+          - Concourse: providers/ci/concourse.md
+      - Monitoring:
+          - providers/monitoring/index.md
+      - Auth:
+          - GitHub: providers/auth/github.md
+
+  - Extend:
+      - extend/index.md
