@@ -3,7 +3,6 @@ module github.com/joscha-alisch/dyve
 go 1.16
 
 require (
-	cloud.google.com/go v0.81.0 // indirect
 	github.com/Pallinder/go-randomdata v1.2.0
 	github.com/ajstarks/svgo v0.0.0-20210406150507-75cfd577ce75
 	github.com/approvals/go-approval-tests v0.0.0-20210628084631-e4f9005a9e2e
@@ -11,7 +10,6 @@ require (
 	github.com/cloudfoundry-community/go-cfclient v0.0.0-20210621174645-7773f7e22665
 	github.com/fatih/structs v1.1.0
 	github.com/go-pkgz/auth v1.18.0
-	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/go-cmp v0.5.6
 	github.com/google/go-github/v39 v39.2.0
 	github.com/google/uuid v1.3.0
@@ -20,14 +18,11 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/kr/text v0.2.0 // indirect
-	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/onsi/gomega v1.14.0 // indirect
-	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.25.0
 	github.com/smartystreets/assertions v1.2.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.7.0
+	github.com/spf13/viper v1.10.1
 	github.com/tryvium-travels/memongo v0.3.2
 	go.mongodb.org/mongo-driver v1.8.1
 	gonum.org/v1/gonum v0.9.3
