@@ -20,7 +20,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/onsi/gomega v1.14.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.25.0
+	github.com/rs/zerolog v1.26.1
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/viper v1.10.1
 	github.com/tryvium-travels/memongo v0.3.2
