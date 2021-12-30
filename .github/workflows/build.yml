@@ -20,15 +20,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tag with 'next'
-        uses: actions/github-script@v5
+        uses: richardsimko/update-tag@v1
         with:
-          script: |
-            github.rest.git.updateRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'next',
-              sha: context.sha
-            })
+          tag_name: next
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
     needs:
       - tag
