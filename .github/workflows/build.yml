@@ -69,7 +69,6 @@ jobs:
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
           excludeTagsRegex: "helm-dyve-.*"
-          onlyLastTag: true
           stripGeneratorNotice: true
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release
