@@ -31,5 +31,5 @@ helm upgrade --install -f values.yaml -n dyve dyve dyve/dyve
 The following shows the available options together with its default values:
 
 ```yaml title="values.yaml"
---8<-- "../dyve/infra/helm/dyve/values.yaml"
+--8<-- "../infra/helm/dyve/values.yaml"
 ```
