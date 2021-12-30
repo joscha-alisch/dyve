@@ -57,6 +57,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#docker" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -298,6 +303,8 @@
       
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
+      
+        
       
       
       <a href="./" class="md-nav__link md-nav__link--active">
@@ -682,6 +689,24 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -692,9 +717,14 @@
 </a>
 
 
-  <h1>Docker</h1>
-
-
+<h1 id="docker">Docker</h1>
+<p>If you can't use the <a href="../helm/">installation method via helm</a>, you can also directly use the docker images.</p>
+<p>They are available at:</p>
+<ul>
+<li><strong>dyve-core</strong>: <code>ghcr.io/joscha-alisch/dyve-core:latest</code></li>
+<li><strong>dyve-frontend</strong>: <code>ghcr.io/joscha-alisch/dyve-frontend:latest</code></li>
+</ul>
+<p><a href="https://github.com/joscha-alisch?tab=packages&amp;repo_name=dyve&amp;ecosystem=container">The full list of images, together with available tags can be found here.</a></p>
 
               
             </article>
