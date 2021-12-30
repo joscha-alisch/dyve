@@ -66,7 +66,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --rm-dist --snapshot -f .github/files/.gorelease.prerelease.yml
+          args: release --rm-dist -f .github/files/.goreleaser.prerelease.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   core:
