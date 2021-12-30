@@ -77,7 +77,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          body: ${{ steps.changelog.outputs.changelog }}
+          body_path: CHANGELOG.md
           prerelease: true
           tag_name: next
           name: next
