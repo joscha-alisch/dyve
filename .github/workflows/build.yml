@@ -53,9 +53,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --rm-dist -f .github/files/.goreleaser.prerelease.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          args: release --rm-dist --no-publish -f .github/files/.goreleaser.prerelease.yml
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
