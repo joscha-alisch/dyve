@@ -73,6 +73,8 @@ jobs:
           stripHeaders: true
           stripGeneratorNotice: true
           token: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          cat CHANGELOG.md
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
