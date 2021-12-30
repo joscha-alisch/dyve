@@ -65,6 +65,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "✏️ Generate release changelog"
+        id: changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
           excludeTagsRegex: "helm-dyve-.*"
@@ -76,7 +77,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: /github/workspace/CHANGELOG.md
+          body: ${{ steps.changelog.outputs.changelog }}
           prerelease: true
           tag_name: next
           name: next
