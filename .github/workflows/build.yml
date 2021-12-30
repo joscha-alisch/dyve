@@ -16,15 +16,6 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  tag:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Tag with 'next'
-        uses: richardsimko/update-tag@v1
-        with:
-          tag_name: next
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
     needs:
       - tag
@@ -76,7 +67,7 @@ jobs:
           files: |
             dist/*.tar.gz
             dist/*.zip
-            *_checksums.txt
+            dist/*_checksums.txt
   core:
     needs:
       - test
