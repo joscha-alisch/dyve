@@ -51,7 +51,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --rm-dist --no-publish -f .github/files/.goreleaser.prerelease.yml
+          args: release --rm-dist --skip-publish -f .github/files/.goreleaser.prerelease.yml
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
