@@ -70,16 +70,13 @@ jobs:
         with:
           excludeTagsRegex: "helm-dyve-.*"
           onlyLastTag: true
-          stripHeaders: true
           stripGeneratorNotice: true
           token: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
-          cat CHANGELOG.md
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: CHANGELOG.md
+          body: "${{ steps.changelog.outputs.changelog }}"
           prerelease: true
           tag_name: next
           name: next
