@@ -57,6 +57,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#helm" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -285,10 +290,43 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Helm
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         Helm
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -682,6 +720,39 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    Configuration
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -692,9 +763,26 @@
 </a>
 
 
-  <h1>Helm</h1>
-
-
+<h1 id="helm">Helm</h1>
+<p>We provide a helm chart to deploy dyve into your kubernetes cluster.</p>
+<details open="open">
+<summary>Install Helm</summary>
+<p>In order to use the helm chart, you will need helm installed and configured to use your kubernetes cluster. You can find <a href="https://helm.sh/docs/intro/install/">the instructions here.</a></p>
+</details>
+<p>With helm installed, add the repository:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>helm repo add dyve https://joscha-alisch.github.io/dyve
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>helm repo update
+</code></pre></div>
+<p>and install the chart:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a>helm upgrade --install -n dyve dyve dyve/dyve
+</code></pre></div>
+<h2 id="configuration">Configuration</h2>
+<p>In order to set configuration parameters, create a <code>values.yaml</code> and specify it when installing the chart:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a>helm upgrade --install -f values.yaml -n dyve dyve dyve/dyve 
+</code></pre></div>
+<p>The following shows the available options together with its default values:</p>
+<div class="highlight"><span class="filename">values.yaml</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a>
+</code></pre></div>
 
               
             </article>
