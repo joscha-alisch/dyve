@@ -16,7 +16,18 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tag with 'next'
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: next
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
+    needs:
+      - tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
