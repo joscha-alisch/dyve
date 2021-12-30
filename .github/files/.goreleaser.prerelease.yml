@@ -76,9 +76,3 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
-
-release:
-  prerelease: true
-  draft: true
-  name_template: next
-  mode: replace

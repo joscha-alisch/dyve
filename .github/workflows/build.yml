@@ -65,6 +65,18 @@ jobs:
           args: release --rm-dist -f .github/files/.goreleaser.prerelease.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body_path: dist/CHANGELOG.md
+          draft: true
+          tag_name: next
+          name: next
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            *_checksums.txt
   core:
     needs:
       - test
