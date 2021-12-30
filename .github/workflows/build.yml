@@ -16,7 +16,22 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/next',
+              sha: context.sha
+            })
   test:
+    needs:
+      - tag
     runs-on: ubuntu-latest
     steps:
         - uses: actions/checkout@v2
@@ -30,6 +45,30 @@ jobs:
         - uses: codecov/codecov-action@v2
           with:
             files: ./coverage.txt
+  binaries:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Tag with v100
+        run: |
+          git tag 100.0.0
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --snapshot -f .github/files/.gorelease.prerelease.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   core:
     needs:
       - test
