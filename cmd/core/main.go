@@ -44,7 +44,7 @@ func main() {
 	logLevel, err := zerolog.ParseLevel(c.LogLevel)
 	if err != nil {
 		logLevel = zerolog.InfoLevel
-		log.Error().Err(err).Msg("couldn't parse log level, setting to info")
+		log.Error().Err(err).Msg("couldn't parse log level, using info instead")
 	}
 	zerolog.SetGlobalLevel(logLevel)
 
