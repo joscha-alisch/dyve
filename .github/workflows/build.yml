@@ -67,7 +67,7 @@ jobs:
       - name: "✏️ Generate release changelog"
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
-          excludeTagsRegex: "dyve-helm-.*"
+          excludeTagsRegex: "helm-dyve-.*"
           onlyLastTag: true
           stripHeaders: true
           stripGeneratorNotice: true
@@ -76,7 +76,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: CHANGELOG.md
+          body_path: /github/workspace/CHANGELOG.md
           prerelease: true
           tag_name: next
           name: next
