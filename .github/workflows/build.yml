@@ -16,18 +16,7 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  tag:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Tag with 'next'
-        uses: richardsimko/update-tag@v1
-        with:
-          tag_name: next
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
-    needs:
-      - tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -63,12 +52,24 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --rm-dist --skip-publish -f .github/files/.goreleaser.prerelease.yml
+      - uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: next
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tag with 'next'
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: next
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           body_path: dist/CHANGELOG.md
-          draft: true
+          prerelease: true
           tag_name: next
           name: next
           files: |
