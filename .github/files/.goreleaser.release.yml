@@ -1,0 +1,78 @@
+builds:
+  - id: "dyve-core"
+    main: ./cmd/core
+    binary: core
+    goos:
+      - darwin
+      - linux
+      - windows
+  - id: "dyve-provider-cf"
+    main: ./cmd/provider/cloudfoundry
+    binary: dyve-provider-cf
+    goos:
+      - darwin
+      - linux
+      - windows
+  - id: "dyve-provider-demo"
+    main: ./cmd/provider/demo
+    binary: dyve-provider-demo
+    goos:
+      - darwin
+      - linux
+      - windows
+  - id: "dyve-provider-gh"
+    main: ./cmd/provider/github
+    binary: dyve-provider-gh
+    goos:
+      - darwin
+      - linux
+      - windows
+
+checksum:
+  name_template: "dyve_{{ .Version }}_checksums.txt"
+
+archives:
+  - id: "dyve-core"
+    builds:
+      - "dyve-core"
+    name_template: "dyve-core_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: macOS
+    format_overrides:
+      - goos: windows
+        format: zip
+  - id: "dyve-provider-cf"
+    builds:
+      - "dyve-provider-cf"
+    name_template: "dyve-provider-cf_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: macOS
+    format_overrides:
+      - goos: windows
+        format: zip
+  - id: "dyve-provider-demo"
+    builds:
+      - "dyve-provider-demo"
+    name_template: "dyve-provider-demo_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: macOS
+    format_overrides:
+      - goos: windows
+        format: zip
+  - id: "dyve-provider-gh"
+    builds:
+      - "dyve-provider-gh"
+    name_template: "dyve-provider-gh_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: macOS
+    format_overrides:
+      - goos: windows
+        format: zip

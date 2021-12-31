@@ -1,0 +1,265 @@
+name: Release
+on:
+  create:
+    tags:
+      - "dyve-[0-9]+.[0-9]+.[0-9]+"
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  getVersion:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Extract version
+      id: version
+      run: |
+        VERSION=$(echo "${{ github.ref }}" | sed -e "s/dyve-//")
+        echo "::set-output name={version}::{${VERSION}}"
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Run coverage
+        run: CI=true go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.txt
+  binaries:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: Tag with only version
+        id: tag
+        run: |
+          git tag "v${{ jobs.getVersion.outputs.version }}"
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --skip-publish -f .github/files/.goreleaser.release.yml
+      - name: "✏️ Generate release changelog"
+        id: changelog
+        uses: heinrichreimer/github-changelog-generator-action@v2.3
+        with:
+          excludeTagsRegex: "helm-dyve-.*"
+          stripGeneratorNotice: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: "${{ steps.changelog.outputs.changelog }}"
+          tag_name: "dyve-${{ jobs.getVersion.outputs.version }}"
+          name: "Dyve ${{ jobs.getVersion.outputs.version }}"
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/*_checksums.txt
+  core:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to Registry
+        uses: docker/login-action@master
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@master
+        with:
+          images: ${{ env.REGISTRY }}/joscha-alisch/dyve-core
+          tags: |
+            type=raw,value=${{ jobs.getVersion.outputs.version }}
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+        with:
+          install: true
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-multi-buildx
+      - name: Build Core
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: infra/docker/Dockerfile
+          target: core
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-current /tmp/.buildx-cache
+  provider-cloudfoundry:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to Registry
+        uses: docker/login-action@master
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@master
+        with:
+          images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-cf
+          tags: |
+            type=raw,value=${{ jobs.getVersion.outputs.version }}
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+        with:
+          install: true
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-multi-buildx
+
+      - name: Build Provider CloudFoundry
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: infra/docker/Dockerfile
+          target: provider-cloudfoundry
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-current /tmp/.buildx-cache
+  provider-demo:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to Registry
+        uses: docker/login-action@master
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@master
+        with:
+          images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-demo
+          tags: |
+            type=raw,value=${{ jobs.getVersion.outputs.version }}
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+        with:
+          install: true
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-multi-buildx
+      - name: Build Provider Demo
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: infra/docker/Dockerfile
+          target: provider-demo
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-current /tmp/.buildx-cache
+  provider-github:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to Registry
+        uses: docker/login-action@master
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@master
+        with:
+          images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-gh
+          tags: |
+            type=raw,value=${{ jobs.getVersion.outputs.version }}
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
+        with:
+          install: true
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-multi-buildx
+      - name: Build Provider GitHub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          builder: ${{ steps.buildx.outputs.name }}
+          file: infra/docker/Dockerfile
+          target: provider-github
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-current
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-current /tmp/.buildx-cache
