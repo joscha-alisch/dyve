@@ -8,7 +8,7 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  getVersion:
+  version:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -47,7 +47,7 @@ jobs:
   binaries:
     needs:
       - test
-      - getVersion
+      - version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -61,8 +61,8 @@ jobs:
       - name: Tag with only version
         id: tag
         run: |
-          git tag ${{needs.getVersion.outputs.currentV}}
-          git tag dyve-${{ needs.getVersion.outputs.previous }} ${{ needs.getVersion.outputs.previousV }}
+          git tag ${{needs.version.outputs.currentV}}
+          git tag dyve-${{ needs.version.outputs.previous }} ${{ needs.version.outputs.previousV }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -70,13 +70,13 @@ jobs:
           version: latest
           args: release --rm-dist --skip-publish -f .github/files/.goreleaser.release.yml
         env:
-          GORELEASER_CURRENT_TAG: ${{needs.getVersion.outputs.currentV}}
-          GORELEASER_PREVIOUS_TAG: ${{needs.getVersion.outputs.previousV}}
+          GORELEASER_CURRENT_TAG: ${{needs.version.outputs.currentV}}
+          GORELEASER_PREVIOUS_TAG: ${{needs.version.outputs.previousV}}
       - name: "✏️ Generate release changelog"
         id: changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
-          sinceTag: ${{needs.getVersion.outputs.previous}}
+          sinceTag: ${{needs.version.outputs.previous}}
           excludeTagsRegex: "helm-dyve-.*"
           stripGeneratorNotice: true
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -85,8 +85,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           body: "${{ steps.changelog.outputs.changelog }}"
-          tag_name: "dyve-${{ needs.getVersion.outputs.current }}"
-          name: "Dyve ${{ needs.getVersion.outputs.current }}"
+          tag_name: "dyve-${{ needs.version.outputs.current }}"
+          name: "Dyve ${{ needs.version.outputs.current }}"
           files: |
             dist/*.tar.gz
             dist/*.zip
@@ -94,7 +94,7 @@ jobs:
   core:
     needs:
       - test
-      - getVersion
+      - version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -110,7 +110,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-core
           tags: |
-            type=raw,value=${{ needs.getVersion.outputs.current }}
+            type=raw,value=${{ needs.version.outputs.current }}
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
@@ -142,7 +142,7 @@ jobs:
   provider-cloudfoundry:
     needs:
       - test
-      - getVersion
+      - version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -158,7 +158,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-cf
           tags: |
-            type=raw,value=${{ needs.getVersion.outputs.current }}
+            type=raw,value=${{ needs.version.outputs.current }}
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
@@ -192,7 +192,7 @@ jobs:
   provider-demo:
     needs:
       - test
-      - getVersion
+      - version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -208,7 +208,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-demo
           tags: |
-            type=raw,value=${{ needs.getVersion.outputs.current }}
+            type=raw,value=${{ needs.version.outputs.current }}
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
@@ -240,7 +240,7 @@ jobs:
   provider-github:
     needs:
       - test
-      - getVersion
+      - version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -256,7 +256,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-gh
           tags: |
-            type=raw,value=${{ needs.getVersion.outputs.current }}
+            type=raw,value=${{ needs.version.outputs.current }}
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
