@@ -20,10 +20,10 @@ jobs:
         CURRENT=$(echo "${{ github.ref }}" | sed -e "s/dyve-//" | sed -e "s|refs/tags/||")
         PREVIOUS=$(git tag -l | grep -v "helm-dyve" | grep "dyve-" | sort -Vr | tail -n +2 | head -n 1 | sed -e "s/dyve-//")
         echo "::echo::on"
-        echo "::set-output name={current}::{${CURRENT}}"
-        echo "::set-output name={previous}::{${PREVIOUS}}"
-        echo "::set-output name={currentV}::{v${CURRENT}}"
-        echo "::set-output name={previousV}::{v${PREVIOUS}}"
+        echo "::set-output name=current::${CURRENT}"
+        echo "::set-output name=previous::${PREVIOUS}"
+        echo "::set-output name=currentV::v${CURRENT}"
+        echo "::set-output name=previousV::v${PREVIOUS}"
         echo "::echo::off"
     outputs:
       current: ${{ steps.version.outputs.current }}
