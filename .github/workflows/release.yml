@@ -19,8 +19,23 @@ jobs:
       run: |
         CURRENT=$(echo "${{ github.ref }}" | sed -e "s/dyve-//")
         PREVIOUS=$(git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2 | head -n 1 | sed -e "s/dyve-//")
+        echo "---"
+        git tag -l
+        echo "---"
+        git tag -l | grep -v "helm-dyve"
+        echo "---"
+        git tag -l | grep -v "helm-dyve" | sort -Vr        
+        echo "---"
+        git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2
+        echo "---"
+        git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2 | head -n 1
+        echo "---"
+        git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2 | head -n 1 | sed -e "s/dyve-//"
+        echo "---"
+        echo "::echo::on"
         echo "::set-output name={current}::{${CURRENT}}"
         echo "::set-output name={previous}::{${PREVIOUS}}"
+        echo "::echo::off"
     outputs:
       current: ${{ steps.version.outputs.current }}
       previous: ${{ steps.version.outputs.previous }}
