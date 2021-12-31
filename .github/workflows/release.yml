@@ -11,13 +11,19 @@ jobs:
   getVersion:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Extract version
       id: version
       run: |
-        VERSION=$(echo "${{ github.ref }}" | sed -e "s/dyve-//")
-        echo "::set-output name={version}::{${VERSION}}"
+        CURRENT=$(echo "${{ github.ref }}" | sed -e "s/dyve-//")
+        PREVIOUS=$(git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2 | head -n 1 | sed -e "s/dyve-//")
+        echo "::set-output name={current}::{${CURRENT}}"
+        echo "::set-output name={previous}::{${PREVIOUS}}"
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      current: ${{ steps.version.outputs.current }}
+      previous: ${{ steps.version.outputs.previous }}
   test:
     runs-on: ubuntu-latest
     steps:
@@ -49,17 +55,22 @@ jobs:
       - name: Tag with only version
         id: tag
         run: |
-          git tag "v${{ needs.getVersion.outputs.version }}"
+          git tag "v${{ needs.getVersion.outputs.current }}"
+          git tag "dyve-${{ needs.getVersion.outputs.previous }}" "v${{ needs.getVersion.outputs.previous }}"
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
           distribution: goreleaser
           version: latest
           args: release --rm-dist --skip-publish -f .github/files/.goreleaser.release.yml
+        env:
+          GORELEASER_CURRENT_TAG: "v${{ needs.getVersion.outputs.current }}"
+          GORELEASER_PREVIOUS_TAG: "v${{ needs.getVersion.outputs.previous }}"
       - name: "✏️ Generate release changelog"
         id: changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
+          sinceTag: "v${{ needs.getVersion.outputs.previous }}"
           excludeTagsRegex: "helm-dyve-.*"
           stripGeneratorNotice: true
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -68,8 +79,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           body: "${{ steps.changelog.outputs.changelog }}"
-          tag_name: "dyve-${{ needs.getVersion.outputs.version }}"
-          name: "Dyve ${{ needs.getVersion.outputs.version }}"
+          tag_name: "dyve-${{ needs.getVersion.outputs.current }}"
+          name: "Dyve ${{ needs.getVersion.outputs.current }}"
           files: |
             dist/*.tar.gz
             dist/*.zip
@@ -93,7 +104,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-core
           tags: |
-            type=raw,value=${{ needs.getVersion.outputs.version }}
+            type=raw,value=${{ needs.getVersion.outputs.current }}
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
@@ -141,7 +152,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-cf
           tags: |
-            type=raw,value=${{ needs.getVersion.outputs.version }}
+            type=raw,value=${{ needs.getVersion.outputs.current }}
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
@@ -191,7 +202,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-demo
           tags: |
-            type=raw,value=${{ needs.getVersion.outputs.version }}
+            type=raw,value=${{ needs.getVersion.outputs.current }}
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
@@ -239,7 +250,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/joscha-alisch/dyve-provider-gh
           tags: |
-            type=raw,value=${{ needs.getVersion.outputs.version }}
+            type=raw,value=${{ needs.getVersion.outputs.current }}
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@master
