@@ -61,8 +61,8 @@ jobs:
       - name: Tag with only version
         id: tag
         run: |
-          git tag "v${{ needs.getVersion.outputs.current }}"
-          git tag "dyve-${{ needs.getVersion.outputs.previous }}" "v${{ needs.getVersion.outputs.previous }}"
+          git tag ${{needs.getVersion.outputs.currentV}}
+          git tag dyve-${{ needs.getVersion.outputs.previous }} ${{ needs.getVersion.outputs.previousV }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
