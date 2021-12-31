@@ -17,28 +17,19 @@ jobs:
     - name: Extract version
       id: version
       run: |
-        CURRENT=$(echo "${{ github.ref }}" | sed -e "s/dyve-//")
-        PREVIOUS=$(git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2 | head -n 1 | sed -e "s/dyve-//")
-        echo "---"
-        git tag -l
-        echo "---"
-        git tag -l | grep -v "helm-dyve"
-        echo "---"
-        git tag -l | grep -v "helm-dyve" | sort -Vr        
-        echo "---"
-        git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2
-        echo "---"
-        git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2 | head -n 1
-        echo "---"
-        git tag -l | grep -v "helm-dyve" | sort -Vr | tail -n +2 | head -n 1 | sed -e "s/dyve-//"
-        echo "---"
+        CURRENT=$(echo "${{ github.ref }}" | sed -e "s/dyve-//" | sed -e "s|refs/tags/||")
+        PREVIOUS=$(git tag -l | grep -v "helm-dyve" | grep "dyve-" | sort -Vr | tail -n +2 | head -n 1 | sed -e "s/dyve-//")
         echo "::echo::on"
         echo "::set-output name={current}::{${CURRENT}}"
         echo "::set-output name={previous}::{${PREVIOUS}}"
+        echo "::set-output name={currentV}::{v${CURRENT}}"
+        echo "::set-output name={previousV}::{v${PREVIOUS}}"
         echo "::echo::off"
     outputs:
       current: ${{ steps.version.outputs.current }}
       previous: ${{ steps.version.outputs.previous }}
+      currentV: ${{ steps.version.outputs.currentV }}
+      previousV: ${{ steps.version.outputs.previousV }}
   test:
     runs-on: ubuntu-latest
     steps:
@@ -79,13 +70,13 @@ jobs:
           version: latest
           args: release --rm-dist --skip-publish -f .github/files/.goreleaser.release.yml
         env:
-          GORELEASER_CURRENT_TAG: "v${{ needs.getVersion.outputs.current }}"
-          GORELEASER_PREVIOUS_TAG: "v${{ needs.getVersion.outputs.previous }}"
+          GORELEASER_CURRENT_TAG: ${{needs.getVersion.outputs.currentV}}
+          GORELEASER_PREVIOUS_TAG: ${{needs.getVersion.outputs.previousV}}
       - name: "✏️ Generate release changelog"
         id: changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
-          sinceTag: "v${{ needs.getVersion.outputs.previous }}"
+          sinceTag: ${{needs.getVersion.outputs.previous}}
           excludeTagsRegex: "helm-dyve-.*"
           stripGeneratorNotice: true
           token: ${{ secrets.GITHUB_TOKEN }}
