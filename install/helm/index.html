@@ -770,57 +770,57 @@
 <p>In order to use the helm chart, you will need helm installed and configured to use your kubernetes cluster. You can find <a href="https://helm.sh/docs/intro/install/">the instructions here.</a></p>
 </details>
 <p>With helm installed, add the repository:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>helm repo add dyve https://joscha-alisch.github.io/dyve
-<a id="__codelineno-0-2" name="__codelineno-0-2"></a>helm repo update
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="__codelineno-0-1"></a>helm repo add dyve https://joscha-alisch.github.io/dyve
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="__codelineno-0-2"></a>helm repo update
 </code></pre></div>
 <p>and install the chart:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a>helm upgrade --install -n dyve dyve dyve/dyve
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="__codelineno-1-1"></a>helm upgrade --install -n dyve dyve dyve/dyve
 </code></pre></div>
 <h2 id="configuration">Configuration</h2>
 <p>In order to set configuration parameters, create a <code>values.yaml</code> and specify it when installing the chart:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a>helm upgrade --install -f values.yaml -n dyve dyve dyve/dyve 
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="__codelineno-2-1"></a>helm upgrade --install -f values.yaml -n dyve dyve dyve/dyve 
 </code></pre></div>
 <p>The following shows the available options together with its default values:</p>
-<div class="highlight"><span class="filename">values.yaml</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="nt">core</span><span class="p">:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2"></a>  <span class="nt">image</span><span class="p">:</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3"></a>    <span class="nt">repository</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ghcr.io/joscha-alisch/dyve-core</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4"></a>    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">main</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5"></a>    <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Always</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6"></a>  <span class="nt">args</span><span class="p">:</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7"></a>    <span class="p p-Indicator">-</span> <span class="s">&quot;--config&quot;</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8"></a>    <span class="p p-Indicator">-</span> <span class="s">&quot;/app/config.yaml&quot;</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9"></a>  <span class="nt">config</span><span class="p">:</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10"></a>    <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8080</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11"></a>    <span class="nt">database</span><span class="p">:</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12"></a>      <span class="nt">uri</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">mongodb://dyve-mongodb:27017</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13"></a>      <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">core</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14"></a>
-<a id="__codelineno-3-15" name="__codelineno-3-15"></a><span class="nt">frontend</span><span class="p">:</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16"></a>  <span class="nt">image</span><span class="p">:</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17"></a>    <span class="nt">repository</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ghcr.io/joscha-alisch/dyve-frontend</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18"></a>    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">main</span>
-<a id="__codelineno-3-19" name="__codelineno-3-19"></a>    <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Always</span>
-<a id="__codelineno-3-20" name="__codelineno-3-20"></a>
-<a id="__codelineno-3-21" name="__codelineno-3-21"></a>  <span class="nt">ingress</span><span class="p">:</span>
-<a id="__codelineno-3-22" name="__codelineno-3-22"></a>    <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
-<a id="__codelineno-3-23" name="__codelineno-3-23"></a>
-<a id="__codelineno-3-24" name="__codelineno-3-24"></a><span class="nt">providers</span><span class="p">:</span>
-<a id="__codelineno-3-25" name="__codelineno-3-25"></a>  <span class="nt">cloudfoundry</span><span class="p">:</span>
-<a id="__codelineno-3-26" name="__codelineno-3-26"></a>    <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
-<a id="__codelineno-3-27" name="__codelineno-3-27"></a>    <span class="nt">image</span><span class="p">:</span>
-<a id="__codelineno-3-28" name="__codelineno-3-28"></a>      <span class="nt">repository</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ghcr.io/joscha-alisch/dyve-provider-cf</span>
-<a id="__codelineno-3-29" name="__codelineno-3-29"></a>      <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">main</span>
-<a id="__codelineno-3-30" name="__codelineno-3-30"></a>      <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Always</span>
-<a id="__codelineno-3-31" name="__codelineno-3-31"></a>    <span class="nt">config</span><span class="p">:</span>
-<a id="__codelineno-3-32" name="__codelineno-3-32"></a>      <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8080</span>
-<a id="__codelineno-3-33" name="__codelineno-3-33"></a>      <span class="nt">database</span><span class="p">:</span>
-<a id="__codelineno-3-34" name="__codelineno-3-34"></a>        <span class="nt">uri</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">mongodb://dyve-mongodb:27017</span>
-<a id="__codelineno-3-35" name="__codelineno-3-35"></a>        <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">provider_cf</span>
-<a id="__codelineno-3-36" name="__codelineno-3-36"></a>
-<a id="__codelineno-3-37" name="__codelineno-3-37"></a><span class="nt">mongodb</span><span class="p">:</span>
-<a id="__codelineno-3-38" name="__codelineno-3-38"></a>  <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-3-39" name="__codelineno-3-39"></a>  <span class="nt">auth</span><span class="p">:</span>
-<a id="__codelineno-3-40" name="__codelineno-3-40"></a>    <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<div class="highlight"><span class="filename">values.yaml</span><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="__codelineno-3-1"></a><span class="nt">core</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="__codelineno-3-2"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="__codelineno-3-3"></a><span class="w">    </span><span class="nt">repository</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/joscha-alisch/dyve-core</span><span class="w"></span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="__codelineno-3-4"></a><span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span><span class="w"></span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="__codelineno-3-5"></a><span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Always</span><span class="w"></span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="__codelineno-3-6"></a><span class="w">  </span><span class="nt">args</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="__codelineno-3-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;--config&quot;</span><span class="w"></span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="__codelineno-3-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/app/config.yaml&quot;</span><span class="w"></span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="__codelineno-3-9"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="__codelineno-3-10"></a><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span><span class="w"></span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="__codelineno-3-11"></a><span class="w">    </span><span class="nt">database</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="__codelineno-3-12"></a><span class="w">      </span><span class="nt">uri</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mongodb://dyve-mongodb:27017</span><span class="w"></span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="__codelineno-3-13"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">core</span><span class="w"></span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="__codelineno-3-15"></a><span class="nt">frontend</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="__codelineno-3-16"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="__codelineno-3-17"></a><span class="w">    </span><span class="nt">repository</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/joscha-alisch/dyve-frontend</span><span class="w"></span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="__codelineno-3-18"></a><span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span><span class="w"></span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="__codelineno-3-19"></a><span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Always</span><span class="w"></span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="__codelineno-3-20"></a>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="__codelineno-3-21"></a><span class="w">  </span><span class="nt">ingress</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="__codelineno-3-22"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="__codelineno-3-23"></a>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="__codelineno-3-24"></a><span class="nt">providers</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="__codelineno-3-25"></a><span class="w">  </span><span class="nt">cloudfoundry</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="__codelineno-3-26"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="__codelineno-3-27"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="__codelineno-3-28"></a><span class="w">      </span><span class="nt">repository</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/joscha-alisch/dyve-provider-cf</span><span class="w"></span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="__codelineno-3-29"></a><span class="w">      </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span><span class="w"></span>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="__codelineno-3-30"></a><span class="w">      </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Always</span><span class="w"></span>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="__codelineno-3-31"></a><span class="w">    </span><span class="nt">config</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="__codelineno-3-32"></a><span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span><span class="w"></span>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="__codelineno-3-33"></a><span class="w">      </span><span class="nt">database</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="__codelineno-3-34"></a><span class="w">        </span><span class="nt">uri</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mongodb://dyve-mongodb:27017</span><span class="w"></span>
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="__codelineno-3-35"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">provider_cf</span><span class="w"></span>
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="__codelineno-3-36"></a>
+<a id="__codelineno-3-37" name="__codelineno-3-37" href="__codelineno-3-37"></a><span class="nt">mongodb</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-38" name="__codelineno-3-38" href="__codelineno-3-38"></a><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<a id="__codelineno-3-39" name="__codelineno-3-39" href="__codelineno-3-39"></a><span class="w">  </span><span class="nt">auth</span><span class="p">:</span><span class="w"></span>
+<a id="__codelineno-3-40" name="__codelineno-3-40" href="__codelineno-3-40"></a><span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
 </code></pre></div>
 
               
