@@ -76,7 +76,7 @@ jobs:
         id: changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
-          sinceTag: ${{needs.version.outputs.previousV}}
+          sinceTag: "dyve-${{needs.version.outputs.previous}}"
           excludeTagsRegex: "helm-dyve-.*"
           stripGeneratorNotice: true
           token: ${{ secrets.GITHUB_TOKEN }}
