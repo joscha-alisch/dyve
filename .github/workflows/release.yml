@@ -58,7 +58,7 @@ jobs:
         id: tag
         run: |
           git tag "${{needs.version.outputs.currentV}}"
-          git tag "dyve-${{ needs.version.outputs.previous }}" "${{ needs.version.outputs.previousV }}"
+          git tag "${{ needs.version.outputs.previousV }}" "dyve-${{ needs.version.outputs.previous }}"
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
