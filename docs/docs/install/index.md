@@ -8,7 +8,7 @@ The following installation methods are currently supported:
 
 ### Demo
 
-[Run dyve with a demo provider via docker-compose setup for quick evaluation,](demo/)
+[Run dyve with a demo provider via docker-compose setup for quick evaluation,](demo)
 
 ### Docker 
 

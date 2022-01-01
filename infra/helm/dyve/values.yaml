@@ -30,6 +30,10 @@ providers:
       pullPolicy: Always
     config:
       port: 8080
+      cloudfoundry:
+        api: ""
+        user: ""
+        password: ""
       database:
         uri: mongodb://dyve-mongodb:27017
         name: provider_cf
