@@ -23,7 +23,7 @@ require (
 	github.com/rs/zerolog v1.25.0
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/viper v1.10.1
-	github.com/tryvium-travels/memongo v0.3.2
+	github.com/tryvium-travels/memongo v0.4.0
 	go.mongodb.org/mongo-driver v1.8.1
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
