@@ -23,10 +23,13 @@ func TestName(t *testing.T) {
 		providerId       string
 		appProvider      *fakes.Provider
 		pipelineProvider *fakes.Provider
+		routingProvider  *fakes.Provider
 		appsBefore       *fakes.MappingAppsService
 		appsAfter        *fakes.MappingAppsService
 		pipelinesBefore  *fakes.MappingPipelinesService
 		pipelinesAfter   *fakes.MappingPipelinesService
+		routesBefore     *fakes.MappingRoutesService
+		routesAfter      *fakes.MappingRoutesService
 		expectedErr      error
 		expectedWorked   bool
 		recordedTime     time.Time
@@ -64,6 +67,25 @@ func TestName(t *testing.T) {
 			},
 			}, expectedWorked: true, recordedTime: someTime,
 		},
+		{
+			desc: "adds routes", job: recon.Job{
+				Type:        provider.ReconcileRoutingProviders,
+				Guid:        "app-a",
+				LastUpdated: someTime,
+			}, providerId: "routes-provider", routingProvider: fakes.RoutesProvider(map[string]sdk.AppRouting{
+				"app-a": {Routes: sdk.AppRoutes{{
+					Host:    "host",
+					Path:    "path",
+					AppPort: 233,
+				}}},
+			}), routesAfter: &fakes.MappingRoutesService{Routes: map[string]sdk.AppRouting{
+				"app-a": {Routes: sdk.AppRoutes{{
+					Host:    "host",
+					Path:    "path",
+					AppPort: 233,
+				}}},
+			}}, expectedWorked: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -72,6 +94,7 @@ func TestName(t *testing.T) {
 				Job:               &test.job,
 				AppProviders:      map[string]sdk.AppProvider{},
 				PipelineProviders: map[string]sdk.PipelineProvider{},
+				RoutingProviders:  map[string]sdk.RoutingProvider{},
 			}
 			if test.appProvider != nil {
 				providers.AppProviders[test.providerId] = test.appProvider
@@ -80,16 +103,24 @@ func TestName(t *testing.T) {
 				providers.PipelineProviders[test.providerId] = test.pipelineProvider
 			}
 
+			if test.routingProvider != nil {
+				providers.RoutingProviders[test.providerId] = test.routingProvider
+			}
+
 			if test.appsBefore == nil {
 				test.appsBefore = &fakes.MappingAppsService{Apps: map[string]apps.App{}}
 			}
 			if test.pipelinesBefore == nil {
 				test.pipelinesBefore = &fakes.MappingPipelinesService{Pipelines: map[string]pipelines.Pipeline{}}
 			}
+			if test.routesBefore == nil {
+				test.routesBefore = &fakes.MappingRoutesService{Routes: map[string]sdk.AppRouting{}}
+			}
 
 			r := NewReconciler(service.Core{
 				Apps:      test.appsBefore,
 				Providers: providers,
+				Routing:   test.routesBefore,
 				Pipelines: test.pipelinesBefore,
 			}, 1*time.Minute)
 			worked, err := r.Run()
@@ -105,12 +136,16 @@ func TestName(t *testing.T) {
 				tt.Errorf("\nwanted time: %v\n   got time: %v", test.recordedTime, test.appProvider.RecordedTime)
 			} else if test.pipelineProvider != nil && test.pipelineProvider.RecordedTime != test.recordedTime {
 				tt.Errorf("\nwanted time: %v\n   got time: %v", test.recordedTime, test.pipelineProvider.RecordedTime)
+			} else if test.routingProvider != nil && test.routingProvider.RecordedTime != test.recordedTime {
+				tt.Errorf("\nwanted time: %v\n   got time: %v", test.recordedTime, test.routingProvider.RecordedTime)
 			}
 
 			if test.appsAfter != nil && !cmp.Equal(test.appsAfter.Apps, test.appsBefore.Apps) {
 				tt.Errorf("\napp service states don't match: \n%s\n", cmp.Diff(test.appsAfter.Apps, test.appsBefore.Apps))
 			} else if test.pipelinesAfter != nil && !cmp.Equal(test.pipelinesAfter.Pipelines, test.pipelinesBefore.Pipelines) {
 				tt.Errorf("\npipeline service states don't match: \n%s\n", cmp.Diff(test.pipelinesAfter.Pipelines, test.pipelinesBefore.Pipelines))
+			} else if test.routesAfter != nil && !cmp.Equal(test.routesAfter.Routes, test.routesBefore.Routes) {
+				tt.Errorf("\nrouting service states don't match: \n%s\n", cmp.Diff(test.routesAfter.Routes, test.routesBefore.Routes))
 			}
 		})
 	}

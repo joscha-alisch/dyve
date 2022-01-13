@@ -18,6 +18,12 @@ func AppProvider(apps []sdk.App) *Provider {
 	}
 }
 
+func RoutesProvider(routes map[string]sdk.AppRouting) *Provider {
+	return &Provider{
+		Routes: routes,
+	}
+}
+
 func NewErrProvider(err error) *Provider {
 	return &Provider{
 		Err: err,
@@ -28,8 +34,13 @@ type Provider struct {
 	Apps         []sdk.App
 	Err          error
 	Pipelines    []sdk.Pipeline
+	Routes       map[string]sdk.AppRouting
 	Updates      sdk.PipelineUpdates
 	RecordedTime time.Time
+}
+
+func (f *Provider) GetAppRouting(id string) (sdk.AppRouting, error) {
+	return f.Routes[id], f.Err
 }
 
 func (f *Provider) ListUpdates(since time.Time) (sdk.PipelineUpdates, error) {

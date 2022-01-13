@@ -11,6 +11,7 @@ type ProviderService struct {
 	Job               *recon.Job
 	AppProviders      map[string]sdk.AppProvider
 	PipelineProviders map[string]sdk.PipelineProvider
+	RoutingProviders  map[string]sdk.RoutingProvider
 }
 
 func (s *ProviderService) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
@@ -43,15 +44,21 @@ func (s *ProviderService) RequestAppUpdate(id string) error {
 }
 
 func (s *ProviderService) AddRoutingProvider(id string, name string, p sdk.RoutingProvider) error {
-	panic("implement me")
+	s.RoutingProviders[id] = p
+	return nil
 }
 
 func (s *ProviderService) GetRoutingProviders() ([]sdk.RoutingProvider, error) {
-	panic("implement me")
+	var res []sdk.RoutingProvider
+	for _, routingProvider := range s.RoutingProviders {
+		res = append(res, routingProvider)
+	}
+	return res, nil
 }
 
 func (s *ProviderService) DeleteRoutingProvider(id string) error {
-	panic("implement me")
+	delete(s.RoutingProviders, id)
+	return nil
 }
 
 func (s *ProviderService) AddInstancesProvider(id string, name string, p sdk.InstancesProvider) error {
