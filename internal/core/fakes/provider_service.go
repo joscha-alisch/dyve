@@ -8,10 +8,11 @@ import (
 )
 
 type ProviderService struct {
-	Job               *recon.Job
-	AppProviders      map[string]sdk.AppProvider
-	PipelineProviders map[string]sdk.PipelineProvider
-	RoutingProviders  map[string]sdk.RoutingProvider
+	Job                *recon.Job
+	AppProviders       map[string]sdk.AppProvider
+	PipelineProviders  map[string]sdk.PipelineProvider
+	RoutingProviders   map[string]sdk.RoutingProvider
+	InstancesProviders map[string]sdk.InstancesProvider
 }
 
 func (s *ProviderService) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
@@ -62,11 +63,16 @@ func (s *ProviderService) DeleteRoutingProvider(id string) error {
 }
 
 func (s *ProviderService) AddInstancesProvider(id string, name string, p sdk.InstancesProvider) error {
-	panic("implement me")
+	s.InstancesProviders[id] = p
+	return nil
 }
 
 func (s *ProviderService) GetInstancesProviders() ([]sdk.InstancesProvider, error) {
-	panic("implement me")
+	var res []sdk.InstancesProvider
+	for _, instancesProvider := range s.InstancesProviders {
+		res = append(res, instancesProvider)
+	}
+	return res, nil
 }
 
 func (s *ProviderService) DeleteInstancesProvider(id string) error {
