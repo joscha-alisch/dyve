@@ -1,7 +1,6 @@
 package cloudfoundry
 
 import (
-	"errors"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"time"
 )
@@ -41,7 +40,9 @@ func (p *Provider) GetApp(id string) (sdk.App, error) {
 }
 
 func (p *Provider) GetAppRouting(id string) (sdk.AppRouting, error) {
-	cached, err := p.db.Cached(id+"/routing", 5*time.Second, func() (interface{}, error) {
+	cached := sdk.AppRouting{}
+
+	res, err := p.db.Cached(id+"/routing", 5*time.Second, &cached, func() (interface{}, error) {
 		routes, err := p.cf.GetRoutes(id)
 		if err != nil {
 			return nil, err
@@ -59,16 +60,16 @@ func (p *Provider) GetAppRouting(id string) (sdk.AppRouting, error) {
 	if err != nil {
 		return sdk.AppRouting{}, err
 	}
-
-	if routing, ok := cached.(sdk.AppRouting); ok {
-		return routing, nil
+	if res != nil {
+		return res.(sdk.AppRouting), nil
 	}
 
-	return sdk.AppRouting{}, errors.New("could not get app routing")
+	return cached, nil
 }
 
 func (p *Provider) GetAppInstances(id string) (sdk.AppInstances, error) {
-	cached, err := p.db.Cached(id+"/instances", 5*time.Second, func() (interface{}, error) {
+	cached := sdk.AppInstances{}
+	res, err := p.db.Cached(id+"/instances", 5*time.Second, &cached, func() (interface{}, error) {
 		instances, err := p.cf.GetInstances(id)
 		if err != nil {
 			return nil, err
@@ -85,12 +86,10 @@ func (p *Provider) GetAppInstances(id string) (sdk.AppInstances, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	if instances, ok := cached.(sdk.AppInstances); ok {
-		return instances, nil
+	if res != nil {
+		return res.(sdk.AppInstances), nil
 	}
-
-	return nil, errors.New("could not get app routing")
+	return cached, nil
 }
 
 func cfStateToSdkState(state string) sdk.AppState {

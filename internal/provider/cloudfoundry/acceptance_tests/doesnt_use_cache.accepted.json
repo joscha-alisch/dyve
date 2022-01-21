@@ -1,0 +1,18 @@
+{
+    "cache": [
+        {
+            "data": {
+                "id": "a",
+                "src": "func"
+            },
+            "id": "a",
+            "last": "2006-01-01T15:00:00Z",
+            "src": "cached"
+        }
+    ],
+    "cf_infos": [
+        {
+            "guid": "main"
+        }
+    ]
+}

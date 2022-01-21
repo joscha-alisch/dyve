@@ -115,6 +115,18 @@ func TestMongoIntegration(t *testing.T) {
 			}
 			return nil
 		}},
+		{desc: "deletes app", state: baseState, f: func(db Database, tt *testing.T) error {
+			_, err := db.DeleteApp("app-a-guid")
+			return err
+		}},
+		{desc: "deletes space", state: baseState, f: func(db Database, tt *testing.T) error {
+			_, err := db.DeleteSpace("space-a-guid")
+			return err
+		}},
+		{desc: "deletes org", state: baseState, f: func(db Database, tt *testing.T) error {
+			_, err := db.DeleteOrg("org-a-guid")
+			return err
+		}},
 		{desc: "fetch org job", state: bson.M{
 			"orgs": []bson.M{
 				{"name": "b", "guid": "def", "lastUpdated": someTime.Add(-1 * time.Minute)},
@@ -162,6 +174,51 @@ func TestMongoIntegration(t *testing.T) {
 			j, ok := db.AcceptReconcileJob(2 * time.Minute)
 			if !ok || !cmp.Equal(expected, j) {
 				tt.Errorf("wrong job returned:\n%s\n", cmp.Diff(expected, j))
+			}
+			return nil
+		}},
+		{desc: "uses cache", state: bson.M{
+			"cache": []bson.M{
+				{"id": "a", "last": someTime.Add(-1 * time.Minute), "src": "cached"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := cacheObj{
+				Id:  "a",
+				Src: "cached",
+			}
+			cached := cacheObj{}
+			res, _ := db.Cached("a", 2*time.Minute, &cached, func() (interface{}, error) {
+				return cacheObj{
+					Id:  "a",
+					Src: "func",
+				}, nil
+			})
+			if !cmp.Equal(expected, cached) {
+				tt.Errorf("wrong data returned:\n%s\n", cmp.Diff(expected, cached))
+			}
+			if res != nil {
+				tt.Errorf("expected res to be nil")
+			}
+			return nil
+		}},
+		{desc: "doesnt use cache", state: bson.M{
+			"cache": []bson.M{
+				{"id": "a", "last": someTime.Add(-3 * time.Minute), "src": "cached"},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			expected := cacheObj{
+				Id:  "a",
+				Src: "func",
+			}
+			cached := cacheObj{}
+			res, _ := db.Cached("a", 2*time.Minute, &cached, func() (interface{}, error) {
+				return cacheObj{
+					Id:  "a",
+					Src: "func",
+				}, nil
+			})
+			if !cmp.Equal(expected, res) {
+				tt.Errorf("wrong data returned:\n%s\n", cmp.Diff(expected, res))
 			}
 			return nil
 		}},
@@ -365,4 +422,9 @@ func walk(m bson.M, f func(map[string]interface{}, string)) {
 			f(m, k)
 		}
 	}
+}
+
+type cacheObj struct {
+	Id  string
+	Src string
 }

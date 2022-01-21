@@ -1,0 +1,174 @@
+{
+    "apps": [
+        {
+            "guid": "app-c-guid",
+            "name": "app-c-name",
+            "space": {
+                "guid": "space-b-guid",
+                "name": "space-b-name",
+                "org": {
+                    "cf": {
+                        "guid": "main"
+                    },
+                    "guid": "org-a-guid",
+                    "name": "org-a-name"
+                }
+            }
+        },
+        {
+            "guid": "app-d-guid",
+            "name": "app-d-name",
+            "space": {
+                "guid": "space-b-guid",
+                "name": "space-b-name",
+                "org": {
+                    "cf": {
+                        "guid": "main"
+                    },
+                    "guid": "org-a-guid",
+                    "name": "org-a-name"
+                }
+            }
+        },
+        {
+            "guid": "app-e-guid",
+            "name": "app-e-name",
+            "space": {
+                "guid": "space-c-guid",
+                "name": "space-c-name",
+                "org": {
+                    "cf": {
+                        "guid": "main"
+                    },
+                    "guid": "org-b-guid",
+                    "name": "org-b-name"
+                }
+            }
+        },
+        {
+            "guid": "app-f-guid",
+            "name": "app-f-name",
+            "space": {
+                "guid": "space-c-guid",
+                "name": "space-c-name",
+                "org": {
+                    "cf": {
+                        "guid": "main"
+                    },
+                    "guid": "org-b-guid",
+                    "name": "org-b-name"
+                }
+            }
+        },
+        {
+            "guid": "app-g-guid",
+            "name": "app-g-name",
+            "space": {
+                "guid": "space-d-guid",
+                "name": "space-d-name",
+                "org": {
+                    "cf": {
+                        "guid": "main"
+                    },
+                    "guid": "org-b-guid",
+                    "name": "org-b-name"
+                }
+            }
+        },
+        {
+            "guid": "app-h-guid",
+            "name": "app-h-name",
+            "space": {
+                "guid": "space-d-guid",
+                "name": "space-d-name",
+                "org": {
+                    "cf": {
+                        "guid": "main"
+                    },
+                    "guid": "org-b-guid",
+                    "name": "org-b-name"
+                }
+            }
+        }
+    ],
+    "cf_infos": [
+        {
+            "guid": "main",
+            "orgs": [
+                "org-a-guid",
+                "org-b-guid"
+            ]
+        }
+    ],
+    "orgs": [
+        {
+            "cf": {
+                "guid": "main"
+            },
+            "guid": "org-a-guid",
+            "name": "org-a-name",
+            "spaces": [
+                "space-a-guid",
+                "space-b-guid"
+            ]
+        },
+        {
+            "cf": {
+                "guid": "main"
+            },
+            "guid": "org-b-guid",
+            "name": "org-b-name",
+            "spaces": [
+                "space-c-guid",
+                "space-d-guid"
+            ]
+        }
+    ],
+    "spaces": [
+        {
+            "apps": [
+                "app-c-guid",
+                "app-d-guid"
+            ],
+            "guid": "space-b-guid",
+            "name": "space-b-name",
+            "org": {
+                "cf": {
+                    "guid": "main"
+                },
+                "guid": "org-a-guid",
+                "name": "org-a-name"
+            }
+        },
+        {
+            "apps": [
+                "app-e-guid",
+                "app-f-guid"
+            ],
+            "guid": "space-c-guid",
+            "name": "space-c-name",
+            "org": {
+                "cf": {
+                    "guid": "main"
+                },
+                "guid": "org-b-guid",
+                "name": "org-b-name"
+            }
+        },
+        {
+            "apps": [
+                "app-g-guid",
+                "app-h-guid"
+            ],
+            "guid": "space-d-guid",
+            "name": "space-d-name",
+            "org": {
+                "cf": {
+                    "guid": "main"
+                },
+                "guid": "org-b-guid",
+                "name": "org-b-name"
+            }
+        }
+    ]
+}

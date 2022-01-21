@@ -183,7 +183,7 @@ type fakeDb struct {
 	b   backend
 }
 
-func (f *fakeDb) Cached(id string, duration time.Duration, fun func() (interface{}, error)) (interface{}, error) {
+func (f *fakeDb) Cached(id string, duration time.Duration, res interface{}, fun func() (interface{}, error)) (interface{}, error) {
 	panic("implement me")
 }
 
@@ -241,25 +241,31 @@ func (f *fakeDb) UpsertSpaceApps(spaceGuid string, apps []App) error {
 	return nil
 }
 
-func (f *fakeDb) DeleteApp(guid string) {
+func (f *fakeDb) DeleteApp(guid string) (bool, error) {
+	ok := f.b.Apps[guid] != nil
 	delete(f.b.Apps, guid)
 	if len(f.b.Apps) == 0 {
 		f.b.Apps = nil
 	}
+	return ok, nil
 }
 
-func (f *fakeDb) DeleteSpace(guid string) {
+func (f *fakeDb) DeleteSpace(guid string) (bool, error) {
+	ok := f.b.Spaces[guid] != nil
 	delete(f.b.Spaces, guid)
 	if len(f.b.Spaces) == 0 {
 		f.b.Spaces = nil
 	}
+	return ok, nil
 }
 
-func (f *fakeDb) DeleteOrg(guid string) {
+func (f *fakeDb) DeleteOrg(guid string) (bool, error) {
+	ok := f.b.Spaces[guid] != nil
 	delete(f.b.Orgs, guid)
 	if len(f.b.Orgs) == 0 {
 		f.b.Orgs = nil
 	}
+	return ok, nil
 }
 
 func (f *fakeDb) UpsertSpace(s Space) error {

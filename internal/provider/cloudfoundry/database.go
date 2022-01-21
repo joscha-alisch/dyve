@@ -12,12 +12,12 @@ type Database interface {
 	UpsertOrgSpaces(orgGuid string, spaces []Space) error
 	UpsertSpaceApps(spaceGuid string, apps []App) error
 
-	DeleteOrg(guid string)
-	DeleteSpace(guid string)
-	DeleteApp(guid string)
+	DeleteOrg(guid string) (bool, error)
+	DeleteSpace(guid string) (bool, error)
+	DeleteApp(guid string) (bool, error)
 
 	ListApps() ([]App, error)
 	GetApp(id string) (App, error)
 
-	Cached(id string, duration time.Duration, f func() (interface{}, error)) (interface{}, error)
+	Cached(id string, duration time.Duration, cached interface{}, f func() (interface{}, error)) (interface{}, error)
 }

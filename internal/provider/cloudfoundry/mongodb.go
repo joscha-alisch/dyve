@@ -15,8 +15,6 @@ type MongoLogin struct {
 	DB  string
 }
 
-var now = time.Now
-
 func NewMongoDatabase(l MongoLogin) (Database, error) {
 	ctx := context.Background()
 	c, err := mongo.Connect(
@@ -59,13 +57,15 @@ type mongoDatabase struct {
 	ctx     context.Context
 }
 
-func (d *mongoDatabase) Cached(id string, duration time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	cacheTime := now().Add(-duration)
-	res := d.cache.FindOne(d.ctx, bson.M{"id": id, "last": bson.M{"$gte": cacheTime}})
+func (d *mongoDatabase) Cached(id string, duration time.Duration, cached interface{}, f func() (interface{}, error)) (interface{}, error) {
+	cacheTime := currentTime().Add(-duration)
+	cacheRes := d.cache.FindOne(d.ctx, bson.M{"id": id, "last": bson.M{"$gte": cacheTime}})
 
-	err := res.Err()
+	err := cacheRes.Err()
 	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, err
+	} else if err == nil {
+		return nil, cacheRes.Decode(cached)
 	}
 
 	data, err := f()
@@ -73,7 +73,7 @@ func (d *mongoDatabase) Cached(id string, duration time.Duration, f func() (inte
 		return nil, err
 	}
 
-	_, err = d.cache.UpdateOne(d.ctx, bson.M{"id": id}, bson.M{"$set": bson.M{"id": id, "last": now(), "data": data}}, options.Update().SetUpsert(true))
+	_, err = d.cache.UpdateOne(d.ctx, bson.M{"id": id}, bson.M{"$set": bson.M{"id": id, "last": currentTime(), "data": data}}, options.Update().SetUpsert(true))
 	if err != nil {
 		return nil, err
 	}
@@ -208,35 +208,38 @@ func (d *mongoDatabase) updateSpace(spaceGuid string, appGuids []string) error {
 	return err
 }
 
-func (d *mongoDatabase) DeleteApp(guid string) {
-	d.deleteByGuid(d.apps, guid)
+func (d *mongoDatabase) DeleteApp(guid string) (bool, error) {
+	return d.deleteByGuid(d.apps, guid, "")
 }
 
-func (d *mongoDatabase) DeleteSpace(guid string) {
-	d.deleteByGuid(d.spaces, guid)
-	d.deleteBySpace(d.apps, guid)
+func (d *mongoDatabase) DeleteSpace(guid string) (bool, error) {
+	deletedSpace, err := d.deleteByGuid(d.spaces, guid, "")
+	if err != nil {
+		return deletedSpace, err
+	}
+	deletedApps, err := d.deleteByGuid(d.apps, guid, "space.")
+	return deletedApps || deletedSpace, err
 }
 
-func (d *mongoDatabase) DeleteOrg(guid string) {
-	d.deleteByGuid(d.orgs, guid)
-	d.deleteByOrg(d.spaces, guid)
-	d.deleteByOrg(d.apps, guid)
+func (d *mongoDatabase) DeleteOrg(guid string) (bool, error) {
+	deletedOrg, err := d.deleteByGuid(d.orgs, guid, "")
+	if err != nil {
+		return deletedOrg, err
+	}
+	deletedSpaces, err := d.deleteByGuid(d.spaces, guid, "org.")
+	if err != nil {
+		return deletedOrg || deletedSpaces, err
+	}
+	deletedApps, err := d.deleteByGuid(d.apps, guid, "space.org.")
+	return deletedOrg || deletedSpaces || deletedApps, err
 }
 
-func (d *mongoDatabase) deleteByGuid(coll *mongo.Collection, guid string) (bool, error) {
-	return d.deleteBy(coll, bson.M{"guid": bson.M{"$eq": guid}})
-}
-
-func (d *mongoDatabase) deleteByOrg(coll *mongo.Collection, guid string) (bool, error) {
-	return d.deleteBy(coll, bson.M{"org": bson.M{"$eq": guid}})
-}
-
-func (d *mongoDatabase) deleteBySpace(coll *mongo.Collection, guid string) (bool, error) {
-	return d.deleteBy(coll, bson.M{"space": bson.M{"$eq": guid}})
+func (d *mongoDatabase) deleteByGuid(coll *mongo.Collection, guid string, nested string) (bool, error) {
+	return d.deleteBy(coll, bson.M{nested + "guid": guid})
 }
 
 func (d *mongoDatabase) deleteBy(coll *mongo.Collection, filter bson.M) (bool, error) {
-	res, err := coll.DeleteOne(d.ctx, filter)
+	res, err := coll.DeleteMany(d.ctx, filter)
 	if err != nil {
 		return false, err
 	}
