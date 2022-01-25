@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/approvals/go-approval-tests"
 	"github.com/approvals/go-approval-tests/reporters"
 	"github.com/google/go-cmp/cmp"
@@ -19,6 +20,8 @@ import (
 )
 
 var someTime, _ = time.Parse(time.RFC3339, "2006-01-01T15:00:00Z")
+
+var someErr = errors.New("some error")
 
 func TestHttp(t *testing.T) {
 	tests := []struct {
@@ -41,6 +44,11 @@ func TestHttp(t *testing.T) {
 		}, expectedApps: &fakes.AppsRecorder{
 			AppId: "guid-a",
 		}},
+		{desc: "error while getting app", method: "GET", path: "/api/apps/guid-a", apps: &fakes.RecordingAppsService{
+			Err: someErr,
+		}, expectedApps: &fakes.AppsRecorder{
+			AppId: "guid-a",
+		}},
 		{desc: "lists apps", method: "GET", path: "/api/apps?perPage=2&page=5", apps: &fakes.RecordingAppsService{
 			Page: sdk.AppPage{
 				Pagination: sdk.Pagination{
@@ -56,6 +64,31 @@ func TestHttp(t *testing.T) {
 			}}, expectedApps: &fakes.AppsRecorder{
 			PerPage: 2,
 			Page:    5,
+		}},
+		{desc: "lists apps with page default", method: "GET", path: "/api/apps?perPage=2", apps: &fakes.RecordingAppsService{
+			Page: sdk.AppPage{
+				Pagination: sdk.Pagination{
+					TotalResults: 20,
+					TotalPages:   10,
+					PerPage:      2,
+					Page:         0,
+				},
+				Apps: []sdk.App{
+					{Id: "guid-a", Name: "name-a"},
+					{Id: "guid-b", Name: "name-b"},
+				},
+			}}, expectedApps: &fakes.AppsRecorder{
+			PerPage: 2,
+			Page:    0,
+		}},
+		{desc: "lists apps perPage missing", method: "GET", path: "/api/apps?page=5", apps: &fakes.RecordingAppsService{}, expectedApps: &fakes.AppsRecorder{}},
+		{desc: "lists apps perPage malformed", method: "GET", path: "/api/apps?perPage=a&page=5", apps: &fakes.RecordingAppsService{}, expectedApps: &fakes.AppsRecorder{}},
+		{desc: "lists apps page malformed", method: "GET", path: "/api/apps?perPage=5&page=a", apps: &fakes.RecordingAppsService{}, expectedApps: &fakes.AppsRecorder{}},
+		{desc: "error while listing apps", method: "GET", path: "/api/apps?perPage=5&page=2", apps: &fakes.RecordingAppsService{
+			Err: someErr,
+		}, expectedApps: &fakes.AppsRecorder{
+			PerPage: 5,
+			Page:    2,
 		}},
 		{desc: "gets pipeline", method: "GET", path: "/api/pipelines/guid-a", pipelines: &fakes.RecordingPipelinesService{
 			Pipeline: sdk.Pipeline{

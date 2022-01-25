@@ -21,7 +21,7 @@ func (a *api) listAppsPaginated(w http.ResponseWriter, r *http.Request) {
 
 	apps, err := a.core.Apps.ListAppsPaginated(perPage, page)
 	if err != nil {
-		respondErr(w, http.StatusInternalServerError, err)
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return
 	}
 
