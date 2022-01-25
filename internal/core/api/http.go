@@ -37,20 +37,6 @@ func defaultQueryInt(r *http.Request, queryKey string, defaultValue int) (int, e
 	return value, nil
 }
 
-func mustQueryTime(r *http.Request, queryKey string) (time.Time, error) {
-	valueStr := r.FormValue(queryKey)
-	if valueStr == "" {
-		return time.Time{}, errExpectedQueryParamMissing
-	}
-
-	value, err := time.Parse(time.RFC3339, valueStr)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	return value, nil
-}
-
 func defaultQueryTime(r *http.Request, queryKey string, defaultValue time.Time) (time.Time, error) {
 	valueStr := r.FormValue(queryKey)
 	if valueStr == "" {

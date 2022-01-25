@@ -95,6 +95,11 @@ func TestHttp(t *testing.T) {
 				Id: "guid-a", Name: "name-a",
 			},
 		}, expectedPipelines: &fakes.PipelinesRecorder{PipelineId: "guid-a"}},
+		{desc: "error while getting pipeline", method: "GET", path: "/api/pipelines/guid-a", pipelines: &fakes.RecordingPipelinesService{
+			Err: someErr,
+		}, expectedPipelines: &fakes.PipelinesRecorder{
+			PipelineId: "guid-a",
+		}},
 		{desc: "lists pipelines", method: "GET", path: "/api/pipelines?perPage=2&page=5", pipelines: &fakes.RecordingPipelinesService{
 			Page: sdk.PipelinePage{
 				Pagination: sdk.Pagination{
@@ -110,6 +115,16 @@ func TestHttp(t *testing.T) {
 			}}, expectedPipelines: &fakes.PipelinesRecorder{
 			PerPage: 2,
 			Page:    5,
+		}},
+		{desc: "lists pipelines perPage missing", method: "GET", path: "/api/pipelines?page=5", pipelines: &fakes.RecordingPipelinesService{}, expectedPipelines: &fakes.PipelinesRecorder{}},
+		{desc: "lists pipelines perPage empty", method: "GET", path: "/api/pipelines?perPage=", pipelines: &fakes.RecordingPipelinesService{}, expectedPipelines: &fakes.PipelinesRecorder{}},
+		{desc: "lists pipelines perPage malformed", method: "GET", path: "/api/pipelines?perPage=a&page=5", pipelines: &fakes.RecordingPipelinesService{}, expectedPipelines: &fakes.PipelinesRecorder{}},
+		{desc: "lists pipelines page malformed", method: "GET", path: "/api/pipelines?perPage=5&page=a", pipelines: &fakes.RecordingPipelinesService{}, expectedPipelines: &fakes.PipelinesRecorder{}},
+		{desc: "error while listing pipelines", method: "GET", path: "/api/pipelines?perPage=5&page=2", pipelines: &fakes.RecordingPipelinesService{
+			Err: someErr,
+		}, expectedPipelines: &fakes.PipelinesRecorder{
+			PerPage: 5,
+			Page:    2,
 		}},
 		{desc: "gets pipeline status", method: "GET", path: "/api/pipelines/pipeline-a/status", pipelines: &fakes.RecordingPipelinesService{
 			Pipeline: sdk.Pipeline{
@@ -157,6 +172,13 @@ func TestHttp(t *testing.T) {
 			PipelineId: "pipeline-a",
 			FromIncl:   someTime.Add(-3 * time.Minute),
 			ToExcl:     someTime,
+		}},
+		{desc: "error while getting pipeline runs", method: "GET", path: "/api/pipelines/pipeline-a/runs", pipelines: &fakes.RecordingPipelinesService{
+			Err: someErr,
+		}, expectedPipelines: &fakes.PipelinesRecorder{
+			PipelineId: "pipeline-a",
+			ToExcl:     someTime,
+			Limit:      10,
 		}},
 		{desc: "gets pipeline runs", method: "GET", path: "/api/pipelines/pipeline-a/runs", pipelines: &fakes.RecordingPipelinesService{Runs: []sdk.PipelineStatus{
 			{

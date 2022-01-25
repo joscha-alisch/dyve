@@ -30,7 +30,7 @@ func (a *api) listPipelinesPaginated(w http.ResponseWriter, r *http.Request) {
 
 	pipelines, err := a.core.Pipelines.ListPipelinesPaginated(perPage, page)
 	if err != nil {
-		respondErr(w, http.StatusInternalServerError, err)
+		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
 		return
 	}
 
