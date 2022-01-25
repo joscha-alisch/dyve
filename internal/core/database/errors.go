@@ -18,7 +18,7 @@ func mongoFailed(err error) error {
 
 func (r *ErrMongoQueryFailed) Is(target error) bool {
 	if rFailed, ok := target.(*ErrMongoQueryFailed); ok {
-		return errors.Is(rFailed.Err, r.Err)
+		return rFailed.Err == nil || errors.Is(rFailed.Err, r.Err)
 	}
 	return false
 }
