@@ -4,6 +4,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	recon "github.com/joscha-alisch/dyve/internal/reconciliation"
+	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"sort"
 	"testing"
 	"time"
@@ -125,13 +126,19 @@ type fakeCf struct {
 }
 
 func (f *fakeCf) GetRoutes(appId string) (Routes, error) {
-	//TODO implement me
-	panic("implement me")
+	if f.b.AppRoutes[appId] == nil {
+		return nil, errNotFound
+	}
+
+	return f.b.AppRoutes[appId], nil
 }
 
 func (f *fakeCf) GetInstances(appId string) (Instances, error) {
-	//TODO implement me
-	panic("implement me")
+	if f.b.AppInstances[appId] == nil {
+		return nil, errNotFound
+	}
+
+	return f.b.AppInstances[appId], nil
 }
 
 func (f *fakeCf) ListOrgs() ([]Org, error) {
@@ -181,13 +188,32 @@ func (f *fakeCf) GetApp(guid string) (App, error) {
 type fakeDb struct {
 	job *recon.Job
 	b   backend
+	err error
 }
 
 func (f *fakeDb) Cached(id string, duration time.Duration, res interface{}, fun func() (interface{}, error)) (interface{}, error) {
-	panic("implement me")
+	if f.err != nil {
+		return nil, f.err
+	}
+
+	if f.b.Cache[id] != nil {
+		if res, ok := res.(*sdk.AppInstances); ok {
+			*res = f.b.Cache[id].(sdk.AppInstances)
+			return nil, nil
+		}
+		if res, ok := res.(*sdk.AppRouting); ok {
+			*res = f.b.Cache[id].(sdk.AppRouting)
+			return nil, nil
+		}
+	}
+	return fun()
 }
 
 func (f *fakeDb) GetApp(id string) (App, error) {
+	if f.err != nil {
+		return App{}, f.err
+	}
+
 	if f.b.Apps[id] == nil {
 		return App{}, errNotFound
 	}
@@ -196,6 +222,10 @@ func (f *fakeDb) GetApp(id string) (App, error) {
 }
 
 func (f *fakeDb) ListApps() ([]App, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+
 	var res []App
 	for _, app := range f.b.Apps {
 		res = append(res, *app)
@@ -208,6 +238,10 @@ func (f *fakeDb) ListApps() ([]App, error) {
 }
 
 func (f *fakeDb) UpsertOrgs(cfGuid string, orgs []Org) error {
+	if f.err != nil {
+		return f.err
+	}
+
 	if f.b.Orgs == nil {
 		f.b.Orgs = make(map[string]*Org)
 	}
@@ -219,6 +253,10 @@ func (f *fakeDb) UpsertOrgs(cfGuid string, orgs []Org) error {
 }
 
 func (f *fakeDb) UpsertOrgSpaces(orgGuid string, spaces []Space) error {
+	if f.err != nil {
+		return f.err
+	}
+
 	if f.b.Spaces == nil {
 		f.b.Spaces = make(map[string]*Space)
 	}
@@ -231,6 +269,10 @@ func (f *fakeDb) UpsertOrgSpaces(orgGuid string, spaces []Space) error {
 }
 
 func (f *fakeDb) UpsertSpaceApps(spaceGuid string, apps []App) error {
+	if f.err != nil {
+		return f.err
+	}
+
 	if f.b.Apps == nil {
 		f.b.Apps = make(map[string]*App)
 	}
@@ -242,6 +284,10 @@ func (f *fakeDb) UpsertSpaceApps(spaceGuid string, apps []App) error {
 }
 
 func (f *fakeDb) DeleteApp(guid string) (bool, error) {
+	if f.err != nil {
+		return false, f.err
+	}
+
 	ok := f.b.Apps[guid] != nil
 	delete(f.b.Apps, guid)
 	if len(f.b.Apps) == 0 {
@@ -251,6 +297,10 @@ func (f *fakeDb) DeleteApp(guid string) (bool, error) {
 }
 
 func (f *fakeDb) DeleteSpace(guid string) (bool, error) {
+	if f.err != nil {
+		return false, f.err
+	}
+
 	ok := f.b.Spaces[guid] != nil
 	delete(f.b.Spaces, guid)
 	if len(f.b.Spaces) == 0 {
@@ -260,6 +310,10 @@ func (f *fakeDb) DeleteSpace(guid string) (bool, error) {
 }
 
 func (f *fakeDb) DeleteOrg(guid string) (bool, error) {
+	if f.err != nil {
+		return false, f.err
+	}
+
 	ok := f.b.Spaces[guid] != nil
 	delete(f.b.Orgs, guid)
 	if len(f.b.Orgs) == 0 {
@@ -269,6 +323,10 @@ func (f *fakeDb) DeleteOrg(guid string) (bool, error) {
 }
 
 func (f *fakeDb) UpsertSpace(s Space) error {
+	if f.err != nil {
+		return f.err
+	}
+
 	if f.b.Spaces == nil {
 		f.b.Spaces = make(map[string]*Space)
 	}
@@ -284,8 +342,11 @@ func (f *fakeDb) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
 }
 
 type backend struct {
-	CfApis map[string]*CF
-	Orgs   map[string]*Org
-	Spaces map[string]*Space
-	Apps   map[string]*App
+	CfApis       map[string]*CF
+	Orgs         map[string]*Org
+	Spaces       map[string]*Space
+	Apps         map[string]*App
+	Cache        map[string]interface{}
+	AppInstances map[string]Instances
+	AppRoutes    map[string]Routes
 }
