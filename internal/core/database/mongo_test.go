@@ -212,6 +212,18 @@ func TestMongoIntegration(t *testing.T) {
 		{desc: "delete by id returns not found", f: func(db Database, a *testSubject, resList *[]testSubject, tt *testing.T) error {
 			return db.DeleteOneById(Subjects, "not-existent")
 		}, expectedErr: ErrNotFound},
+		{desc: "inserts one", f: func(db Database, res *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.InsertOne(Subjects, bson.M{"id": "inserted"}, testSubject{
+				Id:       "inserted",
+				Property: "a",
+			})
+		}},
+		{desc: "insert fails if exists", f: func(db Database, res *testSubject, resList *[]testSubject, tt *testing.T) error {
+			return db.InsertOne(Subjects, bson.M{"id": "subject-a"}, testSubject{
+				Id:       "inserted",
+				Property: "a",
+			})
+		}, expectedErr: ErrExists},
 	}
 
 	opts := &memongo.Options{
