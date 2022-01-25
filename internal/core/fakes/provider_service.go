@@ -13,6 +13,7 @@ type ProviderService struct {
 	PipelineProviders  map[string]sdk.PipelineProvider
 	RoutingProviders   map[string]sdk.RoutingProvider
 	InstancesProviders map[string]sdk.InstancesProvider
+	GroupProviders     map[string]sdk.GroupProvider
 }
 
 func (s *ProviderService) AcceptReconcileJob(olderThan time.Duration) (recon.Job, bool) {
@@ -97,17 +98,29 @@ func (s *ProviderService) DeletePipelineProvider(id string) error {
 }
 
 func (s *ProviderService) ListGroupProviders() ([]provider.Data, error) {
-	panic("implement me")
+	var res []provider.Data
+	for id, _ := range s.GroupProviders {
+		res = append(res, provider.Data{
+			Id:   id,
+			Name: id,
+		})
+	}
+	return res, nil
 }
 
 func (s *ProviderService) AddGroupProvider(id string, name string, p sdk.GroupProvider) error {
-	panic("implement me")
+	s.GroupProviders[id] = p
+	return nil
 }
 
 func (s *ProviderService) GetGroupProvider(id string) (sdk.GroupProvider, error) {
-	panic("implement me")
+	if s.GroupProviders[id] == nil {
+		return nil, provider.ErrNotFound
+	}
+	return s.GroupProviders[id], nil
 }
 
 func (s *ProviderService) DeleteGroupProvider(id string) error {
-	panic("implement me")
+	delete(s.PipelineProviders, id)
+	return nil
 }

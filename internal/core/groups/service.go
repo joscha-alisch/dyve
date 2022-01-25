@@ -13,6 +13,7 @@ type Service interface {
 	ListGroupsByProvider() (GroupByProviderMap, error)
 	ListGroupsPaginated(perPage int, page int) (sdk.GroupPage, error)
 	GetGroup(id string) (sdk.Group, error)
+	DeleteGroup(id string) error
 	UpdateGroups(guid string, groups []sdk.Group) error
 }
 
