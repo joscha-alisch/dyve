@@ -77,7 +77,7 @@ func (m *mongoDb) EnsureIndex(coll Collection, model mongo.IndexModel) error {
 	return err
 }
 
-func (m *mongoDb) FindManyWithOptions(coll Collection, filter bson.M, each func(c *mongo.Cursor) error, sort bson.M, limit int) error {
+func (m *mongoDb) FindManyWithOptions(coll Collection, filter bson.M, each func(c Decodable) error, sort bson.M, limit int) error {
 	c := m.collection(coll)
 	o := options.FindOptions{}
 	if sort != nil {
@@ -107,7 +107,7 @@ func (m *mongoDb) FindOneSorted(coll Collection, filter bson.M, sort bson.M, res
 	return findResult.Decode(res)
 }
 
-func (m *mongoDb) FindMany(coll Collection, filter bson.M, each func(c *mongo.Cursor) error) error {
+func (m *mongoDb) FindMany(coll Collection, filter bson.M, each func(c Decodable) error) error {
 	return m.FindManyWithOptions(coll, filter, each, nil, 0)
 }
 
@@ -215,7 +215,7 @@ func (m *mongoDb) FindOneById(coll Collection, id string, res interface{}) error
 	return m.FindOne(coll, bson.M{"id": id}, res)
 }
 
-func (m *mongoDb) ListPaginated(collName Collection, perPage int, page int, p *sdk.Pagination, each func(c *mongo.Cursor) error) error {
+func (m *mongoDb) ListPaginated(collName Collection, perPage int, page int, p *sdk.Pagination, each func(c Decodable) error) error {
 	coll := m.collection(collName)
 
 	c, err := coll.CountDocuments(m.ctx, bson.M{})

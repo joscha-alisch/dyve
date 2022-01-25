@@ -39,7 +39,7 @@ func (s *service) TeamsForGroups(groups []string) (ByAccess, error) {
 			{"access.member": bson.M{"$in": groups}},
 			{"access.viewer": bson.M{"$in": groups}},
 		},
-	}, func(c *mongo.Cursor) error {
+	}, func(c database.Decodable) error {
 		t := Team{}
 		err := c.Decode(&t)
 		if err != nil {
@@ -88,7 +88,7 @@ func (s *service) EnsureIndices() error {
 
 func (s *service) ListTeamsPaginated(perPage int, page int) (TeamPage, error) {
 	var res TeamPage
-	err := s.db.ListPaginated(Collection, perPage, page, &res.Pagination, func(c *mongo.Cursor) error {
+	err := s.db.ListPaginated(Collection, perPage, page, &res.Pagination, func(c database.Decodable) error {
 		team := Team{}
 		err := c.Decode(&team)
 		if err != nil {

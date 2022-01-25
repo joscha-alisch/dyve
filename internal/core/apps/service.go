@@ -3,7 +3,6 @@ package apps
 import (
 	"github.com/joscha-alisch/dyve/internal/core/database"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const Collection database.Collection = "apps"
@@ -32,7 +31,7 @@ func (m *service) GetApp(id string) (App, error) {
 
 func (m *service) ListAppsPaginated(perPage int, page int) (sdk.AppPage, error) {
 	var res sdk.AppPage
-	err := m.db.ListPaginated(Collection, perPage, page, &res.Pagination, func(c *mongo.Cursor) error {
+	err := m.db.ListPaginated(Collection, perPage, page, &res.Pagination, func(c database.Decodable) error {
 		app := sdk.App{}
 		err := c.Decode(&app)
 		if err != nil {

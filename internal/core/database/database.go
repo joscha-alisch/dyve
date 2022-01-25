@@ -6,13 +6,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type Decodable interface {
+	Decode(interface{}) error
+}
+
 type Database interface {
 	FindOne(coll Collection, filter interface{}, res interface{}) error
 	FindOneById(coll Collection, id string, res interface{}) error
 	FindOneSorted(coll Collection, filter bson.M, sort bson.M, res interface{}) error
-	FindMany(coll Collection, filter bson.M, each func(c *mongo.Cursor) error) error
-	FindManyWithOptions(coll Collection, filter bson.M, each func(c *mongo.Cursor) error, sort bson.M, limit int) error
-	ListPaginated(coll Collection, perPage int, page int, p *sdk.Pagination, each func(c *mongo.Cursor) error) error
+	FindMany(coll Collection, filter bson.M, each func(c Decodable) error) error
+	FindManyWithOptions(coll Collection, filter bson.M, each func(c Decodable) error, sort bson.M, limit int) error
+	ListPaginated(coll Collection, perPage int, page int, p *sdk.Pagination, each func(c Decodable) error) error
 
 	UpdateProvided(coll Collection, provider string, updates map[string]interface{}) error
 	UpdateMany(coll Collection, filters map[string]interface{}, updates map[string]interface{}) error

@@ -8,7 +8,6 @@ import (
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"strings"
 	"time"
 )
@@ -203,7 +202,7 @@ func (s *service) add(id string, name string, providerType Type, p interface{}) 
 
 func (s *service) list(providerType Type) ([]Data, error) {
 	var res []Data
-	err := s.db.FindMany(Collection, bson.M{"type": providerType}, func(c *mongo.Cursor) error {
+	err := s.db.FindMany(Collection, bson.M{"type": providerType}, func(c database.Decodable) error {
 		data := Data{}
 		err := c.Decode(&data)
 		if err != nil {

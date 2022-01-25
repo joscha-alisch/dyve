@@ -266,8 +266,8 @@ func (s testSubject) withProperty(change string) *testSubject {
 	return &s
 }
 
-func decodeEach(list *[]testSubject) func(c *mongo.Cursor) error {
-	return func(c *mongo.Cursor) error {
+func decodeEach(list *[]testSubject) func(c Decodable) error {
+	return func(c Decodable) error {
 		res := testSubject{}
 		err := c.Decode(&res)
 		if err != nil {

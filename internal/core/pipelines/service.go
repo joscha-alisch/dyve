@@ -75,7 +75,7 @@ func (s *service) ListPipelineRunsLimit(id string, toExcl time.Time, limit int) 
 			"$lt": toExcl,
 		},
 	}
-	each := func(c *mongo.Cursor) error {
+	each := func(c database.Decodable) error {
 		run := sdk.PipelineStatus{}
 		err := c.Decode(&run)
 		if err != nil {
@@ -104,7 +104,7 @@ func (s *service) ListPipelineVersions(id string, fromIncl time.Time, toExcl tim
 			"$gte": fromIncl,
 		},
 	}
-	each := func(c *mongo.Cursor) error {
+	each := func(c database.Decodable) error {
 		version := sdk.PipelineVersion{}
 		err := c.Decode(&version)
 		if err != nil {
@@ -169,7 +169,7 @@ func (s *service) ListPipelineRuns(id string, fromIncl time.Time, toExcl time.Ti
 			"$gte": fromIncl,
 		},
 	}
-	each := func(c *mongo.Cursor) error {
+	each := func(c database.Decodable) error {
 		run := sdk.PipelineStatus{}
 		err := c.Decode(&run)
 		if err != nil {
@@ -191,7 +191,7 @@ func (s *service) ListPipelineRuns(id string, fromIncl time.Time, toExcl time.Ti
 
 func (s *service) ListPipelinesPaginated(perPage int, page int) (sdk.PipelinePage, error) {
 	var res sdk.PipelinePage
-	err := s.db.ListPaginated(Collection, perPage, page, &res.Pagination, func(c *mongo.Cursor) error {
+	err := s.db.ListPaginated(Collection, perPage, page, &res.Pagination, func(c database.Decodable) error {
 		i := sdk.Pipeline{}
 		err := c.Decode(&i)
 		if err != nil {

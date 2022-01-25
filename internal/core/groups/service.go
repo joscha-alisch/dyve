@@ -5,7 +5,6 @@ import (
 	"github.com/joscha-alisch/dyve/internal/core/provider"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const Collection = "groups"
@@ -43,7 +42,7 @@ func (s *service) ListGroupsByProvider() (GroupByProviderMap, error) {
 		}
 	}
 
-	each := func(c *mongo.Cursor) error {
+	each := func(c database.Decodable) error {
 		group := GroupWithProvider{}
 		err := c.Decode(&group)
 		if err != nil {
@@ -67,7 +66,7 @@ func (s *service) ListGroupsByProvider() (GroupByProviderMap, error) {
 
 func (s *service) ListGroupsPaginated(perPage int, page int) (sdk.GroupPage, error) {
 	var res sdk.GroupPage
-	err := s.db.ListPaginated(Collection, perPage, page, &res.Pagination, func(c *mongo.Cursor) error {
+	err := s.db.ListPaginated(Collection, perPage, page, &res.Pagination, func(c database.Decodable) error {
 		group := sdk.Group{}
 		err := c.Decode(&group)
 		if err != nil {
