@@ -66,6 +66,22 @@ func TestMongoIntegration(t *testing.T) {
 				{AppInfo: AppInfo{Name: "new-app", Guid: "new-app-guid"}},
 			})
 		}},
+		{desc: "fails update apps for non-existent space", state: map[string]interface{}{}, f: func(db Database, tt *testing.T) error {
+			return db.UpsertSpaceApps("space-a-guid", []App{
+				{AppInfo: AppInfo{Name: "changed-name", Guid: "app-a-guid"}},
+				{AppInfo: AppInfo{Name: "new-app", Guid: "new-app-guid"}},
+			})
+		}, err: errNotFound},
+		{desc: "fails update apps for nonsense space data", state: map[string]interface{}{
+			"spaces": []bson.M{
+				{"name": 1, "guid": "space-a-guid", "org": []string{"hi"}},
+			},
+		}, f: func(db Database, tt *testing.T) error {
+			return db.UpsertSpaceApps("space-a-guid", []App{
+				{AppInfo: AppInfo{Name: "changed-name", Guid: "app-a-guid"}},
+				{AppInfo: AppInfo{Name: "new-app", Guid: "new-app-guid"}},
+			})
+		}, err: errDecode},
 		{desc: "updates org spaces", state: baseState, f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrgSpaces("org-a-guid", []Space{
 				{SpaceInfo: SpaceInfo{Name: "changed-name", Guid: "space-a-guid"}},
@@ -78,6 +94,18 @@ func TestMongoIntegration(t *testing.T) {
 				{OrgInfo: OrgInfo{Name: "new-org", Guid: "new-org-guid"}},
 			})
 		}},
+		{desc: "updates cf orgs for non-existent cf", state: baseState, f: func(db Database, tt *testing.T) error {
+			return db.UpsertOrgs("doesnt-exist", []Org{
+				{OrgInfo: OrgInfo{Name: "changed-name", Guid: "org-a-guid"}},
+				{OrgInfo: OrgInfo{Name: "new-org", Guid: "new-org-guid"}},
+			})
+		}, err: errNotFound},
+		{desc: "updates cf orgs for missing collection", state: map[string]interface{}{}, f: func(db Database, tt *testing.T) error {
+			return db.UpsertOrgs("doesnt-exist", []Org{
+				{OrgInfo: OrgInfo{Name: "changed-name", Guid: "org-a-guid"}},
+				{OrgInfo: OrgInfo{Name: "new-org", Guid: "new-org-guid"}},
+			})
+		}, err: errNotFound},
 		{desc: "lists apps", state: map[string]interface{}{
 			"apps": []bson.M{
 				{"name": "app-a-name", "guid": "app-a-guid"},
@@ -242,7 +270,7 @@ func TestMongoIntegration(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			fileName := strings.ReplaceAll(test.desc, " ", "_")
-			acceptanceTesting(fileName, test.state, test.f, mongodb, tt)
+			acceptanceTesting(fileName, test.state, test.f, test.err, mongodb, tt)
 		})
 	}
 }
@@ -251,6 +279,7 @@ func acceptanceTesting(
 	name string,
 	state map[string]interface{},
 	f func(db Database, tt *testing.T) error,
+	expectedErr error,
 	s *memongo.Server,
 	tt *testing.T,
 ) {
@@ -285,8 +314,8 @@ func acceptanceTesting(
 	})
 
 	err = f(db, tt)
-	if err != nil {
-		tt.Fatal(err)
+	if !errors.Is(err, expectedErr) {
+		tt.Fatalf("error mismatch: %s\n", cmp.Diff(expectedErr, err))
 	}
 
 	contents, err := dumpContents(s, dbName)

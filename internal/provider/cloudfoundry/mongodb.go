@@ -168,7 +168,7 @@ func (d *mongoDatabase) UpsertOrgs(cfGuid string, orgs []Org) error {
 }
 
 func (d *mongoDatabase) updateCfInfo(cfGuid string, orgGuids []string) error {
-	_, err := d.cfInfos.UpdateOne(d.ctx, bson.M{
+	res, err := d.cfInfos.UpdateOne(d.ctx, bson.M{
 		"guid": bson.M{
 			"$eq": cfGuid,
 		},
@@ -178,6 +178,10 @@ func (d *mongoDatabase) updateCfInfo(cfGuid string, orgGuids []string) error {
 			"lastUpdated": currentTime(),
 		},
 	})
+
+	if res.MatchedCount == 0 {
+		return errNotFound
+	}
 
 	return err
 }
@@ -446,13 +450,13 @@ func (d *mongoDatabase) getSpace(spaceGuid string) (Space, error) {
 		"guid": spaceGuid,
 	})
 	if res.Err() != nil {
-		return Space{}, res.Err()
+		return Space{}, errNotFound
 	}
 
 	s := Space{}
 	err := res.Decode(&s)
 	if err != nil {
-		return Space{}, err
+		return Space{}, errDecode
 	}
 
 	return s, nil
