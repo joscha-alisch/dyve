@@ -118,10 +118,6 @@ func TestGetInstances(t *testing.T) {
 	}
 }
 
-func TestNewDefaultApi(t *testing.T) {
-	_, _ = NewDefaultApi(CFLogin{})
-}
-
 type fakeCfClient struct {
 	b cfBackend
 }
