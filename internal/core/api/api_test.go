@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -16,6 +17,7 @@ import (
 	"github.com/joscha-alisch/dyve/internal/core/teams"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -41,6 +43,8 @@ func TestHttp(t *testing.T) {
 		body              string
 		groups            *fakeGroups.RecordingGroupsService
 		expectedGroups    *fakeGroups.GroupsRecorder
+		headers           http.Header
+		overrideRequest   *http.Request
 	}{
 		{desc: "gets app", method: "GET", path: "/api/apps/guid-a", apps: &fakes.RecordingAppsService{
 			App: apps.App{
@@ -510,6 +514,22 @@ func TestHttp(t *testing.T) {
 			},
 			expectedGroups: &fakeGroups.GroupsRecorder{},
 		},
+		{
+			desc:   "start websocket app",
+			method: "GET",
+			headers: http.Header{
+				"Connection":            []string{"upgrade"},
+				"Upgrade":               []string{"websocket"},
+				"Sec-Websocket-Version": []string{"13"},
+				"Sec-Websocket-Key":     []string{"abc"},
+			},
+			path: "/api/apps/app-a/live",
+		},
+		{
+			desc:   "start websocket app with missing headers",
+			method: "GET",
+			path:   "/api/apps/app-a/live",
+		},
 	}
 
 	currentTime = func() time.Time {
@@ -527,7 +547,7 @@ func TestHttp(t *testing.T) {
 				DevConfig: config.DevConfig{DisableAuth: true},
 			})
 
-			testHttp(tt, h, test.method, test.path, test.body)
+			testHttp(tt, h, test.method, test.path, test.body, test.headers)
 
 			if test.expectedPipelines != nil && !cmp.Equal(*test.expectedPipelines, test.pipelines.Record) {
 				tt.Errorf("pipeline records don't match:%s\n", cmp.Diff(*test.expectedPipelines, test.pipelines.Record))
@@ -556,7 +576,7 @@ func TestDisableWebsocketXSRF(t *testing.T) {
 
 	r.Header.Set("Upgrade", "websocket")
 
-	resp := &testReponseWriter{header: map[string][]string{}}
+	resp := &testResponseWriter{header: map[string][]string{}}
 	f.ServeHTTP(resp, r)
 
 	if resp.code != 403 {
@@ -569,7 +589,7 @@ func TestDisableWebsocketXSRF(t *testing.T) {
 	}
 
 	r.AddCookie(&http.Cookie{Name: "XSRF-TOKEN", Value: "secret"})
-	resp = &testReponseWriter{header: map[string][]string{}}
+	resp = &testResponseWriter{header: map[string][]string{}}
 	f.ServeHTTP(resp, r)
 
 	if r.Header.Get("X-XSRF-TOKEN") != "secret" {
@@ -577,12 +597,15 @@ func TestDisableWebsocketXSRF(t *testing.T) {
 	}
 }
 
-func testHttp(tt *testing.T, h http.Handler, method string, path string, body string) {
+func testHttp(tt *testing.T, h http.Handler, method string, path string, body string, headers http.Header) {
 	s := httptest.NewServer(h)
 	defer s.Close()
 
-	w := httptest.NewRecorder()
+	w := &hijackingResponseRecorder{httptest.NewRecorder()}
 	r := httptest.NewRequest(method, s.URL+path, bytes.NewBuffer([]byte(body)))
+	if headers != nil {
+		r.Header = headers
+	}
 
 	h.ServeHTTP(w, r)
 
@@ -599,16 +622,59 @@ func testHttp(tt *testing.T, h http.Handler, method string, path string, body st
 	approvals.VerifyString(tt, responseString)
 }
 
-type testReponseWriter struct {
+type testResponseWriter struct {
 	bytes.Buffer
 	header http.Header
 	code   int
 }
 
-func (t *testReponseWriter) Header() http.Header {
+func (t *testResponseWriter) Header() http.Header {
 	return t.header
 }
 
-func (t *testReponseWriter) WriteHeader(statusCode int) {
+func (t *testResponseWriter) WriteHeader(statusCode int) {
 	t.code = statusCode
+}
+
+type hijackingResponseRecorder struct {
+	*httptest.ResponseRecorder
+}
+
+func (h *hijackingResponseRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	rw := bufio.NewReadWriter(bufio.NewReader(&bytes.Buffer{}), bufio.NewWriter(&bytes.Buffer{}))
+	return &fakeConn{}, rw, nil
+}
+
+type fakeConn struct{}
+
+func (f *fakeConn) Read(b []byte) (n int, err error) {
+	return 0, nil
+}
+
+func (f *fakeConn) Write(b []byte) (n int, err error) {
+	return len(b), nil
+}
+
+func (f *fakeConn) Close() error {
+	return nil
+}
+
+func (f *fakeConn) LocalAddr() net.Addr {
+	return &net.TCPAddr{}
+}
+
+func (f *fakeConn) RemoteAddr() net.Addr {
+	return &net.TCPAddr{}
+}
+
+func (f *fakeConn) SetDeadline(t time.Time) error {
+	return nil
+}
+
+func (f *fakeConn) SetReadDeadline(t time.Time) error {
+	return nil
+}
+
+func (f *fakeConn) SetWriteDeadline(t time.Time) error {
+	return nil
 }
