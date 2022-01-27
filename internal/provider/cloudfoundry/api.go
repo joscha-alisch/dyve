@@ -17,7 +17,6 @@ type API interface {
 	ListOrgs() ([]Org, error)
 	ListSpaces(orgGuid string) ([]Space, error)
 	ListApps(spaceGuid string) ([]App, error)
-	GetApp(guid string) (App, error)
 	GetRoutes(appId string) (Routes, error)
 	GetInstances(appId string) (Instances, error)
 }
@@ -119,10 +118,6 @@ func (a *api) ListOrgs() ([]Org, error) {
 	}
 
 	return res, nil
-}
-
-func (a *api) GetApp(guid string) (App, error) {
-	return App{}, nil
 }
 
 func (a *api) ListApps(spaceGuid string) ([]App, error) {

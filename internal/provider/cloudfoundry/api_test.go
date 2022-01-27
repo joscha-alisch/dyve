@@ -87,24 +87,65 @@ func TestGetCfInfo(t *testing.T) {
 	}
 }
 
+func TestGetInstances(t *testing.T) {
+	tests := []struct {
+		desc        string
+		id          string
+		state       cfBackend
+		expected    Instances
+		expectedErr error
+	}{
+		{desc: "gets instances", id: "app-a", state: cfBackend{
+			instances: map[string]map[string]cf.AppInstance{
+				"app-a": {"0": {State: "STOPPED"}},
+			},
+		}, expected: Instances{
+			{
+				State: "STOPPED",
+			},
+		}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(tt *testing.T) {
+			api := NewApi(&fakeCfClient{test.state})
+
+			res, _ := api.GetInstances(test.id)
+			if !cmp.Equal(test.expected, res) {
+				tt.Errorf("\nresult mismatch: \n%s\n", cmp.Diff(test.expected, res))
+			}
+		})
+	}
+}
+
+func TestNewDefaultApi(t *testing.T) {
+	_, _ = NewDefaultApi(CFLogin{})
+}
+
 type fakeCfClient struct {
 	b cfBackend
 }
 
 func (f *fakeCfClient) GetAppRoutes(appGuid string) ([]cf.Route, error) {
-	//TODO implement me
-	panic("implement me")
+	if f.b.routes[appGuid] == nil {
+		return nil, errNotFound
+	}
+	return f.b.routes[appGuid], nil
 }
 
 func (f *fakeCfClient) GetAppInstances(guid string) (map[string]cf.AppInstance, error) {
-	//TODO implement me
-	panic("implement me")
+	if f.b.instances[guid] == nil {
+		return nil, errNotFound
+	}
+	return f.b.instances[guid], nil
 }
 
 type cfBackend struct {
-	orgs   map[string]*cf.Org
-	spaces map[string]*cf.Space
-	apps   map[string]*cf.App
+	orgs      map[string]*cf.Org
+	spaces    map[string]*cf.Space
+	apps      map[string]*cf.App
+	routes    map[string][]cf.Route
+	instances map[string]map[string]cf.AppInstance
 }
 
 func (f *fakeCfClient) ListOrgs() ([]cf.Org, error) {
