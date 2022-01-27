@@ -3,20 +3,15 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/go-pkgz/auth"
 	"github.com/go-pkgz/auth/avatar"
-	"github.com/go-pkgz/auth/token"
-	"github.com/google/go-github/v39/github"
 	"github.com/gorilla/mux"
 	"github.com/joscha-alisch/dyve/internal/core/config"
 	"github.com/joscha-alisch/dyve/internal/core/database"
 	"github.com/joscha-alisch/dyve/internal/core/live"
 	"github.com/joscha-alisch/dyve/internal/core/service"
 	"github.com/joscha-alisch/dyve/pkg/pipeviz"
-	"github.com/rs/zerolog/log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -40,35 +35,15 @@ func New(core service.Core, pipeGen pipeviz.PipeViz, opts Opts) http.Handler {
 	}
 
 	authOpts := auth.Opts{
-		SecretReader: token.SecretFunc(func(id string) (string, error) {
-			return opts.Auth.Secret, nil
-		}),
+		SecretReader:    getTokenSecretFunc(opts),
 		TokenDuration:   time.Minute * 5,
 		CookieDuration:  time.Hour * 24,
 		Issuer:          "dyve",
 		URL:             opts.Url,
 		AvatarStore:     avatar.NewLocalFS("/tmp"),
 		AvatarRoutePath: "/auth/avatars",
-		ClaimsUpd: token.ClaimsUpdFunc(func(claims token.Claims) token.Claims {
-			if opts.DevConfig.UseFakeOauth2 && claims.User != nil {
-				claims.User.SetSliceAttr("groups", opts.DevConfig.UserGroups)
-			}
-			return claims
-		}),
-		Validator: token.ValidatorFunc(func(_ string, claims token.Claims) bool {
-			if opts.Auth.GitHub.Enabled && strings.HasPrefix(claims.User.ID, "github") {
-				if !userIsInOrg(claims.User, opts.Auth.GitHub.Org) {
-					log.Debug().
-						Str("user", claims.User.Name).
-						Str("required", opts.Auth.GitHub.Org).
-						Strs("orgs", getUserOrgs(claims.User)).
-						Msg("token declined because user is not in org")
-					return false
-				}
-			}
-
-			return claims.User != nil
-		}),
+		ClaimsUpd:       getUpdateClaimsFunc(opts),
+		Validator:       getTokenValidatorFunc(opts),
 	}
 
 	// create auth service with providers
@@ -85,28 +60,7 @@ func New(core service.Core, pipeGen pipeviz.PipeViz, opts Opts) http.Handler {
 		}()
 	} else {
 		if opts.Auth.GitHub.Enabled {
-			service.AddProviderWithOptions("github", opts.Auth.GitHub.Id, opts.Auth.GitHub.Secret, []string{"read:org"}, func(c *http.Client, u token.User) token.User {
-				gh := github.NewClient(c)
-				t, _, _ := gh.Teams.ListUserTeams(context.Background(), &github.ListOptions{})
-
-				orgs := make(map[string]bool)
-				var teams []string
-				for _, team := range t {
-					orgs[team.Organization.GetLogin()] = true
-					teams = append(teams, fmt.Sprintf("%s:%s:%d", "github", team.Organization.GetLogin(), team.GetID()))
-				}
-
-				var orgList []string
-				for org := range orgs {
-					orgList = append(orgList, org)
-				}
-
-				u.SetSliceAttr("orgs", orgList)
-				u.SetSliceAttr("groups", teams)
-
-				log.Debug().Str("user", u.Name).Msg("new login")
-				return u
-			})
+			service.AddProviderWithOptions("github", opts.Auth.GitHub.Id, opts.Auth.GitHub.Secret, []string{"read:org"}, getGHProviderFunc())
 		}
 	}
 
@@ -163,33 +117,4 @@ type api struct {
 	core               service.Core
 	disableOriginCheck bool
 	appViewer          *live.AppViewer
-}
-
-func (a *api) attachTeamInfo(claims token.User) token.User {
-	return claims
-}
-
-func userIsInOrg(user *token.User, org string) bool {
-	orgs := getUserOrgs(user)
-	for _, s := range orgs {
-		if s == org {
-			return true
-		}
-	}
-	return false
-}
-
-func getUserOrgs(u *token.User) []string {
-	orgs, ok := u.Attributes["orgs"].([]interface{})
-	if !ok {
-		return nil
-	}
-	var res []string
-	for _, org := range orgs {
-		if orgString, ok := org.(string); ok {
-			res = append(res, orgString)
-		}
-	}
-
-	return res
 }
