@@ -388,7 +388,7 @@ func TestHttp(t *testing.T) {
 				}}},
 			},
 			expectedTeams: &fakes.TeamsRecorder{
-				PerPage: 5,
+				PerPage: 2,
 				Page:    0,
 			},
 		},
@@ -406,7 +406,10 @@ func TestHttp(t *testing.T) {
 			teams: &fakes.RecordingTeamsService{
 				Err: someErr,
 			},
-			expectedTeams: &fakes.TeamsRecorder{},
+			expectedTeams: &fakes.TeamsRecorder{
+				PerPage: 5,
+				Page:    2,
+			},
 		},
 		{
 			desc:   "get team: internal error",
@@ -415,7 +418,9 @@ func TestHttp(t *testing.T) {
 			teams: &fakes.RecordingTeamsService{
 				Err: someErr,
 			},
-			expectedTeams: &fakes.TeamsRecorder{},
+			expectedTeams: &fakes.TeamsRecorder{
+				TeamId: "team-a",
+			},
 		},
 		{
 			desc:   "update team: internal error",
@@ -468,7 +473,9 @@ func TestHttp(t *testing.T) {
 			teams: &fakes.RecordingTeamsService{
 				Err: someErr,
 			},
-			expectedTeams: &fakes.TeamsRecorder{},
+			expectedTeams: &fakes.TeamsRecorder{
+				TeamId: "team-a",
+			},
 		},
 	}
 
