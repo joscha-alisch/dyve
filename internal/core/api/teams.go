@@ -47,7 +47,7 @@ func (a *api) createTeam(w http.ResponseWriter, r *http.Request) {
 	update := teams.TeamSettings{}
 	err := json.NewDecoder(r.Body).Decode(&update)
 	if err != nil {
-		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		respondErr(w, http.StatusBadRequest, sdk.ErrInternal)
 		return
 	}
 
@@ -66,7 +66,7 @@ func (a *api) updateTeam(w http.ResponseWriter, r *http.Request) {
 	update := teams.TeamSettings{}
 	err := json.NewDecoder(r.Body).Decode(&update)
 	if err != nil {
-		respondErr(w, http.StatusInternalServerError, sdk.ErrInternal)
+		respondErr(w, http.StatusBadRequest, sdk.ErrInternal)
 		return
 	}
 

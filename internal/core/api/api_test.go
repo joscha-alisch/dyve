@@ -11,6 +11,7 @@ import (
 	"github.com/joscha-alisch/dyve/internal/core/config"
 	"github.com/joscha-alisch/dyve/internal/core/fakes"
 	"github.com/joscha-alisch/dyve/internal/core/service"
+	"github.com/joscha-alisch/dyve/internal/core/teams"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"io/ioutil"
 	"net/http"
@@ -27,13 +28,15 @@ var someErr = errors.New("some error")
 func TestHttp(t *testing.T) {
 	tests := []struct {
 		desc              string
-		state             state
 		method            string
 		path              string
 		apps              *fakes.RecordingAppsService
 		expectedApps      *fakes.AppsRecorder
 		pipelines         *fakes.RecordingPipelinesService
 		expectedPipelines *fakes.PipelinesRecorder
+		teams             *fakes.RecordingTeamsService
+		expectedTeams     *fakes.TeamsRecorder
+		body              string
 	}{
 		{desc: "gets app", method: "GET", path: "/api/apps/guid-a", apps: &fakes.RecordingAppsService{
 			App: apps.App{
@@ -258,6 +261,215 @@ func TestHttp(t *testing.T) {
 				ToExcl:     someTime,
 				Limit:      10,
 			}},
+		{
+			desc:   "gets team",
+			method: "GET",
+			path:   "/api/teams/team-a",
+			teams: &fakes.RecordingTeamsService{
+				Team: teams.Team{
+					Id: "team-id",
+					TeamSettings: teams.TeamSettings{
+						Name:        "team-name",
+						Description: "team-desc",
+						Access: teams.AccessGroups{
+							Admin:  []string{"a"},
+							Member: []string{"b"},
+							Viewer: []string{"c"},
+						},
+					},
+				},
+			},
+			expectedTeams: &fakes.TeamsRecorder{
+				TeamId: "team-a",
+			},
+		},
+		{
+			desc:   "deletes team",
+			method: "DELETE",
+			path:   "/api/teams/team-a",
+			teams:  &fakes.RecordingTeamsService{},
+			expectedTeams: &fakes.TeamsRecorder{
+				TeamId: "team-a",
+			},
+		},
+		{
+			desc:   "updates team",
+			method: "PUT",
+			path:   "/api/teams/team-a",
+			body: `
+{
+	"name": "test-name"
+}
+`,
+			teams: &fakes.RecordingTeamsService{},
+			expectedTeams: &fakes.TeamsRecorder{
+				TeamId:   "team-a",
+				TeamData: teams.TeamSettings{Name: "test-name"},
+			},
+		},
+		{
+			desc:   "creates team",
+			method: "POST",
+			path:   "/api/teams/team-a",
+			body: `
+{
+	"name": "test-name"
+}
+`,
+			teams: &fakes.RecordingTeamsService{},
+			expectedTeams: &fakes.TeamsRecorder{
+				TeamId:   "team-a",
+				TeamData: teams.TeamSettings{Name: "test-name"},
+			},
+		},
+		{
+			desc:   "lists teams",
+			method: "GET",
+			path:   "/api/teams?perPage=5&page=2",
+			teams: &fakes.RecordingTeamsService{
+				Page: teams.TeamPage{Pagination: sdk.Pagination{
+					TotalResults: 124,
+					TotalPages:   5214,
+					PerPage:      123,
+					Page:         521,
+				}, Teams: []teams.Team{{
+					Id: "team-id",
+					TeamSettings: teams.TeamSettings{
+						Name:        "team-name",
+						Description: "team-desc",
+						Access: teams.AccessGroups{
+							Admin:  []string{"a"},
+							Member: []string{"b"},
+							Viewer: []string{"c"},
+						},
+					},
+				}}},
+			},
+			expectedTeams: &fakes.TeamsRecorder{
+				PerPage: 5,
+				Page:    2,
+			},
+		},
+		{
+			desc:          "listing teams: perPage missing",
+			method:        "GET",
+			path:          "/api/teams?page=2",
+			teams:         &fakes.RecordingTeamsService{},
+			expectedTeams: &fakes.TeamsRecorder{},
+		},
+		{
+			desc:          "listing teams: perPage malformed",
+			method:        "GET",
+			path:          "/api/teams?perPage=abc&page=2",
+			teams:         &fakes.RecordingTeamsService{},
+			expectedTeams: &fakes.TeamsRecorder{},
+		},
+		{
+			desc:   "listing teams: page missing",
+			method: "GET",
+			path:   "/api/teams?perPage=2",
+			teams: &fakes.RecordingTeamsService{
+				Page: teams.TeamPage{Pagination: sdk.Pagination{
+					TotalResults: 124,
+					TotalPages:   5214,
+					PerPage:      123,
+					Page:         521,
+				}, Teams: []teams.Team{{
+					Id: "team-id",
+					TeamSettings: teams.TeamSettings{
+						Name:        "team-name",
+						Description: "team-desc",
+						Access: teams.AccessGroups{
+							Admin:  []string{"a"},
+							Member: []string{"b"},
+							Viewer: []string{"c"},
+						},
+					},
+				}}},
+			},
+			expectedTeams: &fakes.TeamsRecorder{
+				PerPage: 5,
+				Page:    0,
+			},
+		},
+		{
+			desc:          "listing teams: page malformed",
+			method:        "GET",
+			path:          "/api/teams?perPage=5&page=abc",
+			teams:         &fakes.RecordingTeamsService{},
+			expectedTeams: &fakes.TeamsRecorder{},
+		},
+		{
+			desc:   "listing teams: internal error",
+			method: "GET",
+			path:   "/api/teams?perPage=5&page=2",
+			teams: &fakes.RecordingTeamsService{
+				Err: someErr,
+			},
+			expectedTeams: &fakes.TeamsRecorder{},
+		},
+		{
+			desc:   "get team: internal error",
+			method: "GET",
+			path:   "/api/teams/team-a",
+			teams: &fakes.RecordingTeamsService{
+				Err: someErr,
+			},
+			expectedTeams: &fakes.TeamsRecorder{},
+		},
+		{
+			desc:   "update team: internal error",
+			method: "PUT",
+			path:   "/api/teams/team-a",
+			body:   "{}",
+			teams: &fakes.RecordingTeamsService{
+				Err: someErr,
+			},
+			expectedTeams: &fakes.TeamsRecorder{
+				TeamId: "team-a",
+			},
+		},
+		{
+			desc:   "update team: malformed input",
+			method: "PUT",
+			path:   "/api/teams/team-a",
+			body:   "abc",
+			teams: &fakes.RecordingTeamsService{
+				Err: someErr,
+			},
+			expectedTeams: &fakes.TeamsRecorder{},
+		},
+		{
+			desc:   "create team: internal error",
+			method: "POST",
+			path:   "/api/teams/team-a",
+			body:   "{}",
+			teams: &fakes.RecordingTeamsService{
+				Err: someErr,
+			},
+			expectedTeams: &fakes.TeamsRecorder{
+				TeamId: "team-a",
+			},
+		},
+		{
+			desc:   "create team: malformed input",
+			method: "POST",
+			path:   "/api/teams/team-a",
+			body:   "abc",
+			teams: &fakes.RecordingTeamsService{
+				Err: someErr,
+			},
+			expectedTeams: &fakes.TeamsRecorder{},
+		},
+		{
+			desc:   "delete team: internal error",
+			method: "DELETE",
+			path:   "/api/teams/team-a",
+			teams: &fakes.RecordingTeamsService{
+				Err: someErr,
+			},
+			expectedTeams: &fakes.TeamsRecorder{},
+		},
 	}
 
 	currentTime = func() time.Time {
@@ -269,11 +481,12 @@ func TestHttp(t *testing.T) {
 			h := New(service.Core{
 				Apps:      test.apps,
 				Pipelines: test.pipelines,
+				Teams:     test.teams,
 			}, &fakes.PipeViz{}, Opts{
 				DevConfig: config.DevConfig{DisableAuth: true},
 			})
 
-			testHttp(tt, h, test.method, test.path)
+			testHttp(tt, h, test.method, test.path, test.body)
 
 			if test.expectedPipelines != nil && !cmp.Equal(*test.expectedPipelines, test.pipelines.Record) {
 				tt.Errorf("pipeline records don't match:%s\n", cmp.Diff(*test.expectedPipelines, test.pipelines.Record))
@@ -281,6 +494,10 @@ func TestHttp(t *testing.T) {
 
 			if test.expectedApps != nil && !cmp.Equal(*test.expectedApps, test.apps.Record) {
 				tt.Errorf("app records don't match:%s\n", cmp.Diff(*test.expectedApps, test.apps.Record))
+			}
+
+			if test.expectedTeams != nil && !cmp.Equal(*test.expectedTeams, test.teams.Record) {
+				tt.Errorf("team records don't match:%s\n", cmp.Diff(*test.expectedTeams, test.teams.Record))
 			}
 		})
 	}
@@ -315,12 +532,13 @@ func TestDisableWebsocketXSRF(t *testing.T) {
 	}
 }
 
-func testHttp(tt *testing.T, h http.Handler, method string, path string) {
+func testHttp(tt *testing.T, h http.Handler, method string, path string, body string) {
 	s := httptest.NewServer(h)
 	defer s.Close()
 
 	w := httptest.NewRecorder()
-	r := httptest.NewRequest(method, s.URL+path, nil)
+	r := httptest.NewRequest(method, s.URL+path, bytes.NewBuffer([]byte(body)))
+
 	h.ServeHTTP(w, r)
 
 	resp := w.Result()
@@ -334,15 +552,6 @@ func testHttp(tt *testing.T, h http.Handler, method string, path string) {
 	approvals.UseFolder("testdata")
 	approvals.UseReporter(reporters.NewGoLandReporter())
 	approvals.VerifyString(tt, responseString)
-}
-
-type state struct {
-	appPage      sdk.AppPage
-	app          sdk.App
-	pipelinePage sdk.PipelinePage
-	pipeline     sdk.Pipeline
-	runs         []sdk.PipelineStatus
-	versions     []sdk.PipelineVersion
 }
 
 type testReponseWriter struct {
