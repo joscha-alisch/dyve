@@ -130,12 +130,7 @@ func (d *mongoDatabase) UpsertOrgs(cfGuid string, orgs []Org) error {
 		orgGuids = append(orgGuids, org.Guid)
 	}
 
-	err := d.updateCfInfo(cfGuid, orgGuids)
-	if err != nil {
-		return err
-	}
-
-	cf, err := d.getCf(cfGuid)
+	cf, err := d.updateCfInfo(cfGuid, orgGuids)
 	if err != nil {
 		return err
 	}
@@ -167,8 +162,8 @@ func (d *mongoDatabase) UpsertOrgs(cfGuid string, orgs []Org) error {
 	return nil
 }
 
-func (d *mongoDatabase) updateCfInfo(cfGuid string, orgGuids []string) error {
-	res, err := d.cfInfos.UpdateOne(d.ctx, bson.M{
+func (d *mongoDatabase) updateCfInfo(cfGuid string, orgGuids []string) (CF, error) {
+	res, _ := d.cfInfos.UpdateOne(d.ctx, bson.M{
 		"guid": bson.M{
 			"$eq": cfGuid,
 		},
@@ -178,12 +173,11 @@ func (d *mongoDatabase) updateCfInfo(cfGuid string, orgGuids []string) error {
 			"lastUpdated": currentTime(),
 		},
 	})
-
 	if res.MatchedCount == 0 {
-		return errNotFound
+		return CF{}, errNotFound
 	}
 
-	return err
+	return d.getCf(cfGuid)
 }
 
 func (d *mongoDatabase) updateOrg(orgGuid string, spaceGuids []string) error {
@@ -361,14 +355,6 @@ func (d *mongoDatabase) UpsertSpaceApps(spaceGuid string, apps []App) error {
 	}
 
 	return nil
-}
-
-func (d *mongoDatabase) upsertByGuid(c *mongo.Collection, guid string, o interface{}) error {
-	_, err := c.ReplaceOne(d.ctx, bson.M{
-		"guid": guid,
-	}, o, options.Replace().SetUpsert(true))
-
-	return err
 }
 
 func (d *mongoDatabase) upsertSpaces(spaces []Space) error {

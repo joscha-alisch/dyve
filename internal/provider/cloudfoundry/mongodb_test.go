@@ -100,6 +100,9 @@ func TestMongoIntegration(t *testing.T) {
 				{OrgInfo: OrgInfo{Name: "new-org", Guid: "new-org-guid"}},
 			})
 		}, err: errNotFound},
+		{desc: "updates empty cf orgs list", state: baseState, f: func(db Database, tt *testing.T) error {
+			return db.UpsertOrgs("main", nil)
+		}},
 		{desc: "updates cf orgs for missing collection", state: map[string]interface{}{}, f: func(db Database, tt *testing.T) error {
 			return db.UpsertOrgs("doesnt-exist", []Org{
 				{OrgInfo: OrgInfo{Name: "changed-name", Guid: "org-a-guid"}},
