@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/approvals/go-approval-tests"
@@ -286,6 +287,34 @@ func TestHttp(t *testing.T) {
 
 }
 
+func TestDisableWebsocketXSRF(t *testing.T) {
+	f := disableWebsocketXSRF(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {}))
+	r, _ := http.NewRequest("GET", "/", nil)
+	f.ServeHTTP(nil, r)
+
+	r.Header.Set("Upgrade", "websocket")
+
+	resp := &testReponseWriter{header: map[string][]string{}}
+	f.ServeHTTP(resp, r)
+
+	if resp.code != 403 {
+		t.Error("expected 403")
+	}
+	expected := "{\"status\":403,\"error\":\"XSRF-TOKEN cookie not set\"}"
+	respString := resp.String()
+	if respString != expected {
+		t.Errorf("mismatch: %s\n", cmp.Diff(expected, respString))
+	}
+
+	r.AddCookie(&http.Cookie{Name: "XSRF-TOKEN", Value: "secret"})
+	resp = &testReponseWriter{header: map[string][]string{}}
+	f.ServeHTTP(resp, r)
+
+	if r.Header.Get("X-XSRF-TOKEN") != "secret" {
+		t.Error("expected X-XSRF-TOKEN header from cookie")
+	}
+}
+
 func testHttp(tt *testing.T, h http.Handler, method string, path string) {
 	s := httptest.NewServer(h)
 	defer s.Close()
@@ -314,4 +343,18 @@ type state struct {
 	pipeline     sdk.Pipeline
 	runs         []sdk.PipelineStatus
 	versions     []sdk.PipelineVersion
+}
+
+type testReponseWriter struct {
+	bytes.Buffer
+	header http.Header
+	code   int
+}
+
+func (t *testReponseWriter) Header() http.Header {
+	return t.header
+}
+
+func (t *testReponseWriter) WriteHeader(statusCode int) {
+	t.code = statusCode
 }

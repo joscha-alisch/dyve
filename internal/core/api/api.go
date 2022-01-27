@@ -72,19 +72,7 @@ func New(core service.Core, pipeGen pipeviz.PipeViz, opts Opts) http.Handler {
 	api := a.PathPrefix("/api").Subrouter()
 
 	if !opts.DevConfig.DisableAuth {
-		api.Use(func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Header.Get("Upgrade") == "websocket" {
-					c, err := r.Cookie("XSRF-TOKEN")
-					if err != nil {
-						respondErr(w, http.StatusForbidden, errors.New("XSRF-TOKEN cookie not set"))
-						return
-					}
-					r.Header.Set("X-XSRF-TOKEN", c.Value)
-				}
-				next.ServeHTTP(w, r)
-			})
-		})
+		api.Use(disableWebsocketXSRF)
 		api.Use(authenticated.Auth)
 	}
 
@@ -117,4 +105,18 @@ type api struct {
 	core               service.Core
 	disableOriginCheck bool
 	appViewer          *live.AppViewer
+}
+
+func disableWebsocketXSRF(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Upgrade") == "websocket" {
+			c, err := r.Cookie("XSRF-TOKEN")
+			if err != nil {
+				respondErr(w, http.StatusForbidden, errors.New("XSRF-TOKEN cookie not set"))
+				return
+			}
+			r.Header.Set("X-XSRF-TOKEN", c.Value)
+		}
+		next.ServeHTTP(w, r)
+	})
 }
