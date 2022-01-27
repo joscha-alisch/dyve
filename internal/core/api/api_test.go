@@ -10,6 +10,7 @@ import (
 	"github.com/joscha-alisch/dyve/internal/core/apps"
 	"github.com/joscha-alisch/dyve/internal/core/config"
 	"github.com/joscha-alisch/dyve/internal/core/fakes"
+	"github.com/joscha-alisch/dyve/internal/core/fakes/fakeGroups"
 	"github.com/joscha-alisch/dyve/internal/core/groups"
 	"github.com/joscha-alisch/dyve/internal/core/service"
 	"github.com/joscha-alisch/dyve/internal/core/teams"
@@ -38,8 +39,8 @@ func TestHttp(t *testing.T) {
 		teams             *fakes.RecordingTeamsService
 		expectedTeams     *fakes.TeamsRecorder
 		body              string
-		groups            *fakes.RecordingGroupsService
-		expectedGroups    *fakes.GroupsRecorder
+		groups            *fakeGroups.RecordingGroupsService
+		expectedGroups    *fakeGroups.GroupsRecorder
 	}{
 		{desc: "gets app", method: "GET", path: "/api/apps/guid-a", apps: &fakes.RecordingAppsService{
 			App: apps.App{
@@ -484,7 +485,7 @@ func TestHttp(t *testing.T) {
 			desc:   "list groups",
 			method: "GET",
 			path:   "/api/groups",
-			groups: &fakes.RecordingGroupsService{
+			groups: &fakeGroups.RecordingGroupsService{
 				ByProvider: map[string]groups.ProviderWithGroups{
 					"provider-a": {
 						Provider: "provider",
@@ -498,16 +499,16 @@ func TestHttp(t *testing.T) {
 					},
 				},
 			},
-			expectedGroups: &fakes.GroupsRecorder{},
+			expectedGroups: &fakeGroups.GroupsRecorder{},
 		},
 		{
 			desc:   "list groups error",
 			method: "GET",
 			path:   "/api/groups",
-			groups: &fakes.RecordingGroupsService{
+			groups: &fakeGroups.RecordingGroupsService{
 				Err: someErr,
 			},
-			expectedGroups: &fakes.GroupsRecorder{},
+			expectedGroups: &fakeGroups.GroupsRecorder{},
 		},
 	}
 

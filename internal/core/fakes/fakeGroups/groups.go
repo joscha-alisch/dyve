@@ -1,4 +1,4 @@
-package fakes
+package fakeGroups
 
 import (
 	"github.com/joscha-alisch/dyve/internal/core/groups"
