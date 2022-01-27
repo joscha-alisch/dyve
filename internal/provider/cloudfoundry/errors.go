@@ -7,6 +7,7 @@ import (
 )
 
 var errNotFound = errors.New("not found")
+var errDecode = errors.New("error decoding data from mongodb")
 
 type errReconcileFailed struct {
 	Err error
@@ -15,8 +16,8 @@ type errReconcileFailed struct {
 
 func (r *errReconcileFailed) Is(target error) bool {
 	if rFailed, ok := target.(*errReconcileFailed); ok {
-		return rFailed.Job.Type == r.Job.Type &&
-			rFailed.Job.Guid == r.Job.Guid && errors.Is(rFailed.Err, r.Err)
+		return rFailed.Err == nil || (rFailed.Job.Type == r.Job.Type &&
+			rFailed.Job.Guid == r.Job.Guid && errors.Is(rFailed.Err, r.Err))
 	}
 	return false
 }
