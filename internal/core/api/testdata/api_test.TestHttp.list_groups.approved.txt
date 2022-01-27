@@ -1,0 +1,18 @@
+HTTP/1.1 200 OK
+Connection: close
+
+{
+    "result": {
+        "provider-a": {
+            "groups": [
+                {
+                    "id": "group-a",
+                    "name": "group"
+                }
+            ],
+            "name": "provider-name",
+            "provider": "provider"
+        }
+    },
+    "status": 200
+}

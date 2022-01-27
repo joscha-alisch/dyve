@@ -1,0 +1,30 @@
+HTTP/1.1 200 OK
+Connection: close
+
+{
+    "result": {
+        "page": 521,
+        "perPage": 123,
+        "teams": [
+            {
+                "access": {
+                    "admin": [
+                        "a"
+                    ],
+                    "member": [
+                        "b"
+                    ],
+                    "viewer": [
+                        "c"
+                    ]
+                },
+                "description": "team-desc",
+                "id": "team-id",
+                "name": "team-name"
+            }
+        ],
+        "totalPages": 5214,
+        "totalResults": 124
+    },
+    "status": 200
+}

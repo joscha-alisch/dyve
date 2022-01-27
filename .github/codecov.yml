@@ -1,2 +1,3 @@
 ignore:
  - pkg/pipeviz
+ - internal/core/fakes

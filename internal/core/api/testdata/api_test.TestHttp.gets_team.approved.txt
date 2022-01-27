@@ -1,0 +1,22 @@
+HTTP/1.1 200 OK
+Connection: close
+
+{
+    "result": {
+        "access": {
+            "admin": [
+                "a"
+            ],
+            "member": [
+                "b"
+            ],
+            "viewer": [
+                "c"
+            ]
+        },
+        "description": "team-desc",
+        "id": "team-id",
+        "name": "team-name"
+    },
+    "status": 200
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/joscha-alisch/dyve/internal/core/apps"
 	"github.com/joscha-alisch/dyve/internal/core/config"
 	"github.com/joscha-alisch/dyve/internal/core/fakes"
+	"github.com/joscha-alisch/dyve/internal/core/groups"
 	"github.com/joscha-alisch/dyve/internal/core/service"
 	"github.com/joscha-alisch/dyve/internal/core/teams"
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
@@ -37,6 +38,8 @@ func TestHttp(t *testing.T) {
 		teams             *fakes.RecordingTeamsService
 		expectedTeams     *fakes.TeamsRecorder
 		body              string
+		groups            *fakes.RecordingGroupsService
+		expectedGroups    *fakes.GroupsRecorder
 	}{
 		{desc: "gets app", method: "GET", path: "/api/apps/guid-a", apps: &fakes.RecordingAppsService{
 			App: apps.App{
@@ -477,6 +480,35 @@ func TestHttp(t *testing.T) {
 				TeamId: "team-a",
 			},
 		},
+		{
+			desc:   "list groups",
+			method: "GET",
+			path:   "/api/groups",
+			groups: &fakes.RecordingGroupsService{
+				ByProvider: map[string]groups.ProviderWithGroups{
+					"provider-a": {
+						Provider: "provider",
+						Name:     "provider-name",
+						Groups: []sdk.Group{
+							{
+								Id:   "group-a",
+								Name: "group",
+							},
+						},
+					},
+				},
+			},
+			expectedGroups: &fakes.GroupsRecorder{},
+		},
+		{
+			desc:   "list groups error",
+			method: "GET",
+			path:   "/api/groups",
+			groups: &fakes.RecordingGroupsService{
+				Err: someErr,
+			},
+			expectedGroups: &fakes.GroupsRecorder{},
+		},
 	}
 
 	currentTime = func() time.Time {
@@ -489,6 +521,7 @@ func TestHttp(t *testing.T) {
 				Apps:      test.apps,
 				Pipelines: test.pipelines,
 				Teams:     test.teams,
+				Groups:    test.groups,
 			}, &fakes.PipeViz{}, Opts{
 				DevConfig: config.DevConfig{DisableAuth: true},
 			})
@@ -505,6 +538,10 @@ func TestHttp(t *testing.T) {
 
 			if test.expectedTeams != nil && !cmp.Equal(*test.expectedTeams, test.teams.Record) {
 				tt.Errorf("team records don't match:%s\n", cmp.Diff(*test.expectedTeams, test.teams.Record))
+			}
+
+			if test.expectedGroups != nil && !cmp.Equal(*test.expectedGroups, test.groups.Record) {
+				tt.Errorf("group records don't match:%s\n", cmp.Diff(*test.expectedGroups, test.groups.Record))
 			}
 		})
 	}
