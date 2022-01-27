@@ -42,7 +42,7 @@ func TestService_ListPipelinesPaginated(t *testing.T) {
 		desc        string
 		perPage     int
 		page        int
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.PipelinePage
 		expectedErr error
@@ -51,7 +51,7 @@ func TestService_ListPipelinesPaginated(t *testing.T) {
 			desc:    "gets instances",
 			perPage: 5,
 			page:    2,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				ReturnPagination: func(pagination *sdk.Pagination) {
 					*pagination = somePagination
 				},
@@ -76,7 +76,7 @@ func TestService_ListPipelinesPaginated(t *testing.T) {
 			desc:    "error while getting group",
 			perPage: 5,
 			page:    2,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    sdk.PipelinePage{},
@@ -110,7 +110,7 @@ func TestService_GetPipeline(t *testing.T) {
 	tests := []struct {
 		desc        string
 		id          string
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.Pipeline
 		expectedErr error
@@ -118,7 +118,7 @@ func TestService_GetPipeline(t *testing.T) {
 		{
 			desc: "gets instances",
 			id:   "pipeline-a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Return: func(target interface{}) {
 					*target.(*sdk.Pipeline) = somePipeline
 				},
@@ -132,7 +132,7 @@ func TestService_GetPipeline(t *testing.T) {
 		{
 			desc: "error while getting group",
 			id:   "pipeline-a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    sdk.Pipeline{},
@@ -168,7 +168,7 @@ func TestService_ListPipelineRuns(t *testing.T) {
 		id          string
 		fromIncl    time.Time
 		toExcl      time.Time
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.PipelineStatusList
 		expectedErr error
@@ -178,7 +178,7 @@ func TestService_ListPipelineRuns(t *testing.T) {
 			id:       "pipeline-a",
 			fromIncl: someTime,
 			toExcl:   someTime.Add(2 * time.Minute),
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				ReturnEach: func(each func(decodable database.Decodable) error) {
 					_ = each(DecodableFunc(func(target interface{}) error {
 						*target.(*sdk.PipelineStatus) = somePipelineStatus
@@ -207,7 +207,7 @@ func TestService_ListPipelineRuns(t *testing.T) {
 			id:       "pipeline-a",
 			fromIncl: someTime,
 			toExcl:   someTime.Add(2 * time.Minute),
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    nil,
@@ -243,7 +243,7 @@ func TestService_ListPipelineRunsLimit(t *testing.T) {
 		id          string
 		toExcl      time.Time
 		limit       int
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.PipelineStatusList
 		expectedErr error
@@ -253,7 +253,7 @@ func TestService_ListPipelineRunsLimit(t *testing.T) {
 			id:     "pipeline-a",
 			toExcl: someTime.Add(2 * time.Minute),
 			limit:  20,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				ReturnEach: func(each func(decodable database.Decodable) error) {
 					_ = each(DecodableFunc(func(target interface{}) error {
 						*target.(*sdk.PipelineStatus) = somePipelineStatus
@@ -285,7 +285,7 @@ func TestService_ListPipelineRunsLimit(t *testing.T) {
 			id:     "pipeline-a",
 			toExcl: someTime.Add(2 * time.Minute),
 			limit:  20,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    nil,
@@ -321,7 +321,7 @@ func TestService_ListPipelineVersions(t *testing.T) {
 		id          string
 		fromIncl    time.Time
 		toExcl      time.Time
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.PipelineVersionList
 		expectedErr error
@@ -331,7 +331,7 @@ func TestService_ListPipelineVersions(t *testing.T) {
 			id:       "pipeline-a",
 			fromIncl: someTime,
 			toExcl:   someTime.Add(2 * time.Minute),
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Return: func(target interface{}) {
 					*target.(*sdk.PipelineVersion) = somePipelineVersion
 				},
@@ -375,7 +375,7 @@ func TestService_ListPipelineVersions(t *testing.T) {
 			id:       "pipeline-a",
 			fromIncl: someTime,
 			toExcl:   someTime.Add(2 * time.Minute),
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    nil,
@@ -410,7 +410,7 @@ func TestService_AddPipelineRuns(t *testing.T) {
 		desc        string
 		provider    string
 		runs        sdk.PipelineStatusList
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
@@ -418,7 +418,7 @@ func TestService_AddPipelineRuns(t *testing.T) {
 			desc:     "adds pipeline runs",
 			provider: "provider-a",
 			runs:     []sdk.PipelineStatus{somePipelineStatus},
-			db:       &db.Database{},
+			db:       &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection: "pipeline_runs",
 				Updates: map[string]interface{}{
@@ -437,7 +437,7 @@ func TestService_AddPipelineRuns(t *testing.T) {
 			desc:     "error while updating pipelines",
 			provider: "provider-a",
 			runs:     []sdk.PipelineStatus{somePipelineStatus},
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,
@@ -466,7 +466,7 @@ func TestService_AddPipelineVersions(t *testing.T) {
 		desc        string
 		provider    string
 		versions    sdk.PipelineVersionList
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
@@ -474,7 +474,7 @@ func TestService_AddPipelineVersions(t *testing.T) {
 			desc:     "adds pipeline versions",
 			provider: "provider-a",
 			versions: sdk.PipelineVersionList{somePipelineVersion},
-			db:       &db.Database{},
+			db:       &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection: "pipeline_versions",
 				Updates: map[string]interface{}{
@@ -493,7 +493,7 @@ func TestService_AddPipelineVersions(t *testing.T) {
 			desc:     "error while updating pipelines",
 			provider: "provider-a",
 			versions: sdk.PipelineVersionList{somePipelineVersion},
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,
@@ -521,7 +521,7 @@ func TestService_UpdatePipelines(t *testing.T) {
 		desc        string
 		provider    string
 		pipelines   []sdk.Pipeline
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
@@ -529,7 +529,7 @@ func TestService_UpdatePipelines(t *testing.T) {
 			desc:      "updates pipelines",
 			provider:  "provider-a",
 			pipelines: []sdk.Pipeline{somePipeline},
-			db:        &db.Database{},
+			db:        &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection: "pipelines",
 				Provider:   "provider-a",
@@ -542,7 +542,7 @@ func TestService_UpdatePipelines(t *testing.T) {
 			desc:      "error while updating pipelines",
 			provider:  "provider-a",
 			pipelines: []sdk.Pipeline{somePipeline},
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,

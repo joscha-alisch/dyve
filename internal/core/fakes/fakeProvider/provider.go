@@ -1,4 +1,4 @@
-package fakes
+package fakeProvider
 
 import (
 	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
@@ -30,6 +30,10 @@ func InstancesProvider(instances map[string]sdk.AppInstances) *Provider {
 	}
 }
 
+func GroupProvider() *Provider {
+	return &Provider{}
+}
+
 func NewErrProvider(err error) *Provider {
 	return &Provider{
 		Err: err,
@@ -44,6 +48,16 @@ type Provider struct {
 	Instances    map[string]sdk.AppInstances
 	Updates      sdk.PipelineUpdates
 	RecordedTime time.Time
+}
+
+func (f *Provider) ListGroups() ([]sdk.Group, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *Provider) GetGroup(id string) (sdk.Group, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (f *Provider) GetAppInstances(id string) (sdk.AppInstances, error) {

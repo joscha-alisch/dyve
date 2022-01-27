@@ -250,6 +250,9 @@ func (s *service) delete(id string, providerType Type) error {
 	}
 
 	delete(s.providers[providerType], id)
+	if len(s.providers[providerType]) == 0 {
+		s.providers[providerType] = nil
+	}
 	return nil
 }
 

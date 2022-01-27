@@ -31,7 +31,7 @@ func (r *DatabaseRecorder) Record(record DatabaseRecord) {
 	r.Records = append(r.Records, record)
 }
 
-type Database struct {
+type RecordingDatabase struct {
 	Recorder         *DatabaseRecorder
 	Return           func(target interface{})
 	ReturnEach       func(each func(decodable database.Decodable) error)
@@ -39,7 +39,7 @@ type Database struct {
 	Err              error
 }
 
-func (d *Database) FindOne(coll database.Collection, filter interface{}, res interface{}) error {
+func (d *RecordingDatabase) FindOne(coll database.Collection, filter interface{}, res interface{}) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -54,7 +54,7 @@ func (d *Database) FindOne(coll database.Collection, filter interface{}, res int
 	return nil
 }
 
-func (d *Database) FindOneById(coll database.Collection, id string, res interface{}) error {
+func (d *RecordingDatabase) FindOneById(coll database.Collection, id string, res interface{}) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -68,7 +68,7 @@ func (d *Database) FindOneById(coll database.Collection, id string, res interfac
 	return nil
 }
 
-func (d *Database) FindOneSorted(coll database.Collection, filter bson.M, sort bson.M, res interface{}) error {
+func (d *RecordingDatabase) FindOneSorted(coll database.Collection, filter bson.M, sort bson.M, res interface{}) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -83,7 +83,7 @@ func (d *Database) FindOneSorted(coll database.Collection, filter bson.M, sort b
 	return nil
 }
 
-func (d *Database) FindMany(coll database.Collection, filter bson.M, each func(dec database.Decodable) error) error {
+func (d *RecordingDatabase) FindMany(coll database.Collection, filter bson.M, each func(dec database.Decodable) error) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -95,7 +95,7 @@ func (d *Database) FindMany(coll database.Collection, filter bson.M, each func(d
 	return nil
 }
 
-func (d *Database) FindManyWithOptions(coll database.Collection, filter bson.M, each func(dec database.Decodable) error, sort bson.M, limit int) error {
+func (d *RecordingDatabase) FindManyWithOptions(coll database.Collection, filter bson.M, each func(dec database.Decodable) error, sort bson.M, limit int) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -109,7 +109,7 @@ func (d *Database) FindManyWithOptions(coll database.Collection, filter bson.M, 
 	return nil
 }
 
-func (d *Database) ListPaginated(coll database.Collection, perPage int, page int, p *sdk.Pagination, each func(dec database.Decodable) error) error {
+func (d *RecordingDatabase) ListPaginated(coll database.Collection, perPage int, page int, p *sdk.Pagination, each func(dec database.Decodable) error) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -123,7 +123,7 @@ func (d *Database) ListPaginated(coll database.Collection, perPage int, page int
 	return nil
 }
 
-func (d *Database) UpdateProvided(coll database.Collection, provider string, updates map[string]interface{}) error {
+func (d *RecordingDatabase) UpdateProvided(coll database.Collection, provider string, updates map[string]interface{}) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -135,7 +135,7 @@ func (d *Database) UpdateProvided(coll database.Collection, provider string, upd
 	return nil
 }
 
-func (d *Database) UpdateMany(coll database.Collection, filters map[string]interface{}, updates map[string]interface{}) error {
+func (d *RecordingDatabase) UpdateMany(coll database.Collection, filters map[string]interface{}, updates map[string]interface{}) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -147,7 +147,7 @@ func (d *Database) UpdateMany(coll database.Collection, filters map[string]inter
 	return nil
 }
 
-func (d *Database) UpdateOne(coll database.Collection, filter bson.M, createIfMissing bool, update interface{}, res interface{}) error {
+func (d *RecordingDatabase) UpdateOne(coll database.Collection, filter bson.M, createIfMissing bool, update interface{}, res interface{}) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -163,7 +163,7 @@ func (d *Database) UpdateOne(coll database.Collection, filter bson.M, createIfMi
 	return nil
 }
 
-func (d *Database) UpdateOneById(coll database.Collection, id string, createIfMissing bool, update interface{}, res interface{}) error {
+func (d *RecordingDatabase) UpdateOneById(coll database.Collection, id string, createIfMissing bool, update interface{}, res interface{}) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -179,7 +179,7 @@ func (d *Database) UpdateOneById(coll database.Collection, id string, createIfMi
 	return nil
 }
 
-func (d *Database) InsertOne(coll database.Collection, existsFilter interface{}, data interface{}) error {
+func (d *RecordingDatabase) InsertOne(coll database.Collection, existsFilter interface{}, data interface{}) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -191,7 +191,7 @@ func (d *Database) InsertOne(coll database.Collection, existsFilter interface{},
 	return nil
 }
 
-func (d *Database) DeleteOne(coll database.Collection, filter bson.M) error {
+func (d *RecordingDatabase) DeleteOne(coll database.Collection, filter bson.M) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -202,7 +202,7 @@ func (d *Database) DeleteOne(coll database.Collection, filter bson.M) error {
 	return nil
 }
 
-func (d *Database) DeleteOneById(coll database.Collection, id string) error {
+func (d *RecordingDatabase) DeleteOneById(coll database.Collection, id string) error {
 	if d.Err != nil {
 		return d.Err
 	}
@@ -213,7 +213,7 @@ func (d *Database) DeleteOneById(coll database.Collection, id string) error {
 	return nil
 }
 
-func (d *Database) EnsureIndex(coll database.Collection, model mongo.IndexModel) error {
+func (d *RecordingDatabase) EnsureIndex(coll database.Collection, model mongo.IndexModel) error {
 	if d.Err != nil {
 		return d.Err
 	}

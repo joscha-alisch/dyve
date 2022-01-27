@@ -37,7 +37,7 @@ func TestService_GetGroup(t *testing.T) {
 	tests := []struct {
 		desc        string
 		id          string
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.Group
 		expectedErr error
@@ -45,7 +45,7 @@ func TestService_GetGroup(t *testing.T) {
 		{
 			desc: "gets group",
 			id:   "group-a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Return: func(target interface{}) {
 					*(target.(*sdk.Group)) = someGroup.Group
 				},
@@ -59,7 +59,7 @@ func TestService_GetGroup(t *testing.T) {
 		{
 			desc: "error while getting group",
 			id:   "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    sdk.Group{},
@@ -93,14 +93,14 @@ func TestService_DeleteGroup(t *testing.T) {
 	tests := []struct {
 		desc        string
 		id          string
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
 		{
 			desc: "deletes group",
 			id:   "group-a",
-			db:   &db.Database{},
+			db:   &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection: "groups",
 				Id:         "group-a",
@@ -109,7 +109,7 @@ func TestService_DeleteGroup(t *testing.T) {
 		{
 			desc: "error while deleting group",
 			id:   "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,
@@ -139,7 +139,7 @@ func TestService_UpdateGroups(t *testing.T) {
 		desc        string
 		provider    string
 		groups      []sdk.Group
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
@@ -147,7 +147,7 @@ func TestService_UpdateGroups(t *testing.T) {
 			desc:     "updates groups",
 			provider: "provider-a",
 			groups:   []sdk.Group{someGroup.Group},
-			db:       &db.Database{},
+			db:       &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection: "groups",
 				Provider:   "provider-a",
@@ -159,7 +159,7 @@ func TestService_UpdateGroups(t *testing.T) {
 		{
 			desc:     "error while updating groups",
 			provider: "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,
@@ -189,7 +189,7 @@ func TestService_ListGroupsPaginated(t *testing.T) {
 		desc        string
 		perPage     int
 		page        int
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.GroupPage
 		expectedErr error
@@ -198,7 +198,7 @@ func TestService_ListGroupsPaginated(t *testing.T) {
 			desc:    "lists groups",
 			perPage: 5,
 			page:    2,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				ReturnEach: func(each func(decodable database.Decodable) error) {
 					_ = each(DecodableFunc(func(target interface{}) error {
 						*target.(*sdk.Group) = someGroup.Group
@@ -220,7 +220,7 @@ func TestService_ListGroupsPaginated(t *testing.T) {
 			desc:    "error while listing groups",
 			perPage: 5,
 			page:    2,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,
@@ -252,7 +252,7 @@ func TestService_ListGroupsPaginated(t *testing.T) {
 func TestService_ListGroupsByProvider(t *testing.T) {
 	tests := []struct {
 		desc        string
-		db          *db.Database
+		db          *db.RecordingDatabase
 		providers   provider.Service
 		recorded    []db.DatabaseRecord
 		expected    GroupByProviderMap
@@ -260,7 +260,7 @@ func TestService_ListGroupsByProvider(t *testing.T) {
 	}{
 		{
 			desc: "lists groups by providers",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				ReturnEach: func(each func(decodable database.Decodable) error) {
 					_ = each(DecodableFunc(func(target interface{}) error {
 						*target.(*GroupWithProvider) = someGroup
@@ -288,7 +288,7 @@ func TestService_ListGroupsByProvider(t *testing.T) {
 			providers: &fakes.ProviderService{GroupProviders: map[string]sdk.GroupProvider{
 				"group-provider": nil,
 			}},
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,

@@ -34,7 +34,7 @@ func TestService_GetApp(t *testing.T) {
 	tests := []struct {
 		desc        string
 		id          string
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    App
 		expectedErr error
@@ -42,7 +42,7 @@ func TestService_GetApp(t *testing.T) {
 		{
 			desc: "gets app",
 			id:   "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Return: func(target interface{}) {
 					*(target.(*App)) = someApp
 				},
@@ -56,7 +56,7 @@ func TestService_GetApp(t *testing.T) {
 		{
 			desc: "error while getting app",
 			id:   "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    App{},
@@ -91,7 +91,7 @@ func TestService_ListAppsPaginated(t *testing.T) {
 		desc        string
 		perPage     int
 		page        int
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.AppPage
 		expectedErr error
@@ -100,7 +100,7 @@ func TestService_ListAppsPaginated(t *testing.T) {
 			desc:    "lists apps",
 			perPage: 5,
 			page:    2,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				ReturnPagination: func(pagination *sdk.Pagination) {
 					*pagination = somePagination
 				},
@@ -125,7 +125,7 @@ func TestService_ListAppsPaginated(t *testing.T) {
 			desc:    "error while getting app",
 			perPage: 5,
 			page:    2,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    sdk.AppPage{},
@@ -160,7 +160,7 @@ func TestService_UpdateApps(t *testing.T) {
 		desc        string
 		providerId  string
 		apps        []sdk.App
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
@@ -168,7 +168,7 @@ func TestService_UpdateApps(t *testing.T) {
 			desc:       "update apps",
 			providerId: "provider-a",
 			apps:       []sdk.App{someApp.App},
-			db:         &db.Database{},
+			db:         &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection: "apps",
 				Provider:   "provider-a",
@@ -179,7 +179,7 @@ func TestService_UpdateApps(t *testing.T) {
 			desc:       "error while updating apps",
 			providerId: "provider-a",
 			apps:       []sdk.App{someApp.App},
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,
@@ -208,14 +208,14 @@ func TestService_UpdateApp(t *testing.T) {
 	tests := []struct {
 		desc        string
 		app         sdk.App
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
 		{
 			desc: "updates app",
 			app:  someApp.App,
-			db:   &db.Database{},
+			db:   &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection:      "apps",
 				CreateIfMissing: false,
@@ -226,7 +226,7 @@ func TestService_UpdateApp(t *testing.T) {
 		{
 			desc: "error while updating app",
 			app:  someApp.App,
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,

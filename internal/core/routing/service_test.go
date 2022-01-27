@@ -20,17 +20,11 @@ var someRouting = sdk.AppRouting{
 }
 var someErr = errors.New("some error")
 
-type DecodableFunc func(target interface{}) error
-
-func (f DecodableFunc) Decode(dec interface{}) error {
-	return f(dec)
-}
-
 func TestService_GetRouting(t *testing.T) {
 	tests := []struct {
 		desc        string
 		app         string
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.AppRouting
 		expectedErr error
@@ -38,7 +32,7 @@ func TestService_GetRouting(t *testing.T) {
 		{
 			desc: "gets routes",
 			app:  "app-a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Return: func(target interface{}) {
 					*(target.(*routeData)) = routeData{
 						Id:        "app-a",
@@ -55,7 +49,7 @@ func TestService_GetRouting(t *testing.T) {
 		{
 			desc: "error while getting group",
 			app:  "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    sdk.AppRouting{},
@@ -90,7 +84,7 @@ func TestService_UpdateRouting(t *testing.T) {
 		desc        string
 		app         string
 		routes      sdk.AppRouting
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
@@ -98,7 +92,7 @@ func TestService_UpdateRouting(t *testing.T) {
 			desc:   "updates routes",
 			app:    "app-a",
 			routes: someRouting,
-			db:     &db.Database{},
+			db:     &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection:      "routing",
 				Filter:          bson.M{"id": "app-a"},
@@ -112,7 +106,7 @@ func TestService_UpdateRouting(t *testing.T) {
 		{
 			desc: "error while updating routes",
 			app:  "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,

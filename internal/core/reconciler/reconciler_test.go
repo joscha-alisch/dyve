@@ -5,6 +5,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/joscha-alisch/dyve/internal/core/apps"
 	"github.com/joscha-alisch/dyve/internal/core/fakes"
+	"github.com/joscha-alisch/dyve/internal/core/fakes/fakeProvider"
 	"github.com/joscha-alisch/dyve/internal/core/pipelines"
 	"github.com/joscha-alisch/dyve/internal/core/provider"
 	"github.com/joscha-alisch/dyve/internal/core/service"
@@ -21,10 +22,10 @@ func TestName(t *testing.T) {
 		desc              string
 		job               recon.Job
 		providerId        string
-		appProvider       *fakes.Provider
-		pipelineProvider  *fakes.Provider
-		routingProvider   *fakes.Provider
-		instancesProvider *fakes.Provider
+		appProvider       *fakeProvider.Provider
+		pipelineProvider  *fakeProvider.Provider
+		routingProvider   *fakeProvider.Provider
+		instancesProvider *fakeProvider.Provider
 		appsBefore        *fakes.MappingAppsService
 		appsAfter         *fakes.MappingAppsService
 		pipelinesBefore   *fakes.MappingPipelinesService
@@ -41,7 +42,7 @@ func TestName(t *testing.T) {
 			desc: "adds apps", job: recon.Job{
 				Type: provider.ReconcileAppProvider,
 				Guid: "app-provider",
-			}, providerId: "app-provider", appProvider: fakes.AppProvider([]sdk.App{
+			}, providerId: "app-provider", appProvider: fakeProvider.AppProvider([]sdk.App{
 				{Id: "app-a", Name: "app-a"},
 				{Id: "app-b", Name: "app-b"},
 			}), appsAfter: &fakes.MappingAppsService{Apps: map[string]apps.App{
@@ -54,7 +55,7 @@ func TestName(t *testing.T) {
 				Type:        provider.ReconcilePipelineProvider,
 				Guid:        "pipeline-provider",
 				LastUpdated: someTime,
-			}, providerId: "pipeline-provider", pipelineProvider: fakes.PipelineProvider([]sdk.Pipeline{
+			}, providerId: "pipeline-provider", pipelineProvider: fakeProvider.PipelineProvider([]sdk.Pipeline{
 				{Id: "pipeline-a", Name: "pipeline-a"},
 				{Id: "pipeline-b", Name: "pipeline-b"},
 			}, sdk.PipelineUpdates{
@@ -75,7 +76,7 @@ func TestName(t *testing.T) {
 				Type:        provider.ReconcileRoutingProviders,
 				Guid:        "app-a",
 				LastUpdated: someTime,
-			}, providerId: "routes-provider", routingProvider: fakes.RoutesProvider(map[string]sdk.AppRouting{
+			}, providerId: "routes-provider", routingProvider: fakeProvider.RoutesProvider(map[string]sdk.AppRouting{
 				"app-a": {Routes: sdk.AppRoutes{{
 					Host:    "host",
 					Path:    "path",
@@ -94,7 +95,7 @@ func TestName(t *testing.T) {
 				Type:        provider.ReconcileInstancesProviders,
 				Guid:        "app-a",
 				LastUpdated: someTime,
-			}, providerId: "instances-provider", instancesProvider: fakes.InstancesProvider(map[string]sdk.AppInstances{
+			}, providerId: "instances-provider", instancesProvider: fakeProvider.InstancesProvider(map[string]sdk.AppInstances{
 				"app-a": {
 					{
 						State: "RUNNING",

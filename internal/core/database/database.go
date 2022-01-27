@@ -10,6 +10,12 @@ type Decodable interface {
 	Decode(interface{}) error
 }
 
+type DecodableFunc func(target interface{}) error
+
+func (f DecodableFunc) Decode(dec interface{}) error {
+	return f(dec)
+}
+
 type Database interface {
 	FindOne(coll Collection, filter interface{}, res interface{}) error
 	FindOneById(coll Collection, id string, res interface{}) error

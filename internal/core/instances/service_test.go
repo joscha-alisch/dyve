@@ -24,7 +24,7 @@ func TestService_GetInstances(t *testing.T) {
 	tests := []struct {
 		desc        string
 		app         string
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expected    sdk.AppInstances
 		expectedErr error
@@ -32,7 +32,7 @@ func TestService_GetInstances(t *testing.T) {
 		{
 			desc: "gets instances",
 			app:  "app-a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Return: func(target interface{}) {
 					*(target.(*instancesData)) = instancesData{
 						Id:            "app-a",
@@ -49,7 +49,7 @@ func TestService_GetInstances(t *testing.T) {
 		{
 			desc: "error while getting group",
 			app:  "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expected:    nil,
@@ -84,7 +84,7 @@ func TestService_UpdateInstances(t *testing.T) {
 		desc        string
 		app         string
 		instances   sdk.AppInstances
-		db          *db.Database
+		db          *db.RecordingDatabase
 		recorded    []db.DatabaseRecord
 		expectedErr error
 	}{
@@ -92,7 +92,7 @@ func TestService_UpdateInstances(t *testing.T) {
 			desc:      "updates instances",
 			app:       "app-a",
 			instances: someInstances,
-			db:        &db.Database{},
+			db:        &db.RecordingDatabase{},
 			recorded: []db.DatabaseRecord{{
 				Collection:      "instances",
 				Filter:          bson.M{"id": "app-a"},
@@ -106,7 +106,7 @@ func TestService_UpdateInstances(t *testing.T) {
 		{
 			desc: "error while updating instances",
 			app:  "a",
-			db: &db.Database{
+			db: &db.RecordingDatabase{
 				Err: someErr,
 			},
 			expectedErr: someErr,
