@@ -108,9 +108,9 @@ func TestGithubProvider(t *testing.T) {
 				"organization2",
 			},
 			"groups": []string{
+				"github:organization2:789",
 				"github:organization:123",
 				"github:organization:456",
-				"github:organization2:789",
 			},
 		},
 	}

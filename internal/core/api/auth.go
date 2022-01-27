@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-github/v39/github"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -60,7 +61,9 @@ func getGHProviderFunc() provider.ExtraUserInfoFunc {
 			orgList = append(orgList, org)
 		}
 
+		sort.Strings(orgList)
 		u.SetSliceAttr("orgs", orgList)
+		sort.Strings(teams)
 		u.SetSliceAttr("groups", teams)
 
 		log.Debug().Str("user", u.Name).Msg("new login")
