@@ -11,7 +11,8 @@ type Scheduler interface {
 
 func NewScheduler(r Reconciler) Scheduler {
 	return &scheduler{
-		r: r,
+		r:      r,
+		cancel: make(chan struct{}),
 	}
 }
 
