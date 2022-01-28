@@ -16,16 +16,6 @@ func TestScheduler(t *testing.T) {
 	if r.times < 10 || r.times > 15 {
 		t.Error("expected reconciler to have been called roughly 12 times")
 	}
-
-	s = NewScheduler(r).(*scheduler)
-
-	_ = s.Run(2, 10*time.Millisecond)
-	time.Sleep(120 * time.Millisecond)
-	close(s.cancel)
-
-	if r.times < 20 || r.times > 40 {
-		t.Error("expected reconciler to have been called roughly 24 times, was ", r.times)
-	}
 }
 
 type fakeReconciler struct {
