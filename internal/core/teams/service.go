@@ -50,8 +50,8 @@ func (s *service) TeamsForGroups(groups []string) (ByAccess, error) {
 			res.Admin = append(res.Admin, t)
 		} else if containsAny(t.Access.Member, groups) {
 			res.Member = append(res.Member, t)
-		} else if containsAny(t.Access.Member, groups) {
-			res.Viewer = append(res.Member, t)
+		} else if containsAny(t.Access.Viewer, groups) {
+			res.Viewer = append(res.Viewer, t)
 		}
 		return nil
 	})
