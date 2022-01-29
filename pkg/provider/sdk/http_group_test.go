@@ -30,8 +30,9 @@ func TestGroups(t *testing.T) {
 		path           string
 		expectedStatus int
 		expectedResp   response
+		err            error
 	}{
-		{"returns groups", groups, "GET", "/groups", http.StatusOK, response{
+		{desc: "returns groups", state: groups, method: "GET", path: "/groups", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
 			Result: []interface{}{
 				map[string]interface{}{"id": "a", "name": "name-a"},
@@ -47,24 +48,32 @@ func TestGroups(t *testing.T) {
 				map[string]interface{}{"id": "840e560f-38d3-460e-be23-8677a4539f35", "name": "name-k"},
 			},
 		}},
-		{"returns groups with trailing slash", []Group{}, "GET", "/groups/", http.StatusOK, response{
+		{desc: "returns groups with trailing slash", state: []Group{}, method: "GET", path: "/groups/", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
 			Result: []interface{}{},
 		}},
-		{"returns group", groups, "GET", "/groups/840e560f-38d3-460e-be23-8677a4539f35", http.StatusOK, response{
+		{desc: "returns group", state: groups, method: "GET", path: "/groups/840e560f-38d3-460e-be23-8677a4539f35", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
 			Result: map[string]interface{}{"id": "840e560f-38d3-460e-be23-8677a4539f35", "name": "name-k"},
 		}},
-		{"returns 404 for non-existent", groups, "GET", "/groups/dont-exist", http.StatusNotFound, response{
+		{desc: "returns 404 for non-existent", state: groups, method: "GET", path: "/groups/dont-exist", expectedStatus: http.StatusNotFound, expectedResp: response{
 			Status: http.StatusNotFound,
 			Err:    "not found",
+		}},
+		{desc: "returns 5xx for other errors", state: groups, err: ErrInternal, method: "GET", path: "/groups/840e560f-38d3-460e-be23-8677a4539f35", expectedStatus: http.StatusInternalServerError, expectedResp: response{
+			Status: http.StatusInternalServerError,
+			Err:    "internal error occurred",
+		}},
+		{desc: "returns 5xx for other errors when listing", state: groups, err: ErrInternal, method: "GET", path: "/groups", expectedStatus: http.StatusInternalServerError, expectedResp: response{
+			Status: http.StatusInternalServerError,
+			Err:    "internal error occurred",
 		}},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			r := httptest.NewRecorder()
-			handler := NewGroupProviderHandler(&fakeGroupProvider{state: test.state})
+			handler := NewGroupProviderHandler(&fakeGroupProvider{state: test.state, err: test.err})
 			handler.ServeHTTP(r, httptest.NewRequest(test.method, test.path, nil))
 			res := r.Result()
 			if res.StatusCode != test.expectedStatus {
@@ -82,14 +91,22 @@ func TestGroups(t *testing.T) {
 }
 
 type fakeGroupProvider struct {
+	err   error
 	state []Group
 }
 
 func (f *fakeGroupProvider) ListGroups() ([]Group, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
 	return f.state, nil
 }
 
 func (f *fakeGroupProvider) GetGroup(id string) (Group, error) {
+	if f.err != nil {
+		return Group{}, f.err
+	}
+
 	for _, app := range f.state {
 		if app.Id == id {
 			return app, nil

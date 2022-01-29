@@ -30,8 +30,9 @@ func TestApps(t *testing.T) {
 		path           string
 		expectedStatus int
 		expectedResp   response
+		err            error
 	}{
-		{"returns apps", apps, "GET", "/apps", http.StatusOK, response{
+		{desc: "returns apps", state: apps, method: "GET", path: "/apps", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
 			Result: []interface{}{
 				map[string]interface{}{"id": "a", "name": "name-a"},
@@ -47,24 +48,32 @@ func TestApps(t *testing.T) {
 				map[string]interface{}{"id": "840e560f-38d3-460e-be23-8677a4539f35", "name": "name-k"},
 			},
 		}},
-		{"returns apps with trailing slash", []App{}, "GET", "/apps/", http.StatusOK, response{
+		{desc: "returns apps with trailing slash", state: []App{}, method: "GET", path: "/apps/", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
 			Result: []interface{}{},
 		}},
-		{"returns app", apps, "GET", "/apps/840e560f-38d3-460e-be23-8677a4539f35", http.StatusOK, response{
+		{desc: "returns app", state: apps, method: "GET", path: "/apps/840e560f-38d3-460e-be23-8677a4539f35", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
 			Result: map[string]interface{}{"id": "840e560f-38d3-460e-be23-8677a4539f35", "name": "name-k"},
 		}},
-		{"returns 404 for non-existent", apps, "GET", "/apps/dont-exist", http.StatusNotFound, response{
+		{desc: "returns 404 for non-existent", state: apps, method: "GET", path: "/apps/dont-exist", expectedStatus: http.StatusNotFound, expectedResp: response{
 			Status: http.StatusNotFound,
 			Err:    "not found",
+		}},
+		{desc: "returns 5xx for other errors", state: apps, err: ErrInternal, method: "GET", path: "/apps/a", expectedStatus: http.StatusInternalServerError, expectedResp: response{
+			Status: http.StatusInternalServerError,
+			Err:    "internal error occurred",
+		}},
+		{desc: "returns 5xx for other errors when listing", state: apps, err: ErrInternal, method: "GET", path: "/apps", expectedStatus: http.StatusInternalServerError, expectedResp: response{
+			Status: http.StatusInternalServerError,
+			Err:    "internal error occurred",
 		}},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			r := httptest.NewRecorder()
-			handler := NewAppProviderHandler(&fakeAppProvider{state: test.state})
+			handler := NewAppProviderHandler(&fakeAppProvider{state: test.state, err: test.err})
 			handler.ServeHTTP(r, httptest.NewRequest(test.method, test.path, nil))
 			res := r.Result()
 			if res.StatusCode != test.expectedStatus {
@@ -83,13 +92,20 @@ func TestApps(t *testing.T) {
 
 type fakeAppProvider struct {
 	state []App
+	err   error
 }
 
 func (f *fakeAppProvider) ListApps() ([]App, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
 	return f.state, nil
 }
 
 func (f *fakeAppProvider) GetApp(id string) (App, error) {
+	if f.err != nil {
+		return App{}, f.err
+	}
 	for _, app := range f.state {
 		if app.Id == id {
 			return app, nil

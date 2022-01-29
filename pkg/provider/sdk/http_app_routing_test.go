@@ -25,23 +25,30 @@ func TestAppRouting(t *testing.T) {
 		path           string
 		expectedStatus int
 		expectedResp   response
+		err            error
 	}{
-		{"returns app routing", routes, "GET", "/routing/a", http.StatusOK, response{
+		{desc: "returns app routing", state: routes, method: "GET", path: "/routing/a", expectedStatus: http.StatusOK, expectedResp: response{
 			Status: http.StatusOK,
 			Result: map[string]interface{}{"routes": []interface{}{
 				map[string]interface{}{"host": "host", "path": "path", "appPort": float64(900)},
 			}},
 		}},
-		{"returns 404 for non-existent", routes, "GET", "/routing/dont-exist", http.StatusNotFound, response{
+		{desc: "returns 404 for non-existent", state: routes, method: "GET", path: "/routing/dont-exist", expectedStatus: http.StatusNotFound, expectedResp: response{
 			Status: http.StatusNotFound,
 			Err:    "not found",
+		}},
+		{desc: "returns 5xx for other errors", state: routes, err: ErrInternal, method: "GET", path: "/routing/a", expectedStatus: http.StatusInternalServerError, expectedResp: response{
+			Status: http.StatusInternalServerError,
+			Err:    "internal error occurred",
 		}},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(tt *testing.T) {
 			r := httptest.NewRecorder()
-			handler := NewAppRoutingProviderHandler(&fakeRoutingProvider{state: test.state})
+			p := &fakeRoutingProvider{state: test.state}
+			p.err = test.err
+			handler := NewAppRoutingProviderHandler(p)
 			handler.ServeHTTP(r, httptest.NewRequest(test.method, test.path, nil))
 			res := r.Result()
 			if res.StatusCode != test.expectedStatus {
@@ -60,9 +67,13 @@ func TestAppRouting(t *testing.T) {
 
 type fakeRoutingProvider struct {
 	state map[string]AppRoutes
+	err   error
 }
 
 func (f *fakeRoutingProvider) GetAppRouting(id string) (AppRouting, error) {
+	if f.err != nil {
+		return AppRouting{}, f.err
+	}
 	for appId, routes := range f.state {
 		if appId == id {
 			return AppRouting{Routes: routes}, nil
