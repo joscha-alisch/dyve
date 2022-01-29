@@ -8,8 +8,8 @@ type InstancesProvider interface {
 
 type AppInstances []AppInstance
 type AppInstance struct {
-	State AppState
-	Since time.Time
+	State AppState  `json:"state"`
+	Since time.Time `json:"since"`
 }
 
 type AppState string
