@@ -118,6 +118,38 @@ func TestGetInstances(t *testing.T) {
 	}
 }
 
+func TestGetRoutes(t *testing.T) {
+	tests := []struct {
+		desc        string
+		id          string
+		state       cfBackend
+		expected    Routes
+		expectedErr error
+	}{
+		{desc: "not found", id: "app-a", state: cfBackend{
+			routes: map[string][]cf.Route{
+				"app-a": {},
+			},
+		}, expected: nil},
+		{desc: "gets routes", id: "app-a", state: cfBackend{
+			routes: map[string][]cf.Route{
+				"app-a": {},
+			},
+		}, expected: nil},
+	}
+
+	for _, test := range tests {
+		t.Run(test.desc, func(tt *testing.T) {
+			api := NewApi(&fakeCfClient{test.state})
+
+			res, _ := api.GetRoutes(test.id)
+			if !cmp.Equal(test.expected, res) {
+				tt.Errorf("\nresult mismatch: \n%s\n", cmp.Diff(test.expected, res))
+			}
+		})
+	}
+}
+
 type fakeCfClient struct {
 	b cfBackend
 }
