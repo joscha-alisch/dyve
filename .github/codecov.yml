@@ -1,3 +1,6 @@
 ignore:
  - pkg/pipeviz
  - internal/core/fakes
+ - cmd
+ - internal/provider/demo
+ - internal/provider/concourse
