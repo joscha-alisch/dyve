@@ -28,13 +28,19 @@ const DetailPage = ({
     }))
 
     useEffect(() => {
+        if (status === "Open") {
+            send("update")
+        }
+    }, [status])
+
+    useEffect(() => {
         detailApi(id, (json) => {
             setState({
                 ...state,
                 detail: json.result
             })
         })
-    }, [id])
+    }, [])
 
     let buttons = () => <>
         <span className={styles.Live + " " + (status === "Open" ? styles.Connected : styles.Connecting)}>{status === "Open" ? "Live" : "Connecting..."}

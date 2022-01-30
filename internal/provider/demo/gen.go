@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Pallinder/go-randomdata"
 	"github.com/google/uuid"
+	"github.com/joscha-alisch/dyve/pkg/provider/sdk"
 	"strings"
 )
 
@@ -13,6 +14,10 @@ func id() string {
 
 func appName() string {
 	return randomdata.Adjective() + "-" + randomdata.Adjective() + "-" + appWords[randomdata.Number(0, len(appWords))]
+}
+
+func appState() sdk.AppState {
+	return appStates[randomdata.Number(0, len(appStates)-1)]
 }
 
 func pipelineName() string {
@@ -25,6 +30,30 @@ func version() string {
 
 func namespace() string {
 	return randomdata.City()
+}
+
+func host() string {
+	return randomdata.Noun() + ".com"
+}
+
+func path() string {
+	path := "/"
+
+	if randomdata.Number(0, 100) > 90 {
+		path += randomdata.Noun()
+	}
+
+	return path
+}
+
+func port() int {
+	port := 8080
+
+	if randomdata.Number(0, 100) > 90 {
+		port = randomdata.Number(1025, 50000)
+	}
+
+	return port
 }
 
 func team() string {
@@ -89,6 +118,24 @@ var appWords = []string{
 	"connector",
 	"client",
 	"faker",
+}
+
+var appStates = []sdk.AppState{
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateRunning,
+	sdk.AppStateStopped,
+	sdk.AppStateCrashed,
+	sdk.AppStateStarting,
+	sdk.AppStateUnknown,
 }
 
 var pipelineWords = []string{

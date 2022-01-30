@@ -1,13 +1,14 @@
 @import "src/styles/shared"
 
 .Main
+  margin-top: 50px
 
-.Routes
+.Instances
   list-style: none
   padding: 0
   margin: 20px 0 0
 
-.Route
+.Instance
   display: flex
   justify-content: flex-start
   align-items: center
@@ -19,26 +20,25 @@
     background-color: $paletteAccent2
     cursor: pointer
 
-  .Icon
+  .IconGreen
     border-right: 1px solid $paletteAccent1
     background-color: $paletteAccent1
     height: 100%
     padding: 8px
     flex: 0 0 auto
+  .IconRed
+    border-right: 1px solid $paletteAccent1
+    background-color: $paletteRed
+    height: 100%
+    padding: 8px
+    flex: 0 0 auto
 
-  .Url
+
+  .Info
     margin-left: 20px
     flex: 1 1 auto
-  .Host
+    font-size: 10pt
+
+  .State
     font-weight: bold
-
-  .Path
-
-  .Port
-    margin-left: 20px
-    margin-right: 10px
-    font-size: 12px
-    background-color: $paletteAccent1
-    border-radius: 4px
-    padding: 4px
-    flex: 0 0 auto
+    font-size: 12pt

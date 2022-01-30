@@ -7,6 +7,7 @@ import DetailPage from "../components/base/pages/detailPage/detailpage";
 import Box from "../components/base/box/box";
 import {prettyJ} from "../helpers/pretty";
 import RoutingCard from "../components/cards/routing/routingcard";
+import InstancesCard from "../components/cards/instances/instancescard";
 
 export const AppDetail = () => <DetailPage
     parentRoute={"/apps"}
@@ -15,6 +16,7 @@ export const AppDetail = () => <DetailPage
     useLive={API.Apps.Live}
     render={(detail, live) => <div>
         <RoutingCard routing={live.routing}/>
+        <InstancesCard instances={live.instances} />
     </div>}
 />
 

@@ -11,6 +11,8 @@ func NewProvider() *Provider {
 	p.GenerateApps()
 	p.GeneratePipelines()
 	p.GenerateHistory()
+	p.GenerateAppInstances()
+	p.GenerateAppRouting()
 
 	return p
 }
@@ -20,6 +22,16 @@ type Provider struct {
 	pipelines []sdk.Pipeline
 	history   map[string][]sdk.PipelineStatus
 	versions  map[string]sdk.PipelineVersionList
+	routing   map[string]sdk.AppRouting
+	instances map[string]sdk.AppInstances
+}
+
+func (d *Provider) GetAppInstances(id string) (sdk.AppInstances, error) {
+	return d.instances[id], nil
+}
+
+func (d *Provider) GetAppRouting(id string) (sdk.AppRouting, error) {
+	return d.routing[id], nil
 }
 
 func (d *Provider) GenerateApps() {
@@ -221,4 +233,35 @@ func (d *Provider) ListUpdates(since time.Time) (sdk.PipelineUpdates, error) {
 	}
 
 	return updates, nil
+}
+
+func (d *Provider) GenerateAppInstances() {
+	d.instances = map[string]sdk.AppInstances{}
+	for _, app := range d.apps {
+		n := randomdata.Number(1, 10)
+		for i := 0; i < n; i++ {
+			now := time.Now()
+			since := now.Add(-(time.Minute) * time.Duration(randomdata.Number(1, 365)))
+			d.instances[app.Id] = append(d.instances[app.Id], sdk.AppInstance{
+				State: appState(),
+				Since: since,
+			})
+		}
+	}
+}
+
+func (d *Provider) GenerateAppRouting() {
+	d.routing = map[string]sdk.AppRouting{}
+	for _, app := range d.apps {
+		var routes sdk.AppRoutes
+		n := randomdata.Number(1, 10)
+		for i := 0; i < n; i++ {
+			routes = append(routes, sdk.AppRoute{
+				Host:    host(),
+				Path:    path(),
+				AppPort: port(),
+			})
+		}
+		d.routing[app.Id] = sdk.AppRouting{Routes: routes}
+	}
 }

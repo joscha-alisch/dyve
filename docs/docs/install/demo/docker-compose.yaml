@@ -19,7 +19,7 @@ services:
     image: ghcr.io/joscha-alisch/dyve-core:next
     restart: always
     environment:
-      DYVE_DEVCONFIG_USEFAKEOAUTH2: true
+      DYVE_DEVCONFIG_USEFAKEOAUTH2: "true"
       DYVE_AUTH_SECRET: secret
       DYVE_DATABASE_URI: mongodb://mongo:27017
       DYVE_EXTERNALURL: http://localhost:8080

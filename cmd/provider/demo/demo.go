@@ -11,6 +11,8 @@ func main() {
 	err := sdk.ListenAndServe(":9003", sdk.ProviderConfig{
 		Apps:      p,
 		Pipelines: p,
+		Instances: p,
+		Routing:   p,
 	})
 	if err != nil {
 		panic(err)
