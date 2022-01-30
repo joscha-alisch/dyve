@@ -5,6 +5,8 @@ providers:
     features:
       - apps
       - pipelines
+      - routing
+      - instances
 auth:
   secret: secret
 database:
