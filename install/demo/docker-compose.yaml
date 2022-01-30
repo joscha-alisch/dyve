@@ -7,7 +7,7 @@ services:
     networks:
       - shared
   ui:
-    image: ghcr.io/joscha-alisch/dyve-frontend:next
+    image: docker.io/library/dyve-frontend:local
     restart: always
     environment:
       DYVE_API_BACKEND: "core:9000"
