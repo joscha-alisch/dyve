@@ -6,7 +6,7 @@ Dyve is a vendor-agnostic unified interface for all your platforms, CI and monit
 
 The following illustrates the high-level architecture of dyve. The core and frontend application are the main building blocks of dyve. The core application fetches data from many different platforms and tools by using domain specific provider apps.
 
-![Dyve Architecture](../img/architecture.png)
+![Dyve Architecture](img/architecture.png)
 
 ### Demo
 
