@@ -3,6 +3,20 @@ entries:
   dyve:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2022-02-08T19:59:04.48814431Z"
+    dependencies:
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 10.26.3
+    description: Deploys dyve
+    digest: b797bc894810c4efad13f968da10c6397a269979da3734d52dff2e669f3dbcf7
+    name: dyve
+    urls:
+    - https://github.com/joscha-alisch/dyve/releases/download/helm-dyve-0.7.0/dyve-0.7.0.tgz
+    version: 0.7.0
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2022-02-08T19:55:30.953531324Z"
     dependencies:
     - condition: mongodb.enabled
@@ -71,4 +85,4 @@ entries:
     urls:
     - https://github.com/joscha-alisch/dyve/releases/download/helm-dyve-0.4.2/dyve-0.4.2.tgz
     version: 0.4.2
-generated: "2022-02-08T19:55:30.953558225Z"
+generated: "2022-02-08T19:59:04.488174311Z"
