@@ -23,7 +23,7 @@ spec:
             {{- .Values.frontend.args | toYaml | nindent 12 }}
           {{- end }}
           env: 
-            - name: DYVE_BACKEND
+            - name: DYVE_API_BACKEND
               value: dyve-core
           {{- if .Values.frontend.probe }}
           readinessProbe:
