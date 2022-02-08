@@ -1,5 +1,4 @@
 version: "3"
-
 services:
   mongo:
     image: mongo
@@ -7,7 +6,7 @@ services:
     networks:
       - shared
   ui:
-    image: docker.io/library/dyve-frontend:local
+    image: ghcr.io/joscha-alisch/dyve-frontend:next
     restart: always
     environment:
       DYVE_API_BACKEND: "core:9000"
