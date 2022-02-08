@@ -31,7 +31,7 @@ const put = (api, data, then = () => {}, error = (err) => {}) => axios
     .catch(error)
 
 const useWs = (api, setData) => {
-    let socketUrl = "ws://" + window.location.host + Base + api
+    let socketUrl = "wss://" + window.location.host + Base + api
     if (isDev()) {
         socketUrl = "ws://localhost:9001" + Base + api
     }
