@@ -11,9 +11,11 @@ data:
   {{else}}
 {{ .Values.core.config | toYaml | indent 4 }}
 
-    appProviders:
+    providers:
   {{- if .Values.providers.cloudfoundry.enabled }}
       - name: cf
         host: http://dyve-cloudfoundry
+        features:
+          - apps
     {{end}}
   {{end}}
