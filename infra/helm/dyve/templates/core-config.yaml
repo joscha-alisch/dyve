@@ -17,5 +17,7 @@ data:
         host: http://dyve-cloudfoundry
         features:
           - apps
+          - routing
+          - instances
     {{end}}
   {{end}}
