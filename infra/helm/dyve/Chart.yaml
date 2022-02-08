@@ -1,6 +1,6 @@
 apiVersion: v2
 name: dyve
-version: 0.6.0
+version: 0.7.0
 description: Deploys dyve
 appVersion: "0.0.1"
 
