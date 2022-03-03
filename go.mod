@@ -24,7 +24,7 @@ require (
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/viper v1.10.1
 	github.com/tryvium-travels/memongo v0.3.2
-	go.mongodb.org/mongo-driver v1.8.1
+	go.mongodb.org/mongo-driver v1.8.4
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/h2non/gock.v1 v1.1.2
