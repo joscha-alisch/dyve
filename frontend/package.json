@@ -15,7 +15,7 @@
     "@mui/styles": "^5.0.1",
     "@rjsf/core": "^3.2.0",
     "@testing-library/jest-dom": "^5.16.1",
-    "@testing-library/react": "^11.1.0",
+    "@testing-library/react": "^12.1.5",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^0.21.1",
     "cytoscape": "^3.19.0",
