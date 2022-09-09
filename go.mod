@@ -10,7 +10,7 @@ require (
 	github.com/cloudfoundry-community/go-cfclient v0.0.0-20210621174645-7773f7e22665
 	github.com/fatih/structs v1.1.0
 	github.com/go-pkgz/auth v1.18.0
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v39 v39.2.0
 	github.com/google/uuid v1.3.0
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
