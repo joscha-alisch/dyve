@@ -24,11 +24,11 @@ require (
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/viper v1.10.1
 	github.com/tryvium-travels/memongo v0.3.2
-	go.mongodb.org/mongo-driver v1.8.1
+	go.mongodb.org/mongo-driver v1.11.2
 	gonum.org/v1/gonum v0.9.3
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/h2non/gock.v1 v1.1.2
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 replace github.com/go-pkgz/auth => github.com/joscha-alisch/auth v1.18.1-0.20211006101921-5702e9e067f9
